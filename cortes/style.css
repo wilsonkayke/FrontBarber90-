@@ -1,0 +1,73 @@
+* {
+    box-sizing: border-box;
+    background-image: linear-gradient(to right, rgb(220, 20, 20), rgb(0, 0, 0));
+  }
+  
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    min-height: 100vh;
+  }
+  
+  .carrossel {
+    position: relative; /* Necessário para posicionar os botões de navegação */
+    box-shadow: 2px 2px 4px black;
+    overflow: hidden;
+    height: 300px;
+    width: 300px;
+  }
+  
+  .container {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    transform: translateX(0);
+    width: calc(300px * 4); /* Ajustar para o número de imagens */
+  }
+  
+  img {
+    object-fit: cover;
+    height: 100%;
+    width: 300px;
+  }
+  
+  .nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1;
+    font-size: 24px;
+    opacity: 0.2;
+    border-radius: 10px;
+  }
+  
+  #prev {
+    left: 5px;
+  }
+  
+  #next {
+    right: 5px;
+  }
+  
+  #voltar{
+    position:fixed;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    color: white;
+    font-size: 12px;
+    background-color: gray;
+    padding: 10px 20px;
+    top: 10px;
+    left: 10px;
+  }
+  
+  #voltar:hover{
+    background-color: gray;
+  }

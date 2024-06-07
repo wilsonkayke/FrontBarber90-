@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Cadastro</title>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>CADASTRAR</h1>
+
+            <div id="msgError"></div>
+            <div id="msgSucesso"></div>
+
+            <div class="label-float">
+                <input type="text" id="nome" placeholder="" required>
+                <label id="labelNome" for="nome">NOME</label>
+            </div>
+            <div class="label-float">
+                <input type="text" id="usuario" placeholder="" required>
+                <label id="labelUsuario" for="usuario">USUÁRIO</label>
+            </div>
+            <div class="label-float">
+                <input type="password" id="senha" placeholder="" required>
+                <label id="labelSenha" for="senha">SENHA</label>
+                <i id="toggleSenha" class="fa fa-eye" aria-hidden="true"></i>
+            </div>
+            <div class="label-float">
+                <input type="password" id="confirmar_senha" placeholder="" required>
+                <label id="labelConfi_senha" for="confirmar_senha">CONFIRMAR SENHA</label>
+                <i id="toggleConfirmSenha" class="fa fa-eye" aria-hidden="true"></i>
+            </div>
+            <div class="justify-center">
+                <button onclick="cadastrar()">CADASTRAR</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Seleciona os elementos do DOM e inicializa as variáveis de validação
+        let nome = document.querySelector("#nome")
+        let labelNome = document.querySelector("#labelNome")
+        let validNome = false
+
+        let usuario = document.querySelector("#usuario")
+        let labelUsuario = document.querySelector("#labelUsuario")
+        let validUsuario = false
+
+        let senha = document.querySelector("#senha")
+        let labelSenha = document.querySelector("#labelSenha")
+        let validSenha = false
+
+        let confirmar_senha = document.querySelector("#confirmar_senha")
+        let labelConfi_senha = document.querySelector("#labelConfi_senha")
+        let validConfi_senha = false
+
+        let msgError = document.querySelector('#msgError')
+        let msgSucesso = document.querySelector('#msgSucesso')
+
+        // Adiciona um listener para quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            // Adiciona evento de keyup no campo nome para validar o input
+            nome.addEventListener('keyup', () => {
+                if (nome.value.length <= 2) {
+                    // Se o nome for menor ou igual a 2 caracteres, exibe mensagem de erro
+                    labelNome.setAttribute('style', 'color: red');
+                    labelNome.innerHTML = '<strong>Nome: Insira no mínimo 3 caracteres</strong>';
+                    nome.setAttribute('style', 'border-color: red')
+                    validNome = false
+                } else {
+                    // Se o nome for maior que 2 caracteres, exibe mensagem de sucesso
+                    labelNome.setAttribute('style', 'color: green');
+                    labelNome.innerHTML = 'NOME';
+                    nome.setAttribute('style', 'border-color: green')
+                    validNome = true
+                }
+            });
+
+            // Adiciona evento de keyup no campo usuário para validar o input
+            usuario.addEventListener('keyup', () => {
+                if (usuario.value.length <= 4) {
+                    // Se o usuário for menor ou igual a 4 caracteres, exibe mensagem de erro
+                    labelUsuario.setAttribute('style', 'color: red');
+                    labelUsuario.innerHTML = '<strong>Usuário: Insira no mínimo 5 caracteres</strong>';
+                    usuario.setAttribute('style', 'border-color: red')
+                    validUsuario = false
+                } else {
+                    // Se o usuário for maior que 4 caracteres, exibe mensagem de sucesso
+                    labelUsuario.setAttribute('style', 'color: green');
+                    labelUsuario.innerHTML = 'USUÁRIO';
+                    usuario.setAttribute('style', 'border-color: green')
+                    validUsuario = true
+                }
+            });
+
+            // Adiciona evento de keyup no campo senha para validar o input
+            senha.addEventListener('keyup', () => {
+                if (senha.value.length <= 5) {
+                    // Se a senha for menor ou igual a 5 caracteres, exibe mensagem de erro
+                    labelSenha.setAttribute('style', 'color: red');
+                    labelSenha.innerHTML = '<strong>Senha: Insira no mínimo 6 caracteres</strong>';
+                    senha.setAttribute('style', 'border-color: red')
+                    validSenha = false
+                } else {
+                    // Se a senha for maior que 5 caracteres, exibe mensagem de sucesso
+                    labelSenha.setAttribute('style', 'color: green');
+                    labelSenha.innerHTML = 'SENHA';
+                    senha.setAttribute('style', 'border-color: green')
+                    validSenha = true
+                }
+            });
+
+            // Adiciona evento de keyup no campo confirmar senha para validar se as senhas são iguais
+            confirmar_senha.addEventListener('keyup', () => {
+                if (senha.value != confirmar_senha.value) {
+                    // Se as senhas não conferirem, exibe mensagem de erro
+                    labelConfi_senha.setAttribute('style', 'color: red');
+                    labelConfi_senha.innerHTML = '<strong>Senhas não conferem</strong>';
+                    confirmar_senha.setAttribute('style', 'border-color: red')
+                    validConfi_senha = false
+                } else {
+                    // Se as senhas conferirem, exibe mensagem de sucesso
+                    labelConfi_senha.setAttribute('style', 'color: green');
+                    labelConfi_senha.innerHTML = 'CONFIRMAR SENHA';
+                    confirmar_senha.setAttribute('style', 'border-color: green')
+                    validConfi_senha = true
+                }
+            });
+
+            // Seleciona os ícones de alternância de visibilidade da senha
+            let btnSenha = document.querySelector('#toggleSenha');
+            let btnConfirmSenha = document.querySelector('#toggleConfirmSenha');
+
+            // Adiciona evento de clique para alternar a visibilidade da senha
+            btnSenha.addEventListener('click', () => {
+                let inputSenha = document.querySelector('#senha');
+                if (inputSenha.getAttribute('type') === 'password') {
+                    inputSenha.setAttribute('type', 'text');
+                } else {
+                    inputSenha.setAttribute('type', 'password');
+                }
+            });
+
+            // Adiciona evento de clique para alternar a visibilidade da confirmação da senha
+            btnConfirmSenha.addEventListener('click', () => {
+                let inputConfirmSenha = document.querySelector('#confirmar_senha');
+                if (inputConfirmSenha.getAttribute('type') === 'password') {
+                    inputConfirmSenha.setAttribute('type', 'text');
+                } else {
+                    inputConfirmSenha.setAttribute('type', 'password');
+                }
+            });
+        });
+
+        // Função que executa o cadastro
+        function cadastrar() {
+            // Verifica se todos os campos são válidos
+            if (validNome && validUsuario && validSenha && validConfi_senha) {
+                // Recupera a lista de usuários do localStorage ou inicializa uma nova lista
+                let listaUser = JSON.parse(localStorage.getItem('listaUser') || '[]')
+
+                // Adiciona o novo usuário à lista
+                listaUser.push({
+                    nomeCadas: nome.value,
+                    usuaCadas: usuario.value,
+                    senhaCadas: senha.value
+                })
+
+                // Atualiza o localStorage com a nova lista de usuários
+                localStorage.setItem('listaUser', JSON.stringify(listaUser))
+
+                // Exibe mensagem de sucesso e oculta mensagem de erro
+                msgSucesso.setAttribute('style', 'display: block')
+                msgSucesso.innerHTML = '<strong>Cadastro feito com sucesso!</strong>'
+                msgError.setAttribute('style', 'display: none')
+                msgError.innerHTML = ''
+
+                // Redireciona para a página de login
+                window.location.href = 'file:///C:/Users/User/Downloads/front-end/login/index.html'
+
+            } else {
+                // Exibe mensagem de erro se houver campos inválidos e oculta mensagem de sucesso
+                msgError.setAttribute('style', 'display: block')
+                msgError.innerHTML = '<strong>Preencha todos os campos corretamente antes de cadastrar!</strong>'
+                msgSucesso.setAttribute('style', 'display: none')
+                msgSucesso.innerHTML = ''    
+            }
+        }
+    </script>
+</body>
+</html>
