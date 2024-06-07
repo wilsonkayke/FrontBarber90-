@@ -6,7 +6,7 @@ let idx = 0;
 
 function showImage() {
     const container = document.getElementById("img");
-    container.style.transform = translateX(${-idx * 300}px);
+    container.style.transform = `translateX(${-idx * 300}px)`;
 }
 
 function nextImage() {
@@ -32,3 +32,4 @@ function prevImage() {
 // Adicionando os eventos de clique aos botões de navegação
 nextButton.addEventListener('click', nextImage);
 prevButton.addEventListener('click', prevImage);
+
