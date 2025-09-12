@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  experimental: {
+    appDir: true, // garante suporte ao /app dentro do src
+  },
+};
 
 export default nextConfig;
+
