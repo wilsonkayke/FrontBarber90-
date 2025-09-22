@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Barber Queue",
+  title: "Barbearia",
   description: "Sistema de agendamento para barbearia",
 };
 
