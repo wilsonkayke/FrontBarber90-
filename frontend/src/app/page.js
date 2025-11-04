@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -15,24 +16,36 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const entrar = () => {
-    let listaUser = JSON.parse(localStorage.getItem("listaUser") || "[]");
+  let listaUser = JSON.parse(localStorage.getItem("listaUser") || "[]");
 
-    let userValid = listaUser.find(
-      (item) => usuario === item.usuaCadas && senha === item.senhaCadas
-    );
+  // 🔐 Admin fixo
+  if (usuario === "admin" && senha === "1234") {
+    setMsgSucesso("Bem-vindo, administrador!");
+    setMsgErro("");
 
-    if (userValid) {
-      setMsgSucesso("Usuário autenticado com sucesso!");
-      setMsgErro("");
+    setTimeout(() => {
+      router.push("/admin"); // vai para tela de admin
+    }, 1500);
+    return; // impede continuar o código
+  }
 
-      setTimeout(() => {
-        router.push("/agenda"); // vai para agenda após login
-      }, 1500);
-    } else {
-      setMsgErro("Usuário ou senha inválidos!");
-      setMsgSucesso("");
-    }
-  };
+  let userValid = listaUser.find(
+    (item) => usuario === item.usuaCadas && senha === item.senhaCadas
+  );
+
+  if (userValid) {
+    setMsgSucesso("Usuário autenticado com sucesso!");
+    setMsgErro("");
+
+    setTimeout(() => {
+      router.push("/agenda"); // vai para agenda após login normal
+    }, 1500);
+  } else {
+    setMsgErro("Usuário ou senha inválidos!");
+    setMsgSucesso("");
+  }
+};
+
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
