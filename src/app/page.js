@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
   const [msgErro, setMsgErro] = useState("");
@@ -15,36 +15,43 @@ export default function LoginPage() {
 
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const entrar = () => {
-  let listaUser = JSON.parse(localStorage.getItem("listaUser") || "[]");
+  const entrar = async () => {
+  setMsgErro("");
+  setMsgSucesso("");
 
-  // 🔐 Admin fixo
-  if (usuario === "admin" && senha === "1234") {
-    setMsgSucesso("Bem-vindo, administrador!");
-    setMsgErro("");
+  try {
+    const response = await fetch("http://127.0.0.1:8000/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        senha,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMsgErro(data.detail || "Email ou senha inválidos");
+      return;
+    }
+
+    setMsgSucesso("Login realizado com sucesso!");
+
+    // (opcional) salvar dados do usuário
+    localStorage.setItem("cliente", JSON.stringify(data));
 
     setTimeout(() => {
-      router.push("/admin"); // vai para tela de admin
+      router.push("/agenda");
     }, 1500);
-    return; // impede continuar o código
-  }
 
-  let userValid = listaUser.find(
-    (item) => usuario === item.usuaCadas && senha === item.senhaCadas
-  );
-
-  if (userValid) {
-    setMsgSucesso("Usuário autenticado com sucesso!");
-    setMsgErro("");
-
-    setTimeout(() => {
-      router.push("/agenda"); // vai para agenda após login normal
-    }, 1500);
-  } else {
-    setMsgErro("Usuário ou senha inválidos!");
-    setMsgSucesso("");
+  } catch (error) {
+    setMsgErro("Erro ao conectar com o servidor");
   }
 };
+
 
 
   return (
@@ -71,8 +78,8 @@ export default function LoginPage() {
           </label>
           <input
             type="text"
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full border border-gray-300 rounded-lg p-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             placeholder="Digite seu email"
           />

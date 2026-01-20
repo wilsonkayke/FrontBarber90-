@@ -1,6 +1,0 @@
-# Arquivos de ambiente
-.env
-
-# Cache e arquivos temporários
-__pycache__/
-*.pyc

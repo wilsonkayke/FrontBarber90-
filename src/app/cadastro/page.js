@@ -40,27 +40,41 @@ export default function CadastroPage() {
     return true;
   };
 
-  const cadastrar = () => {
-    if (!validarFormulario()) return;
+  const cadastrar = async () => {
+  if (!validarFormulario()) return;
 
-    let listaUser = JSON.parse(localStorage.getItem("listaUser") || "[]");
-
-    listaUser.push({
-      nomeCadas: email,
-      usuaCadas: usuario,
-      senhaCadas: senha,
+  try {
+    const response = await fetch("http://127.0.0.1:8000/clientes/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        usuario,
+        senha,
+        confirmar_senha: senha,
+      }),
     });
 
-    localStorage.setItem("listaUser", JSON.stringify(listaUser));
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMsgErro(data.detail || "Erro ao cadastrar");
+      return;
+    }
 
     setMsgSucesso("Cadastro feito com sucesso!");
     setMsgErro("");
-
-    // Redireciona para login
+    
     setTimeout(() => {
-      router.push("/login");
+      router.push("/agenda");
     }, 1500);
-  };
+  } catch (error) {
+    setMsgErro("Erro de conexão com o servidor");
+  }
+};
+
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-100">
