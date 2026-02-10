@@ -34,18 +34,35 @@ export default function LoginPage() {
     const data = await response.json();
 
     if (!response.ok) {
-      setMsgErro(data.detail || "Email ou senha inválidos");
-      return;
-    }
+  if (Array.isArray(data.detail)) {
+    const erros = data.detail.map((err) => err.msg).join(", ");
+    setMsgErro(erros);
+  } else {
+    setMsgErro(data.detail || "Email ou senha inválidos");
+  }
+  return;
+}
+
 
     setMsgSucesso("Login realizado com sucesso!");
 
     // (opcional) salvar dados do usuário
     localStorage.setItem("cliente", JSON.stringify(data));
+    localStorage.setItem("role", data.role);
 
     setTimeout(() => {
+
+    // 👑 Se for admin
+    if (data.role === "admin") {
+      router.push("/admin");
+    }
+
+    // 👤 Se for cliente
+    else {
       router.push("/agenda");
-    }, 1500);
+    }
+
+  }, 1500);
 
   } catch (error) {
     setMsgErro("Erro ao conectar com o servidor");
