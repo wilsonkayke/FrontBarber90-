@@ -23,5 +23,5 @@ def login(dados: ClientLogin):
         "cliente_id": str(cliente["_id"]),
         "usuario": cliente["usuario"],
         "email": cliente["email"],
-        "role": cliente.get("role", "cliente")  
+        "role": cliente.get("role", "cliente")
     }
