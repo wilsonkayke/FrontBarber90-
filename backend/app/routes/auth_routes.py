@@ -1,27 +1,46 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.client_schema import ClientLogin
+from pydantic import BaseModel
 from app.db.mongo_connection import db
-from app.utils.security import verify_password
+from app.utils.jwt_handler import create_access_token
+from passlib.context import CryptContext
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-collection = db["clientes"]
+users_collection = db["clientes"]
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+# ✅ Schema direto aqui
+class LoginRequest(BaseModel):
+    email: str
+    senha: str
 
 
 @router.post("/login")
-def login(dados: ClientLogin):
-    cliente = collection.find_one({"email": dados.email})
+def login(dados: LoginRequest):
 
-    if not cliente:
-        raise HTTPException(status_code=401, detail="Email ou senha inválidos")
+    user = users_collection.find_one({"email": dados.email})
 
-    if not verify_password(dados.senha, cliente["senha"]):
-        raise HTTPException(status_code=401, detail="Email ou senha inválidos")
+    if not user:
+        raise HTTPException(status_code=400, detail="Email ou senha inválidos")
+
+    if not pwd_context.verify(dados.senha, user["senha"]):
+        raise HTTPException(status_code=400, detail="Email ou senha inválidos")
+
+    access_token = create_access_token(
+        data={
+            "id": str(user["_id"]),
+            "email": user["email"],
+            "role": user.get("role", "cliente")
+        }
+    )
 
     return {
-        "message": "Login realizado com sucesso",
-        "cliente_id": str(cliente["_id"]),
-        "usuario": cliente["usuario"],
-        "email": cliente["email"],
-        "role": cliente.get("role", "cliente")
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(user["_id"]),
+            "email": user["email"],
+            "role": user.get("role", "cliente")
+        }
     }

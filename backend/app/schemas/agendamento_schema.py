@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from bson import ObjectId
+from pydantic import BaseModel
+from datetime import datetime
 
 class AgendamentoCreate(BaseModel):
-    cliente_id: str = Field(..., example="ObjectId do cliente")
-    data: str = Field(..., example="2026-01-20")
-    hora: str = Field(..., example="14:30")
+    horario: datetime
 
 class AgendamentoResponse(AgendamentoCreate):
     id: str
+    status: str
+    created_at: datetime
+
+class AgendamentoUpdateStatus(BaseModel):
     status: str

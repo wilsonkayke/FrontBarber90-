@@ -34,37 +34,37 @@ export default function LoginPage() {
     const data = await response.json();
 
     if (!response.ok) {
-  if (Array.isArray(data.detail)) {
-    const erros = data.detail.map((err) => err.msg).join(", ");
-    setMsgErro(erros);
-  } else {
-    setMsgErro(data.detail || "Email ou senha inválidos");
-  }
-  return;
-}
+      if (Array.isArray(data.detail)) {
+        const erros = data.detail.map((err) => err.msg).join(", ");
+        setMsgErro(erros);
+      } else {
+        setMsgErro(data.detail || "Email ou senha inválidos");
+      }
+      return;
+    }
 
+    localStorage.clear();
+    // ✅ Salva token
+    localStorage.setItem("token", data.access_token);
 
-    setMsgSucesso("Login realizado com sucesso!");
+    // ✅ Salva usuário
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-    // (opcional) salvar dados do usuário
-    localStorage.setItem("cliente", JSON.stringify(data));
-    localStorage.setItem("role", data.role);
+    // ✅ Salva role
+    localStorage.setItem("role", data.user.role);
+
+    setMsgSucesso("Login realizado com sucesso!"); 
 
     setTimeout(() => {
-
-    // 👑 Se for admin
-    if (data.role === "admin") {
-      router.push("/admin");
-    }
-
-    // 👤 Se for cliente
-    else {
-      router.push("/agenda");
-    }
-
-  }, 1500);
+      if (data.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/agenda");
+      }
+    }, 1000);
 
   } catch (error) {
+    console.error(error);
     setMsgErro("Erro ao conectar com o servidor");
   }
 };

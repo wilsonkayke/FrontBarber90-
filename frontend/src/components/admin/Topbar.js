@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 export default function Topbar() {
   const router = useRouter();
 
-  const usuario = JSON.parse(localStorage.getItem("cliente") || "{}");
+  const usuario = JSON.parse(localStorage.getItem("user") || "null");
 
   const sair = () => {
     localStorage.clear();

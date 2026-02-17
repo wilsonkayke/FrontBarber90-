@@ -1,5 +1,7 @@
 from passlib.context import CryptContext
-from app.config.database import db
+from app.db.mongo_connection import db
+from app.utils.security import hash_password
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

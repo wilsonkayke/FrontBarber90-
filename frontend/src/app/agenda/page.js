@@ -12,39 +12,63 @@ export default function AgendaPage() {
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
 
-  const handleAgendar = (e) => {
-    e.preventDefault();
+  const handleAgendar = async (e) => {
+  e.preventDefault();
 
-    if (!data || !hora) {
-      setMsgErro("Preencha todos os campos antes de agendar!");
-      setMsgSucesso("");
-      return;
-    }
+  if (!data || !hora) {
+    setMsgErro("Preencha todos os campos antes de agendar!");
+    setMsgSucesso("");
+    return;
+  }
 
-    // salva os agendamentos no localStorage
-    let listaAgendamentos = JSON.parse(localStorage.getItem("listaAgendamentos") || "[]");
+  try {
+    const token = localStorage.getItem("token");
 
-    listaAgendamentos.push({
-      data,
-      hora,
+    const [ano, mes, dia] = data.split("-");
+    const [horaSel, minutoSel] = hora.split(":");
+
+    const dataLocal = new Date(
+    Number(ano),
+    Number(mes) - 1,
+    Number(dia),
+    Number(horaSel),
+    Number(minutoSel)
+  );
+
+    const resposta = await fetch("http://localhost:8000/agendamentos/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        horario: dataLocal.toISOString(),
+      }),
     });
 
-    localStorage.setItem("listaAgendamentos", JSON.stringify(listaAgendamentos));
+    if (!resposta.ok) {
+    const erroBackend = await resposta.json();
+    console.log("ERRO DO BACKEND:", erroBackend);
+    throw new Error(erroBackend.detail || "Erro ao criar agendamento");
+    }
+
 
     setMsgSucesso("Agendamento realizado com sucesso!");
     setMsgErro("");
 
-    // limpa os campos
-    
     setData("");
     setHora("");
 
-    setMsgSucesso("Agendamento realizado com sucesso!");
-
-    setTimeout(() =>{
+    setTimeout(() => {
       router.push("/fila");
-    }, 2000); 
-  };
+    }, 2000);
+
+  } catch (erro) {
+    setMsgErro("Erro ao conectar com o servidor.");
+    setMsgSucesso("");
+  }
+};
+
 
   return (
   <main className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -59,9 +83,9 @@ export default function AgendaPage() {
       <div className="bg-gray-100 rounded-lg p-4 mb-4">
         <h2 className="font-semibold mb-1">Informações da Barbearia</h2>
         <p className="text-sm">
-          Barbearia Barber90 - Atendimento por ordem de chegada.
+          Barbearia Barber space - Atendimento por ordem de chegada.
         </p>
-        <p className="text-sm">Horário: 08h às 18h</p>
+        <p className="text-sm">Horário: 08h às 18h, quarta à sábado.</p>
       </div>
 
       {/* Card - Como funciona */}

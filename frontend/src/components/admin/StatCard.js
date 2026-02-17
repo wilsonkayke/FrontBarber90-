@@ -1,17 +1,11 @@
 "use client";
 import React from "react";
 
-export default function StatCard({ title, value, subtitle, icon }) {
+export default function StatCard({ title, value }) {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs font-medium text-gray-500">{title}</div>
-          <div className="mt-1 text-2xl font-bold">{value}</div>
-          {subtitle && <div className="mt-2 text-sm text-gray-500">{subtitle}</div>}
-        </div>
-        {icon && <div className="ml-4 text-3xl">{icon}</div>}
-      </div>
+    <div className="bg-white p-5 rounded-xl shadow-sm border">
+      <p className="text-sm text-gray-500">{title}</p>
+      <h3 className="text-3xl font-bold mt-2">{value}</h3>
     </div>
   );
 }
