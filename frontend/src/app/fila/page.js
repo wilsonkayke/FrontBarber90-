@@ -42,7 +42,7 @@ export default function FilaPage() {
         {!fila ? (
           <p className="text-center text-gray-600">Carregando...</p>
         ) : fila.posicao === null ? (
-          <p className="text-center text-gray-600">Você não está na fila</p>
+          <p className="text-center text-gray-600">Você foi chamado</p>
         ) : (
           <div className="space-y-3 text-center">
             <p className="text-lg font-semibold">

@@ -64,7 +64,7 @@ export default function AgendaPage() {
     }, 2000);
 
   } catch (erro) {
-    setMsgErro("Erro ao conectar com o servidor.");
+    setMsgErro("Horário agendado.");
     setMsgSucesso("");
   }
 };

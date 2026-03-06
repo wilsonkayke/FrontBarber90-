@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
+from datetime import datetime, timedelta
 
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_current_user, get_admin
@@ -13,6 +14,7 @@ router = APIRouter(
 )
 
 agendamentos_collection = db["agendamentos"]
+atendidos_collection = db["atendidos"]
 
 
 # =========================================================
@@ -108,7 +110,7 @@ def chamar_proximo(admin=Depends(get_admin)):
         {"status": "agendado"},
         {
             "$set": {
-                "status": "atendido",
+                "status": "em_atendimento",
                 "atendido_em": datetime.utcnow()
             }
         },
@@ -125,7 +127,42 @@ def chamar_proximo(admin=Depends(get_admin)):
     return {
         "message": "Cliente chamado",
         "agendamento_id": str(proximo["_id"]),
-        "cliente_id": str(proximo["cliente_id"])
+        "cliente_id": str(proximo["cliente_id"]),
+        "status": proximo["status"]
+    }
+
+
+# =========================================================
+# Finalizar atendimento 
+# =========================================================
+
+@router.post("/admin/finalizar")
+def finalizar_atendimento(admin=Depends(get_admin)):
+
+    atendimento = agendamentos_collection.find_one_and_update(
+        {"status": "em_atendimento"},
+        {
+            "$set": {
+                "status": "finalizado",
+                "finalizado_em": datetime.utcnow()
+            }
+        },
+        return_document=ReturnDocument.AFTER
+    )
+
+    if not atendimento:
+        raise HTTPException(
+            status_code=404,
+            detail="Nenhum atendimento em andamento"
+        )
+
+    # 🔥 salvar histórico na collection atendidos
+    atendidos_collection.insert_one(atendimento)
+    agendamentos_collection.delete_one({"_id": atendimento["_id"]})
+
+    return {
+        "message": "Atendimento finalizado",
+        "agendamento_id": str(atendimento["_id"])
     }
 
 
@@ -147,14 +184,16 @@ def dashboard_admin(admin=Depends(get_admin)):
         "status": "agendado"
     })
 
-    atendimentos_hoje = agendamentos_collection.count_documents({
-        "status": "atendido",
-        "atendido_em": {"$gte": hoje_inicio, "$lte": hoje_fim}
+    atendimentos_hoje = atendidos_collection.count_documents({
+        "status": "finalizado",
+        "finalizado_em": {"$gte": hoje_inicio, "$lte": hoje_fim}
     })
 
     pipeline = [
         {
-            "$match": {"status": "agendado"}
+            "$match": {
+                "status": {"$in": ["agendado", "em_atendimento"]}
+            }
         },
         {
             "$lookup": {
@@ -188,7 +227,7 @@ def dashboard_admin(admin=Depends(get_admin)):
     return {
         "fila": fila,
         "atendimentosHoje": atendimentos_hoje,
-        "barbeirosAtivos": 3,
+        "barbeirosAtivos": 1,
         "agendamentos": lista
     }
 
