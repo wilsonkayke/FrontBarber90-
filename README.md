@@ -47,3 +47,32 @@ Durante o desenvolvimento deste projeto, foram aplicados conceitos como:
 ---
 
 ## 🏗️ Estrutura do projeto
+
+O back-end da aplicação foi estruturado seguindo boas práticas de organização e separação de responsabilidades, inspirado no padrão MVC (Model-View-Controller) e utilizando uma camada de serviços.
+
+### Estrutura:
+
+- **models**: definição das entidades e estrutura de dados  
+- **schemas**: validação e tipagem dos dados com Pydantic  
+- **routes**: definição das rotas da API  
+- **services**: implementação das regras de negócio  
+- **db**: configuração e conexão com o banco de dados  
+- **utils**: funções auxiliares reutilizáveis  
+
+### 🔐 Tela de Login
+![Tela de Login](./assets/TelaLogin.png) 
+
+### 📝 Cadastro
+![Cadastro](./assets/TelaCadastro.png)
+
+### 📅 Agendamento
+![Agendamento](./assets/TelaAgenda.png)
+
+### 📊 Fila
+![Fila](./assets/TelaAcompanhamentoFila.png)
+
+### ⚙️ Painel Admin
+![Painel Admin](./assets/TelaAdmin.png)
+
+### 📣 Cliente Chamado
+![Cliente Chamado](./assets/ClienteChamado.png)
