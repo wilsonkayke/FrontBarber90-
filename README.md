@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 💈 Sistema de Fila para Barbearias
 
-## Getting Started
+## 📌 Sobre o projeto
 
-First, run the development server:
+Este projeto é uma aplicação web full stack desenvolvida para gerenciar filas de espera em barbearias, com o objetivo de organizar o atendimento e melhorar a experiência dos clientes e dos profissionais.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O sistema permite que clientes entrem na fila e que o barbeiro tenha controle completo sobre a ordem de atendimento.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🚀 Tecnologias utilizadas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Front-end
+- React
+- Next.js
+- Tailwind CSS
 
-## Learn More
+### Back-end
+- Python
+- FastAPI
 
-To learn more about Next.js, take a look at the following resources:
+### Banco de dados
+- MongoDB (NoSQL)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ⚙️ Funcionalidades
 
-## Deploy on Vercel
+- Cadastro de clientes
+- Entrada e gerenciamento da fila
+- Controle de atendimento (próximo cliente)
+- Interface responsiva e moderna
+- Integração entre front-end e back-end
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧠 Aprendizados
+
+Durante o desenvolvimento deste projeto, foram aplicados conceitos como:
+
+- Desenvolvimento full stack
+- Criação de APIs REST com FastAPI
+- Integração entre front-end e back-end
+- Modelagem de banco de dados NoSQL com MongoDB
+- Organização de arquitetura de software
+
+---
+
+## 🏗️ Estrutura do projeto

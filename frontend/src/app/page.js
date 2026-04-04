@@ -72,7 +72,7 @@ export default function LoginPage() {
 
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
+    <main className="flex items-center justify-center min-h-screen bg-linear-to-br from-gray-100 to-gray-300">
       <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Entrar
