@@ -77,7 +77,10 @@ def criar_agendamento(
 @router.get("/")
 def listar_agendamentos(usuario=Depends(get_current_user)):
 
-    filtro = {"horario": {"$exists": True}}
+    filtro = {
+            "horario": {"$exists": True},
+            "status": "agendado"
+        }
 
     if usuario["role"] == "admin":
         agendamentos = agendamentos_collection.find(filtro).sort("horario", 1)
@@ -271,8 +274,21 @@ def minha_fila(usuario=Depends(get_current_user)):
     "total_na_fila": total
     }
 
+@router.delete("/agendamentos/sair")
+def sair_fila(usuario=Depends(get_current_user)):
 
+    result = agendamentos_collection.update_one(
+        {
+            "cliente_id": ObjectId(usuario["id"]),  # <-- CORRIGIDO
+            "status": "agendado"
+        },
+        {
+            "$set": {"status": "cancelado"}
+        }
+    )
 
+    print("Modificados:", result.modified_count)
 
+    return {"msg": "Saiu da fila"}
 
 

@@ -9,9 +9,4 @@ export default {
     extend: {},
   },
   plugins: [],
-};
-
-
-
-
-
+}; 
