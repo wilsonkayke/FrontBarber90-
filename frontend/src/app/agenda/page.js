@@ -35,7 +35,10 @@ export default function AgendaPage() {
     Number(minutoSel)
   );
 
-    const resposta = await fetch("http://localhost:8000/agendamentos/", {
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    const resposta = await fetch(`${API_URL}/agendamentos/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

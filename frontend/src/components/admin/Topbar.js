@@ -21,7 +21,7 @@ export default function Topbar() {
 
       <div className="flex items-center space-x-4">
         <div className="text-sm text-gray-600">
-          Olá, {usuario.usuario || "Administrador"}
+          Olá, {usuario.usuario || "Ramon"}
         </div>
 
         <button
