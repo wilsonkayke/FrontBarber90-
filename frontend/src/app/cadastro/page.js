@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function CadastroPage() {
   const router = useRouter();
 
@@ -21,64 +24,67 @@ export default function CadastroPage() {
     const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!regexEmail.test(email)) {
-    setMsgErro("Email inválido.");
-    return false;
+      setMsgErro("Email inválido.");
+      return false;
     }
+
     if (usuario.length < 5) {
       setMsgErro("Usuário deve ter pelo menos 5 caracteres.");
       return false;
     }
+
     if (senha.length < 6) {
       setMsgErro("Senha deve ter pelo menos 6 caracteres.");
       return false;
     }
+
     if (senha !== confirmarSenha) {
       setMsgErro("As senhas não conferem.");
       return false;
     }
+
     setMsgErro("");
     return true;
   };
 
   const cadastrar = async () => {
-  if (!validarFormulario()) return;
+    if (!validarFormulario()) return;
 
-  try {
+    try {
+      const response = await fetch(`${API_URL}/clientes/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          usuario,
+          senha,
+          confirmar_senha: senha,
+        }),
+      });
 
-    const API_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const data = await response.json();
 
-    const response = await fetch(`${API_URL}/clientes/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        usuario,
-        senha,
-        confirmar_senha: senha,
-      }),
-    });
+      if (!response.ok) {
+        setMsgErro(data.detail || "Erro ao cadastrar");
+        setMsgSucesso("");
+        return;
+      }
 
-    const data = await response.json();
+      setMsgSucesso("Cadastro feito com sucesso!");
+      setMsgErro("");
 
-    if (!response.ok) {
-      setMsgErro(data.detail || "Erro ao cadastrar");
-      return;
+      setTimeout(() => {
+        router.push("/agenda");
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setMsgErro("Erro de conexão com o servidor");
+      setMsgSucesso("");
     }
-
-    setMsgSucesso("Cadastro feito com sucesso!");
-    setMsgErro("");
-    
-    setTimeout(() => {
-      router.push("/agenda");
-    }, 1500);
-  } catch (error) {
-    setMsgErro("Erro de conexão com o servidor");
-  }
-};
-
+  };
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">

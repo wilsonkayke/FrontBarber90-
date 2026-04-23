@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function AgendaPage() {
   const router = useRouter();
 
@@ -13,64 +16,64 @@ export default function AgendaPage() {
   const [msgErro, setMsgErro] = useState("");
 
   const handleAgendar = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!data || !hora) {
-    setMsgErro("Preencha todos os campos antes de agendar!");
-    setMsgSucesso("");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-
-    const [ano, mes, dia] = data.split("-");
-    const [horaSel, minutoSel] = hora.split(":");
-
-    const dataLocal = new Date(
-    Number(ano),
-    Number(mes) - 1,
-    Number(dia),
-    Number(horaSel),
-    Number(minutoSel)
-  );
-
-    const API_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-    const resposta = await fetch(`${API_URL}/agendamentos/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        horario: dataLocal.toISOString(),
-      }),
-    });
-
-    if (!resposta.ok) {
-    const erroBackend = await resposta.json();
-    console.log("ERRO DO BACKEND:", erroBackend);
-    throw new Error(erroBackend.detail || "Erro ao criar agendamento");
+    if (!data || !hora) {
+      setMsgErro("Preencha todos os campos antes de agendar!");
+      setMsgSucesso("");
+      return;
     }
 
+    try {
+      const token = localStorage.getItem("token");
 
-    setMsgSucesso("Agendamento realizado com sucesso!");
-    setMsgErro("");
+      const [ano, mes, dia] = data.split("-");
+      const [horaSel, minutoSel] = hora.split(":");
 
-    setData("");
-    setHora("");
+      const dataLocal = new Date(
+        Number(ano),
+        Number(mes) - 1,
+        Number(dia),
+        Number(horaSel),
+        Number(minutoSel)
+      );
 
-    setTimeout(() => {
-      router.push("/fila");
-    }, 2000);
+      const resposta = await fetch(`${API_URL}/agendamentos/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          horario: dataLocal.toISOString(),
+        }),
+      });
 
-  } catch (erro) {
-    setMsgErro("Horário agendado.");
-    setMsgSucesso("");
-  }
-};
+      if (!resposta.ok) {
+        const erroBackend = await resposta.json();
+        console.log("ERRO DO BACKEND:", erroBackend);
+
+        setMsgErro(erroBackend.detail || "Erro ao criar agendamento");
+        setMsgSucesso("");
+        return;
+      }
+
+      setMsgSucesso("Agendamento realizado com sucesso!");
+      setMsgErro("");
+
+      setData("");
+      setHora("");
+
+      setTimeout(() => {
+        router.push("/fila");
+      }, 2000);
+
+    } catch (erro) {
+      console.error(erro);
+      setMsgErro("Erro ao conectar com o servidor");
+      setMsgSucesso("");
+    }
+  };
 
 
   return (

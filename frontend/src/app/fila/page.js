@@ -2,48 +2,63 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function FilaPage() {
   const [fila, setFila] = useState(null);
   const router = useRouter();
 
- const exit = async () => {
-  try {
-    const response = await fetch("http://localhost:8000/agendamentos/sair", {
-      method: "DELETE", // <-- CORRIGIDO
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+  const getAuthHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  });
 
-    const data = await response.json();
-    console.log(data);
+  const exit = async () => {
+    try {
+      const response = await fetch(`${API_URL}/agendamentos/sair/`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
 
-    localStorage.clear();
-    router.push("/agenda");
+      if (!response.ok) {
+        console.log("Erro ao sair da fila");
+        return;
+      }
 
-  } catch(error) {
-    console.error(error);
-  }
-};
+      const data = await response.json();
+      console.log(data);
+
+      localStorage.clear();
+      router.push("/agenda");
+
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  };
 
   useEffect(() => {
+    let ativo = true;
+
     async function carregarFila() {
       try {
         const response = await fetch(
-          "http://localhost:8000/agendamentos/fila",
+          `${API_URL}/agendamentos/fila/`,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
+            headers: getAuthHeaders(),
+          }
         );
 
         if (!response.ok) return;
 
         const data = await response.json();
-        setFila(data);
+
+        if (ativo) {
+          setFila(data);
+        }
+
       } catch (error) {
-        console.error(error);
+        console.error("Erro ao carregar fila:", error);
       }
     }
 
@@ -51,8 +66,13 @@ export default function FilaPage() {
 
     const interval = setInterval(carregarFila, 3000);
 
-    return () => clearInterval(interval);
+    return () => {
+      ativo = false;
+      clearInterval(interval);
+    };
   }, []);
+
+  if (!fila) return <p>Carregando...</p>;
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">

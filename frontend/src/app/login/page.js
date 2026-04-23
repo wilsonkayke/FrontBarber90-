@@ -4,6 +4,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -16,62 +19,54 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const entrar = async () => {
-  setMsgErro("");
-  setMsgSucesso("");
+    setMsgErro("");
+    setMsgSucesso("");
 
-  try {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          senha,
+        }),
+      });
 
-    const API_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const data = await response.json();
 
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        senha,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      if (Array.isArray(data.detail)) {
-        const erros = data.detail.map((err) => err.msg).join(", ");
-        setMsgErro(erros);
-      } else {
-        setMsgErro(data.detail || "Email ou senha inválidos");
+      if (!response.ok) {
+        if (Array.isArray(data.detail)) {
+          const erros = data.detail.map((err) => err.msg).join(", ");
+          setMsgErro(erros);
+        } else {
+          setMsgErro(data.detail || "Email ou senha inválidos");
+        }
+        return;
       }
-      return;
+
+      // 🔐 salva dados
+      localStorage.clear();
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.user.role);
+
+      setMsgSucesso("Login realizado com sucesso!");
+
+      setTimeout(() => {
+        if (data.user.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/agenda");
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error(error);
+      setMsgErro("Erro ao conectar com o servidor");
     }
-
-    localStorage.clear();
-    // ✅ Salva token
-    localStorage.setItem("token", data.access_token);
-
-    // ✅ Salva usuário
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    // ✅ Salva role
-    localStorage.setItem("role", data.user.role);
-
-    setMsgSucesso("Login realizado com sucesso!"); 
-
-    setTimeout(() => {
-      if (data.user.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/agenda");
-      }
-    }, 1000);
-
-  } catch (error) {
-    console.error(error);
-    setMsgErro("Erro ao conectar com o servidor");
-  }
-};
+  };
 
 
 

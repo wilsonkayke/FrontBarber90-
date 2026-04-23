@@ -7,77 +7,84 @@ import BarberTable from "../../components/admin/barberTable";
 
 export default function AdminDashboard() {
   const router = useRouter();
+
   const [dashboard, setDashboard] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
 
+  // 🔐 Helper de autenticação
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // 🚀 Chamar próximo cliente
   async function chamarProximo() {
-  try {
-    const response = await fetch(
-      "http://localhost:8000/agendamentos/admin/chamar",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+    try {
+      const response = await fetch(
+        `${API_URL}/agendamentos/admin/chamar`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const erro = await response.json();
+        console.log("Erro:", erro.detail);
+        return;
       }
-    );
 
-    if (!response.ok) {
-      const erro = await response.json();
-      console.log("Erro:", erro.detail);
-      return;
+      const data = await response.json();
+      console.log("Cliente chamado:", data);
+
+      setDashboard((prev) => ({
+        ...prev,
+        fila: prev.fila - 1,
+        agendamentos: prev.agendamentos.slice(1),
+      }));
+
+    } catch (error) {
+      console.error("Erro ao chamar cliente:", error);
     }
-
-    const data = await response.json();
-    console.log("Cliente chamado:", data);
-
-    // 🔥 Atualiza o dashboard imediatamente
-    setDashboard((prev) => ({
-      ...prev,
-      fila: prev.fila - 1,
-      agendamentos: prev.agendamentos.slice(1), // remove o primeiro
-    }));
-
-  } catch (error) {
-    console.error("Erro ao chamar cliente:", error);
   }
-}
 
-async function finalizarAtendimento() {
-  try {
-    const response = await fetch(
-      "http://localhost:8000/agendamentos/admin/finalizar",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+  // ✅ Finalizar atendimento
+  async function finalizarAtendimento() {
+    try {
+      const response = await fetch(
+        `${API_URL}/agendamentos/admin/finalizar`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const erro = await response.json();
+        console.log("Erro:", erro.detail);
+        return;
       }
-    );
 
-    if (!response.ok) {
-      const erro = await response.json();
-      console.log(erro.detail);
-      return;
+      const data = await response.json();
+      console.log("Atendimento finalizado:", data);
+
+      setDashboard((prev) => ({
+        ...prev,
+        agendamentos: prev.agendamentos.filter(
+          (ag) => ag._id !== data.agendamento_id
+        ),
+        atendimentosHoje: prev.atendimentosHoje + 1,
+      }));
+
+    } catch (error) {
+      console.error("Erro ao finalizar atendimento:", error);
     }
-
-    const data = await response.json();
-    console.log("Atendimento finalizado:", data);
-
-    // 🔥 Remove da tabela
-    setDashboard((prev) => ({
-      ...prev,
-      agendamentos: prev.agendamentos.filter(
-        (ag) => ag._id !== data.agendamento_id
-      ),
-      atendimentosHoje: prev.atendimentosHoje + 1,
-    }));
-
-  } catch (error) {
-    console.error(error);
   }
-}
-  
+
+  // 🔐 Verifica se é admin
   useEffect(() => {
     const role = localStorage.getItem("role");
 
@@ -89,48 +96,47 @@ async function finalizarAtendimento() {
     setAutorizado(true);
   }, []);
 
+  // 📊 Carregar dashboard (auto refresh)
   useEffect(() => {
-  if (!autorizado) return;
+    if (!autorizado) return;
 
-  let ativo = true;
+    let ativo = true;
 
-  async function carregarDashboard() {
-    try {
-      const response = await fetch(
-        "http://localhost:8000/agendamentos/admin/dashboard",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+    async function carregarDashboard() {
+      try {
+        const response = await fetch(
+          `${API_URL}/agendamentos/admin/dashboard`,
+          {
+            headers: getAuthHeaders(),
+          }
+        );
+
+        if (!response.ok) {
+          console.log("Erro:", response.status);
+          return;
         }
-      );
 
-      if (!response.ok) {
-        console.log("Erro:", response.status);
-        return;
+        const data = await response.json();
+
+        if (ativo) {
+          setDashboard(data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
       }
-
-      const data = await response.json();
-
-      if (ativo) {
-        setDashboard(data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
     }
-  }
 
-  carregarDashboard();
+    carregarDashboard();
 
-  const interval = setInterval(carregarDashboard, 3000);
+    const interval = setInterval(carregarDashboard, 3000);
 
-  return () => {
-    ativo = false;
-    clearInterval(interval);
-  };
-}, [autorizado]);
+    return () => {
+      ativo = false;
+      clearInterval(interval);
+    };
+  }, [autorizado]);
 
-
+  // ⏳ Loading
   if (!autorizado) return null;
   if (!dashboard) return <p>Carregando...</p>;
 
@@ -156,4 +162,5 @@ async function finalizarAtendimento() {
       </div>
     </AdminLayout>
   );
-} 
+}
+
