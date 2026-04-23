@@ -44,7 +44,11 @@ export default function CadastroPage() {
   if (!validarFormulario()) return;
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/clientes/", {
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+    const response = await fetch(`${API_URL}/clientes/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
