@@ -71,7 +71,7 @@ export default function LoginPage() {
 
 
   return (
-  <main className="flex items-center justify-center min-h-screen bg-linear-to-br from-gray-100 to-gray-300 px-4">
+  <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800 px-4">
     
     <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-8 w-full max-w-md">
       
