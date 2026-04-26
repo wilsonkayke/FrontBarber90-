@@ -5,6 +5,8 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import StatCard from "../../components/admin/StatCard";
 import BarberTable from "../../components/admin/barberTable";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function AdminDashboard() {
   const router = useRouter();
 
@@ -23,13 +25,10 @@ export default function AdminDashboard() {
   // 🚀 Chamar próximo cliente
   async function chamarProximo() {
     try {
-      const response = await fetch(
-        `${API_URL}/agendamentos/admin/chamar`,
-        {
-          method: "POST",
-          headers: getAuthHeaders(),
-        }
-      );
+      const response = await fetch(`${API_URL}/agendamentos/admin/chamar`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
 
       if (!response.ok) {
         const erro = await response.json();
@@ -45,7 +44,6 @@ export default function AdminDashboard() {
         fila: prev.fila - 1,
         agendamentos: prev.agendamentos.slice(1),
       }));
-
     } catch (error) {
       console.error("Erro ao chamar cliente:", error);
     }
@@ -54,13 +52,10 @@ export default function AdminDashboard() {
   // ✅ Finalizar atendimento
   async function finalizarAtendimento() {
     try {
-      const response = await fetch(
-        `${API_URL}/agendamentos/admin/finalizar`,
-        {
-          method: "POST",
-          headers: getAuthHeaders(),
-        }
-      );
+      const response = await fetch(`${API_URL}/agendamentos/admin/finalizar`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
 
       if (!response.ok) {
         const erro = await response.json();
@@ -74,11 +69,10 @@ export default function AdminDashboard() {
       setDashboard((prev) => ({
         ...prev,
         agendamentos: prev.agendamentos.filter(
-          (ag) => ag._id !== data.agendamento_id
+          (ag) => ag._id !== data.agendamento_id,
         ),
         atendimentosHoje: prev.atendimentosHoje + 1,
-      }));
-
+      })); 
     } catch (error) {
       console.error("Erro ao finalizar atendimento:", error);
     }
@@ -104,25 +98,35 @@ export default function AdminDashboard() {
 
     async function carregarDashboard() {
       try {
+        const token = localStorage.getItem("token");
+        console.log("TOKEN:", token);
+        console.log("API_URL:", API_URL);
+
         const response = await fetch(
           `${API_URL}/agendamentos/admin/dashboard`,
           {
             headers: getAuthHeaders(),
-          }
+          },
         );
 
+        console.log("STATUS:", response.status);
+
         if (!response.ok) {
-          console.log("Erro:", response.status);
+          const erro = await response.text();
+          console.log("ERRO BACKEND:", erro);
+          setDashboard({ erro: true });
           return;
         }
 
         const data = await response.json();
+        console.log("DADOS:", data);
 
         if (ativo) {
           setDashboard(data);
         }
       } catch (error) {
         console.error("Erro ao carregar dashboard:", error);
+        setDashboard({ erro: true });
       }
     }
 
@@ -138,29 +142,31 @@ export default function AdminDashboard() {
 
   // ⏳ Loading
   if (!autorizado) return null;
-  if (!dashboard) return <p>Carregando...</p>;
-
+  if (!dashboard) return <p className="text-center">Carregando...</p>;
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold">
-          Dashboard Administrativo
-        </h2>
+        <h2 className="text-2xl font-bold">Dashboard Administrativo</h2>
 
         <div className="grid md:grid-cols-3 gap-5">
           <StatCard title="Clientes na fila" value={dashboard.fila} />
-          <StatCard title="Atendimentos hoje" value={dashboard.atendimentosHoje} />
-          <StatCard title="Barbeiros ativos" value={dashboard.barbeirosAtivos} />
+          <StatCard
+            title="Atendimentos hoje"
+            value={dashboard.atendimentosHoje}
+          />
+          <StatCard
+            title="Barbeiros ativos"
+            value={dashboard.barbeirosAtivos}
+          />
         </div>
 
-        <BarberTable 
+        <BarberTable
           data={dashboard.agendamentos}
-          onChamar={chamarProximo} 
+          onChamar={chamarProximo}
           onFinalizar={finalizarAtendimento}
         />
       </div>
     </AdminLayout>
   );
 }
-
