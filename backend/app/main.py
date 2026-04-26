@@ -6,10 +6,15 @@ from app.routes.agendamento_routes import router as agendamento_router
 
 app = FastAPI(title="Barbearia API com MongoDB")
 
+origins = [
+    "http://localhost:3000",
+    "https://sistemagerenciamentefila.vercel.app",
+]
+
 # ✅ CORS antes das rotas
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # depois você pode restringir
+    allow_origins=origins,  # depois você pode restringir
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
