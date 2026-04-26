@@ -66,9 +66,7 @@ export default function LoginPage() {
       console.error(error);
       setMsgErro("Erro ao conectar com o servidor");
     }
-  };
-
-
+  }; 
 
   return (
   <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800 px-4">

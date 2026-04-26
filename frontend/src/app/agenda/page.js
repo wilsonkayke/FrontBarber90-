@@ -77,7 +77,7 @@ export default function AgendaPage() {
 
 
   return (
-  <main className="flex items-center justify-center min-h-screen bg-gray-100">
+  <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">
     <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
 
       {/* Título */}
