@@ -10,5 +10,5 @@ export default function Home() {
     router.push("/login");
   }, []);
 
-  return <p>Redirecionando...</p>;
+  return <p className="text-center">Redirecionando...</p>;
 }
