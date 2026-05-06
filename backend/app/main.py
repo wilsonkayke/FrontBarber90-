@@ -9,7 +9,7 @@ app = FastAPI(title="Barbearia API com MongoDB")
 origins = [
     "http://localhost:3000",
     "https://sistemagerenciamentefila.vercel.app/",
-],
+]
 
 # ✅ CORS antes das rotas
 app.add_middleware(
