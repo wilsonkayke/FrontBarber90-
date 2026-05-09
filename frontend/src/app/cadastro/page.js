@@ -60,7 +60,7 @@ export default function CadastroPage() {
           email,
           usuario,
           senha,
-          confirmar_senha: senha,
+          confirmar_senha: confirmarSenha,
         }),
       });
 
