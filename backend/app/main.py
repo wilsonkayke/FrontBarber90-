@@ -10,7 +10,7 @@ origins = [
     "http://localhost:3000",
     "https://sistemagerenciamentefila.vercel.app",
 ]
- 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
