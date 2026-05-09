@@ -23,7 +23,7 @@ export default function LoginPage() {
     setMsgSucesso("");
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch("https://barber-edxf.onrender.com/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
