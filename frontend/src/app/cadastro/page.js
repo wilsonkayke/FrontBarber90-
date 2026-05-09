@@ -64,7 +64,11 @@ export default function CadastroPage() {
         }),
       });
 
-      const data = await response.json();
+      //const data = await response.json();
+
+      const text = await response.json()
+      console.log(text);
+      const data = test ? JSON.parse(text) : {};
 
       if (!response.ok) {
         setMsgErro(data.detail || "Erro ao cadastrar");
