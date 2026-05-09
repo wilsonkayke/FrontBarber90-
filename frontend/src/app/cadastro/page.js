@@ -68,6 +68,7 @@ export default function CadastroPage() {
       console.log("STATUS:", response.status);
       console.log("RESPOSTA:", data);
 
+      
       if (!response.ok) {
         setMsgErro(data.detail || "Erro ao cadastrar");
         setMsgSucesso("");
