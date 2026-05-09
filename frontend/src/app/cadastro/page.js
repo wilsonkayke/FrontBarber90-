@@ -50,51 +50,58 @@ export default function CadastroPage() {
     if (!validarFormulario()) return;
 
     try {
-      const response = await fetch(`${API_URL}/clientes/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          usuario,
-          senha,
-          confirmar_senha: confirmarSenha,
-        }),
-      });
+  const response = await fetch(`${API_URL}/clientes/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      usuario,
+      senha,
+      confirmar_senha: confirmarSenha,
+    }),
+  });
 
-      const data = await response.json();
+  const text = await response.text();
 
-      console.log("STATUS:", response.status);
-      console.log("RESPOSTA:", data);
+  console.log("STATUS:", response.status);
+  console.log("RAW RESPONSE:", text);
 
-      
-      if (!response.ok) {
-        setMsgErro(data.detail || "Erro ao cadastrar");
-        setMsgSucesso("");
-        return;
-      }
+  let data = {};
 
-      setMsgSucesso("Cadastro feito com sucesso!");
-      setMsgErro("");
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (jsonError) {
+    console.error("Erro ao converter JSON:", jsonError);
+  }
 
-      setTimeout(() => {
-        router.push("/agenda");
-      }, 1500);
-    } catch (error) { 
-      /* catch (error) {
-      console.error(error);
-      setMsgErro("Erro de conexão com o servidor");
-      setMsgSucesso("");
-    }*/
-      console.error("ERRO COMPLETO:", error);
+  if (!response.ok) {
+    setMsgErro(data.detail || "Erro ao cadastrar");
+    setMsgSucesso("");
+    return;
+  }
+
+  setMsgSucesso("Cadastro feito com sucesso!");
+  setMsgErro("");
+
+} catch (error) {
+  console.error("ERRO COMPLETO:", error);
+
+  if (error instanceof Error) {
+    setMsgErro(error.message);
+  } else {
+    setMsgErro("Erro desconhecido");
+  }
+}
+     /* console.error("ERRO COMPLETO:", error);
 
       if (error instanceof Error) {
         setMsgErro(error.message);
       } else {
         setMsgErro("Erro desconhecido");
       }
-    }
+    }*/
 
     return (
       <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">
