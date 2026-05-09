@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -64,11 +63,10 @@ export default function CadastroPage() {
         }),
       });
 
-      //const data = await response.json();
+      const data = await response.json();
 
-      const text = await response.json()
-      console.log(text);
-      const data = test ? JSON.parse(text) : {};
+      console.log("STATUS:", response.status);
+      console.log("RESPOSTA:", data);
 
       if (!response.ok) {
         setMsgErro(data.detail || "Erro ao cadastrar");
@@ -82,102 +80,108 @@ export default function CadastroPage() {
       setTimeout(() => {
         router.push("/agenda");
       }, 1500);
-
-    } catch (error) {
+    } catch (error) { 
+      /* catch (error) {
       console.error(error);
       setMsgErro("Erro de conexão com o servidor");
       setMsgSucesso("");
+    }*/
+      console.error("ERRO COMPLETO:", error);
+
+      if (error instanceof Error) {
+        setMsgErro(error.message);
+      } else {
+        setMsgErro("Erro desconhecido");
+      }
     }
+
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">
+        <div className="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full max-w-md">
+          <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
+            Cadastrar
+          </h1>
+
+          {msgErro && (
+            <div className="bg-red-100 text-red-600 p-2 mb-4 rounded text-sm">
+              {msgErro}
+            </div>
+          )}
+
+          {msgSucesso && (
+            <div className="bg-green-100 text-green-600 p-2 mb-4 rounded text-sm">
+              {msgSucesso}
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border rounded-lg p-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          {/* Usuario */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Usuário</label>
+            <input
+              type="text"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+              className="w-full border rounded-lg p-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          {/* Senha */}
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium mb-1">Senha</label>
+            <input
+              type={mostrarSenha ? "text" : "password"}
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className="w-full border rounded-lg p-2.5 pr-10 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarSenha(!mostrarSenha)}
+              className="absolute right-3 top-9 text-gray-500"
+            >
+              👁
+            </button>
+          </div>
+
+          {/* Confirmar senha */}
+          <div className="mb-6 relative">
+            <label className="block text-sm font-medium mb-1">
+              Confirmar Senha
+            </label>
+            <input
+              type={mostrarConfirmarSenha ? "text" : "password"}
+              value={confirmarSenha}
+              onChange={(e) => setConfirmarSenha(e.target.value)}
+              className="w-full border rounded-lg p-2.5 pr-10 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+              className="absolute right-3 top-9 text-gray-500"
+            >
+              👁
+            </button>
+          </div>
+
+          <button
+            onClick={cadastrar}
+            className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm sm:text-base hover:bg-blue-700 transition"
+          >
+            Cadastrar-se
+          </button>
+        </div>
+      </main>
+    );
   };
-
-  return (
-    <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">
-      <div className="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full max-w-md">
-        <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
-          Cadastrar
-        </h1>
-
-        {msgErro && (
-          <div className="bg-red-100 text-red-600 p-2 mb-4 rounded text-sm">
-            {msgErro}
-          </div>
-        )}
-
-        {msgSucesso && (
-          <div className="bg-green-100 text-green-600 p-2 mb-4 rounded text-sm">
-            {msgSucesso}
-          </div>
-        )}
-
-        {/* Email */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded-lg p-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
-
-        {/* Usuario */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Usuário</label>
-          <input
-            type="text"
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-            className="w-full border rounded-lg p-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-        </div>
-
-        {/* Senha */}
-        <div className="mb-4 relative">
-          <label className="block text-sm font-medium mb-1">Senha</label>
-          <input
-            type={mostrarSenha ? "text" : "password"}
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            className="w-full border rounded-lg p-2.5 pr-10 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => setMostrarSenha(!mostrarSenha)}
-            className="absolute right-3 top-9 text-gray-500"
-          >
-            👁
-          </button>
-        </div>
-
-        {/* Confirmar senha */}
-        <div className="mb-6 relative">
-          <label className="block text-sm font-medium mb-1">
-            Confirmar Senha
-          </label>
-          <input
-            type={mostrarConfirmarSenha ? "text" : "password"}
-            value={confirmarSenha}
-            onChange={(e) => setConfirmarSenha(e.target.value)}
-            className="w-full border rounded-lg p-2.5 pr-10 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <button
-            type="button"
-            onClick={() =>
-              setMostrarConfirmarSenha(!mostrarConfirmarSenha)
-            }
-            className="absolute right-3 top-9 text-gray-500"
-          >
-            👁
-          </button>
-        </div>
-
-        <button
-          onClick={cadastrar}
-          className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm sm:text-base hover:bg-blue-700 transition"
-        >
-          Cadastrar-se
-        </button>
-      </div>
-    </main>
-  );
 }
