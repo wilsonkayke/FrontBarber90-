@@ -85,7 +85,7 @@ export default function CadastroPage() {
   setMsgSucesso("Cadastro feito com sucesso!");
   setMsgErro("");
 
-} catch (error) {
+}  catch (error) {
   console.error("ERRO COMPLETO:", error);
 
   if (error instanceof Error) {
@@ -94,14 +94,8 @@ export default function CadastroPage() {
     setMsgErro("Erro desconhecido");
   }
 }
-     /* console.error("ERRO COMPLETO:", error);
 
-      if (error instanceof Error) {
-        setMsgErro(error.message);
-      } else {
-        setMsgErro("Erro desconhecido");
-      }
-    }*/
+};
 
     return (
       <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800">
@@ -191,5 +185,4 @@ export default function CadastroPage() {
         </div>
       </main>
     );
-  };
-}
+  }; 
