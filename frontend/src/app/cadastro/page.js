@@ -92,6 +92,11 @@ export default function CadastroPage() {
 
       setMsgSucesso("Cadastro feito com sucesso!");
       setMsgErro("");
+
+        setTimeout(() => {
+          router.push("/agenda");
+        }, 1500);
+      
     } catch (error) {
       console.error("ERRO COMPLETO:", error);
 
