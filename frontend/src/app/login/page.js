@@ -61,7 +61,7 @@ export default function LoginPage() {
         } else {
           router.push("/agenda");
         }
-      }, 1000); 
+      }, 1000);
     } catch (error) {
       console.error(error);
       setMsgErro("Erro ao conectar com o servidor");
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-8 w-full max-w-md">
+      <div className="bg-white shadow-2xl rounded-2xl p-5 sm:p-8 w-full max-w-md md:max-w-lg">
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-gray-800">
           Entrar
         </h1>
@@ -92,12 +92,13 @@ export default function LoginPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
+
           <input
             type="text"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Digite seu email"
-            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full border border-gray-300 rounded-lg p-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
         </div>
 
@@ -112,13 +113,13 @@ export default function LoginPage() {
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             placeholder="Digite sua senha"
-            className="w-full border border-gray-300 rounded-lg p-2.5 pr-11 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full border border-gray-300 rounded-lg p-3 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
 
           <button
             type="button"
             onClick={() => setMostrarSenha(!mostrarSenha)}
-            className="absolute right-3 top-9.5 text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
           >
             {mostrarSenha ? "🙈" : "👁"}
           </button>
@@ -127,7 +128,7 @@ export default function LoginPage() {
         {/* Botão */}
         <button
           onClick={entrar}
-          className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm sm:text-base hover:bg-blue-700 active:scale-95 transition"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg text-sm sm:text-base hover:bg-blue-700 active:scale-95 transition"
         >
           Entrar
         </button>
