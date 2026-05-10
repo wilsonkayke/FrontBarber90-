@@ -9,8 +9,8 @@ usuarios = db["clientes"]  # ou "usuarios" se você usa essa coleção
 
 def criar_admin():
 
-    email = "admin@barber.com"
-    senha = "admin123"
+    email = ""
+    senha = ""
 
     # Verifica se já existe
     if usuarios.find_one({"email": email}):
