@@ -13,24 +13,38 @@ export default function Topbar() {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 bg-white border-b">
+    <header className="sticky top-0 z-50 flex items-center justify-between p-4 bg-white border-b shadow-sm">
+
+      {/* Esquerda */}
       <div className="flex items-center space-x-4">
-        <button className="md:hidden p-2 rounded bg-gray-100">☰</button>
-        <h2 className="text-lg font-semibold">Painel Administrativo</h2>
+
+        {/* Menu Mobile */}
+        <button className="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+          ☰
+        </button>
+
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
+          Painel Administrativo
+        </h2>
+
       </div>
 
+      {/* Direita */}
       <div className="flex items-center space-x-4">
-        <div className="text-sm text-gray-600">
-          Olá, {usuario.usuario || "Ramon"}
+
+        <div className="hidden sm:block text-sm text-gray-600">
+          Olá, {usuario?.usuario || "Ramon"}
         </div>
 
         <button
           onClick={sair}
-          className="px-3 py-1 border rounded hover:bg-red-500 hover:text-white transition"
+          className="px-4 py-2 border rounded-lg hover:bg-red-500 hover:text-white transition"
         >
           Sair
         </button>
+
       </div>
+
     </header>
   );
 }

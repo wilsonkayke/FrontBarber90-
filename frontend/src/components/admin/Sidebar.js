@@ -16,13 +16,17 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen">
-      <div className="p-5 text-xl font-bold border-b border-slate-700">
+    <aside className="hidden md:block w-64 bg-slate-900 text-white min-h-screen shadow-xl">
+
+      {/* Logo */}
+      <div className="p-5 text-2xl font-bold border-b border-slate-700">
         Admin
       </div>
 
+      {/* Navegação */}
       <nav className="p-4">
         <ul className="space-y-2">
+
           {items.map((item) => {
             const active = pathname === item.href;
 
@@ -30,9 +34,9 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`block px-4 py-2 rounded-lg transition ${
+                  className={`block px-4 py-3 rounded-xl transition-all duration-200 ${
                     active
-                      ? "bg-slate-700"
+                      ? "bg-slate-700 text-white shadow"
                       : "hover:bg-slate-800 text-slate-300"
                   }`}
                 >
@@ -41,8 +45,10 @@ export default function Sidebar() {
               </li>
             );
           })}
+
         </ul>
       </nav>
+
     </aside>
   );
 }
