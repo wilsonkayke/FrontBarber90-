@@ -37,6 +37,11 @@ export default function CadastroPage() {
       return false;
     }
 
+    if (senha.length > 72) {
+      setMsgErro("Senha muito longa.");
+      return false;
+    }
+
     if (senha !== confirmarSenha) {
       setMsgErro("As senhas não conferem.");
       return false;
