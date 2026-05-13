@@ -7,7 +7,7 @@ from app.routes.agendamento_routes import router as agendamento_router
 app = FastAPI(title="Barbearia API com MongoDB")
 
 origins = [
-    "http://localhost:8000",
+    "http://localhost:3000",
     "https://sistemagerenciamentefila.vercel.app",
 ]
 

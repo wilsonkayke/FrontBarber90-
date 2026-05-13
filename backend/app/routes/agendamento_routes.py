@@ -108,11 +108,9 @@ def buscar_horarios(data: str):
 
     for ag in agendamentos:
 
-        horario_formatado = (
-            ag["horario"]
-            .astimezone()
-            .strftime("%H:%M")
-        )
+        horario_formatado = ag["horario"].strftime("%H:%M") 
+           
+        
 
         horarios_ocupados.append(
             horario_formatado
