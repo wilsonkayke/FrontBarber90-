@@ -23,9 +23,12 @@ export default function LoginPage() {
     setMsgErro("");
     setMsgSucesso("");
 
+  console.log(API_URL);
+  
     try {
       const response = await fetch(
-        "https://barber-edxf.onrender.com/auth/login",
+
+        `${API_URL}/auth/login`,
         {
           method: "POST",
           headers: {
@@ -74,10 +77,18 @@ export default function LoginPage() {
   return (
     <LoginForms 
     email={email}
-    senha={senha}
+    senha={senha} 
+
     setEmail={setEmail}
     setSenha={setSenha}
-    
+
+    mostrarSenha={mostrarSenha}
+    setMostrarSenha={setMostrarSenha}
+
+    msgErro={msgErro}
+    msgSucesso={msgSucesso}
+
+    entrar={entrar}
     />
   )
     

@@ -46,7 +46,7 @@ export default function CadastroUI({
             </div>
 
             <h1 className="text-5xl font-bold mb-4">
-              BarberShop
+              BarberSpace
             </h1>
 
             <div className="w-20 h-1 bg-white mx-auto rounded-full mb-8"></div>

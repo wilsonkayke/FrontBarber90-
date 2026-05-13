@@ -57,7 +57,7 @@ export default function CadastroPage() {
 
     try {
       const response = await fetch(
-        "https://barber-edxf.onrender.com/clientes/",
+        `${API_URL}/clientes/`,
         {
           method: "POST",
           headers: {

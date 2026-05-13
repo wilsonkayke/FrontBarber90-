@@ -18,11 +18,7 @@ export default function AgendaPage() {
   // HORÁRIO SELECIONADO
   const [horarioSelecionado, setHorarioSelecionado] =
     useState("");
-
-  // HORÁRIOS DISPONÍVEIS
-  const [horariosDisponiveis, setHorariosDisponiveis] =
-    useState([]);
-
+     
   // MENSAGENS
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
@@ -51,10 +47,23 @@ export default function AgendaPage() {
     "17:30",
   ];
 
+  // HORÁRIOS DISPONÍVEIS
+  const [horariosDisponiveis, setHorariosDisponiveis] =
+   useState(
+    horariosFixos.map((hora) => ({
+      hora,
+      ocupado: false,
+    }))
+   );
+
   // BUSCAR HORÁRIOS OCUPADOS
   useEffect(() => {
 
-    if (!data) return;
+    if (!data) {
+      setHorariosDisponiveis(horariosFixos);
+
+      return;
+    } 
 
     const buscarHorarios = async () => {
 
@@ -74,13 +83,13 @@ export default function AgendaPage() {
           : [];
 
         // FILTRAR
-        const livres = horariosFixos.filter(
-          (horario) =>
-            !horariosOcupados.includes(horario)
+        setHorariosDisponiveis(
+          horariosFixos.map((horario) => ({
+            hora: horario,
+            ocupado: horariosOcupados.includes(horario),
+          })) 
         );
-
-        setHorariosDisponiveis(livres);
-
+ 
       } catch (erro) {
 
         console.error(erro);
@@ -189,11 +198,11 @@ export default function AgendaPage() {
 
   return (
     <AgendaForm
-      // DATA
+    
       data={data}
       setData={setData}
 
-      // HORÁRIOS
+      
       horarios={horariosDisponiveis}
 
       horarioSelecionado={
@@ -204,11 +213,11 @@ export default function AgendaPage() {
         setHorarioSelecionado
       }
 
-      // MENSAGENS
+      
       msgErro={msgErro}
       msgSucesso={msgSucesso}
 
-      // FUNÇÃO
+      
       handleAgendar={handleAgendar}
     />
   );

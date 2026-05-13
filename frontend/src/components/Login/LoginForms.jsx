@@ -43,7 +43,7 @@ export default function LoginForms({
           </div>
 
           <h1 className="text-5xl font-bold mb-4">
-            BarberShop
+            BarberSpace
           </h1>
 
           <div className="w-24 h-1 bg-white rounded-full mx-auto mb-8"></div>
@@ -53,8 +53,7 @@ export default function LoginForms({
           </h2>
 
           <p className="text-blue-100 text-lg leading-relaxed max-w-sm">
-            Entre na plataforma e gerencie sua
-            barbearia de forma simples e moderna.
+            Entre na plataforma e gerencie seus agendamentos de forma fácil e rápida.
           </p>
 
         </div>
