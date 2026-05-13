@@ -118,7 +118,7 @@ def buscar_horarios(data: str):
             horario_formatado
         )
 
-    return horarios_ocupados
+    return horarios_ocupados 
 
 
 # =========================================================
