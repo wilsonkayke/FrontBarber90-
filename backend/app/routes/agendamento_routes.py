@@ -74,49 +74,36 @@ def criar_agendamento(
 # =========================================================
 
 @router.get("/horarios")
-def buscar_horarios(data: str):
+def horarios_ocupados(data: str):
 
-    try:
+    inicio = datetime.strptime(
+        data,
+        "%Y-%m-%d"
+    )
 
-        # DATA INÍCIO
-        data_inicio = datetime.strptime(
-            data,
-            "%Y-%m-%d"
-        )
-
-        # DATA FIM
-        data_fim = data_inicio + timedelta(days=1)
-
-    except:
-        raise HTTPException(
-            status_code=400,
-            detail="Data inválida"
-        )
-
-    # BUSCAR AGENDAMENTOS DO DIA
+    fim = inicio + timedelta(days=1)
+ 
     agendamentos = list(
         agendamentos_collection.find({
             "horario": {
-                "$gte": data_inicio,
-                "$lt": data_fim
+                "$gte": inicio,
+                "$lt": fim
             },
             "status": "agendado"
         })
     )
 
-    horarios_ocupados = []
+    horarios = []
 
     for ag in agendamentos:
 
-        horario_formatado = ag["horario"].strftime("%H:%M") 
-           
-        
-
-        horarios_ocupados.append(
-            horario_formatado
+        horario_brasil = (
+            ag["horario"].astimezone().strftime("%H:%M")
         )
 
-    return horarios_ocupados 
+        horarios.append(horario_brasil)
+
+    return horarios
 
 
 # =========================================================
