@@ -46,7 +46,7 @@ export default function AgendaForm({
             </div>
 
             {/* Logo */}
-            <h1 className="text-5xl font-bold mb-4">BarberShop</h1>
+            <h1 className="text-5xl font-bold mb-4">BarberSpace</h1>
 
             <div className="w-24 h-1 bg-white rounded-full mx-auto mb-8"></div>
 
