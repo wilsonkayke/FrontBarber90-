@@ -8,7 +8,7 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-100">
 
       {/* Sidebar */}
-      <Sidebar />
+      
 
       {/* Conteúdo */}
       <div className="flex-1 flex flex-col">

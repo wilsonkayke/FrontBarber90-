@@ -16,7 +16,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:block w-64 bg-slate-900 text-white min-h-screen shadow-xl">
+    <aside className=" w-64 bg-slate-900 text-white h-full shadow-xl">
 
       {/* Logo */}
       <div className="p-5 text-2xl font-bold border-b border-slate-700">
