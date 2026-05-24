@@ -60,19 +60,19 @@ O back-end da aplicação foi estruturado seguindo boas práticas de organizaç�
 - **utils**: funções auxiliares reutilizáveis  
 
 ### 🔐 Tela de Login
-![Tela de Login](./assets/TelaLogin.png) 
+![Tela de Login](./assets/telaLogin2.png) 
 
 ### 📝 Cadastro
-![Cadastro](./assets/TelaCadastro.png)
+![Cadastro](./assets/TelaCadastro2.png)
 
 ### 📅 Agendamento
-![Agendamento](./assets/TelaAgenda.png)
+![Agendamento](./assets/TelaAgenda2.png)
 
 ### 📊 Fila
-![Fila](./assets/TelaAcompanhamentoFila.png)
+![Fila](./assets/telaFila2.png)
 
 ### ⚙️ Painel Admin
 ![Painel Admin](./assets/TelaAdmin.png)
 
 ### 📣 Cliente Chamado
-![Cliente Chamado](./assets/ClienteChamado.png)
+![Cliente Chamado](./assets/telaFilaChamdo.png)
