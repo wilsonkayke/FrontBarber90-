@@ -10,7 +10,7 @@ export default function BarberTable({ data = [], onChamar, onFinalizar }) {
             <th className="py-4 px-4">#</th>
             <th>Nome</th>
             <th>Horário</th>
-            <th className="pr-4">Ações</th>
+            <th className="pr-4 px-14">Ações</th>
 
           </tr>
         </thead>

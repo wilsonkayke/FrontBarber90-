@@ -109,10 +109,10 @@ export default function AgendaForm({
               </label>
 
               <div className="relative">
-                <CalendarDays
+                {/* <CalendarDays
                   size={20}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
+                />*/}
 
                 <input
                   type="date"

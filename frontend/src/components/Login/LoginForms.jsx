@@ -194,7 +194,7 @@ export default function LoginForms({
         >
 
           <span className="text-xl">
-            🔵
+            🔵 
           </span>
 
           Entrar com Google
