@@ -63,10 +63,10 @@ O back-end da aplicação foi estruturado seguindo boas práticas de organizaç�
 ![Tela de Login](./assets/telaLogin2.png) 
 
 ### 📝 Cadastro
-![Cadastro](./assets/TelaCadastro2.png)
+![Cadastro](./assets/telaCadastro2.png)
 
 ### 📅 Agendamento
-![Agendamento](./assets/TelaAgenda2.png)
+![Agendamento](./assets/telaAgenda2.png)
 
 ### 📊 Fila
 ![Fila](./assets/telaFila2.png)
