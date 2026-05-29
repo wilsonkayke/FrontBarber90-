@@ -189,17 +189,11 @@ export default function LoginForms({
         </div>
 
         {/* Google */}
-        <button
-          className="w-full border border-gray-300 hover:bg-gray-100 py-3 rounded-xl flex items-center justify-center gap-3 transition"
-        >
+        <div className="mt-04 flex justify-center">
 
-          <span className="text-xl">
-            🔵 
-          </span>
+         <div id="googleButton"></div> 
 
-          Entrar com Google
-
-        </button>
+        </div>
 
         {/* Cadastro */}
         <p className="text-center mt-6 text-sm sm:text-base text-gray-600">
