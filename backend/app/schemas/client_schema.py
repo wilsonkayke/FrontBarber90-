@@ -25,3 +25,6 @@ class ClientResponse(BaseModel):
     usuario: str
     email: EmailStr
     created_at: datetime
+
+class GoogleLoginRequest(BaseModel):
+    token: str
