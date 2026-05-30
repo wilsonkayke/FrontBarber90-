@@ -191,7 +191,7 @@ export default function LoginForms({
         {/* Google */}
         <div className="mt-04 flex justify-center">
 
-         <div id="googleButton"></div> 
+         <div id="googleButton" /> 
 
         </div>
 
