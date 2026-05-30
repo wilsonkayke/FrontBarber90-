@@ -18,7 +18,9 @@ export default function FilaPage() {
 
   const exit = async () => {
     try {
-      const response = await fetch(`${API_URL}/agendamentos/sair/`, {
+      console.log("Saindo da fila...");
+
+      const response = await fetch(`${API_URL}/fila/agendamentos/sair`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
