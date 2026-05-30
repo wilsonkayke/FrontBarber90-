@@ -311,21 +311,6 @@ def minha_fila(usuario=Depends(get_current_user)):
     "total_na_fila": total
     }
 
-@router.delete("/agendamentos/sair")
-def sair_fila(usuario=Depends(get_current_user)):
 
-    result = agendamentos_collection.update_one(
-        {
-            "cliente_id": ObjectId(usuario["id"]),  # <-- CORRIGIDO
-            "status": "agendado"
-        },
-        {
-            "$set": {"status": "cancelado"}
-        }
-    )
-
-    print("Modificados:", result.modified_count)
-
-    return {"msg": "Saiu da fila"}
 
 

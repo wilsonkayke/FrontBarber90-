@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from app.db.mongo_connection import db
 from bson import ObjectId
+from fastapi import APIRouter, HTTPException, Depends
+from app.dependencies.auth import get_current_user, get_admin
 
 router = APIRouter(
     prefix="/fila",
@@ -32,4 +34,21 @@ def obter_posicao_fila(cliente_id: str):
             }
 
     raise HTTPException(status_code=404, detail="Cliente não está na fila")
+
+@router.delete("/agendamentos/sair")
+def sair_fila(usuario=Depends(get_current_user)):
+
+    result = agendamentos_collection.update_one(
+        {
+            "cliente_id": ObjectId(usuario["id"]),  # <-- CORRIGIDO
+            "status": "agendado"
+        },
+        {
+            "$set": {"status": "cancelado"}
+        }
+    )
+
+    print("Modificados:", result.modified_count)
+
+    return {"msg": "Saiu da fila"}
     
