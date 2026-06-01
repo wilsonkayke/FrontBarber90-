@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_current_user, get_admin
@@ -76,18 +77,19 @@ def criar_agendamento(
 @router.get("/horarios")
 def horarios_ocupados(data: str):
 
-    inicio = datetime.strptime(
-        data,
-        "%Y-%m-%d"
+    inicio_local = datetime.strptime(data, "%Y-%m-%d")
+
+    inicio_utc = inicio_local.replace(
+        tzinfo=timezone.utc
     )
 
-    fim = inicio + timedelta(days=1)
- 
+    fim_utc = inicio_utc + timedelta(days=1)
+
     agendamentos = list(
         agendamentos_collection.find({
             "horario": {
-                "$gte": inicio,
-                "$lt": fim
+                "$gte": inicio_utc,
+                "$lt": fim_utc
             },
             "status": "agendado"
         })
@@ -97,11 +99,15 @@ def horarios_ocupados(data: str):
 
     for ag in agendamentos:
 
-        horario_brasil = (
-            ag["horario"].astimezone().strftime("%H:%M")
+        horario = (
+            ag["horario"]
+            .astimezone(
+                ZoneInfo("America/Sao_Paulo")
+            )
+            .strftime("%H:%M")
         )
 
-        horarios.append(horario_brasil)
+        horarios.append(horario)
 
     return horarios
 
