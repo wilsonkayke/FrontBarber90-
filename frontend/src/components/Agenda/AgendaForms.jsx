@@ -136,7 +136,7 @@ export default function AgendaForm({
               </div>
 
               {/* GRID */}
-              <div className="grid grid-cols-3 gap-2 max-h-62.5 overflow-y-auto pr-2">
+              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2">
                 {horarios.map((item) => (
                   <button
                     key={item.hora}

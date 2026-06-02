@@ -12,6 +12,37 @@ export default function AdminDashboard() {
 
   const [dashboard, setDashboard] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
+  const [diaSelecionado, setDiaSelecionado] = useState("hoje");
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const amanha = new Date(hoje);
+  amanha.setDate(amanha.getDate() + 1);
+
+  const depoisDeAmanha = new Date(amanha);
+  depoisDeAmanha.setDate(depoisDeAmanha.getDate() + 1);
+
+  const dadosFiltrados = Array.isArray(dashboard?.agendamentos)
+  ? dashboard.agendamentos.filter((cliente) => {
+      const dataAgendamento = new Date(cliente.horario);
+      dataAgendamento.setHours(0, 0, 0, 0);
+
+      if (diaSelecionado === "hoje") {
+        return dataAgendamento.getTime() === hoje.getTime();
+      }
+
+      if (diaSelecionado === "amanha") {
+        return dataAgendamento.getTime() === amanha.getTime();
+      }
+
+      if (diaSelecionado === "proximos") {
+        return dataAgendamento >= depoisDeAmanha;
+      }
+
+      return true;
+    })
+  : [];
 
   // 🔐 Helper de autenticação
   const getAuthHeaders = () => {
@@ -72,7 +103,7 @@ export default function AdminDashboard() {
           (ag) => ag._id !== data.agendamento_id,
         ),
         atendimentosHoje: prev.atendimentosHoje + 1,
-      })); 
+      }));
     } catch (error) {
       console.error("Erro ao finalizar atendimento:", error);
     }
@@ -155,16 +186,27 @@ export default function AdminDashboard() {
             title="Atendimentos hoje"
             value={dashboard.atendimentosHoje}
           />
-          <StatCard
+
+          <StatCard 
+            title="Desistiram"
+            value={dashboard.desistenciasHoje}
+          />
+
+          {/*<StatCard
             title="Barbeiros ativos"
             value={dashboard.barbeirosAtivos}
-          />
+          />*/}
+
+          
+          
         </div>
 
         <BarberTable
-          data={dashboard.agendamentos}
+          data={dadosFiltrados}
           onChamar={chamarProximo}
           onFinalizar={finalizarAtendimento}
+          diaSelecionado={diaSelecionado}
+          setDiaSelecionado={setDiaSelecionado}
         />
       </div>
     </AdminLayout>

@@ -7,8 +7,7 @@ export default function FilaForms({
   exit,
 }) {
 
-  const imagens = [
-    "/imagens/jaca.jpg",
+  const imagens = [ 
     "/imagens/Reflexo.jpg",
     "/imagens/Nevou.jpg",
     "/imagens/Moicano.jpg",
