@@ -99,6 +99,13 @@ def horarios_ocupados(data: str):
 
     for ag in agendamentos:
 
+        print(
+            "HORARIO BANCO:",
+            ag["horario"],
+            "TZ:",
+            ag["horario"].tzinfo
+        )
+
         horario = (
             ag["horario"]
             .astimezone(
