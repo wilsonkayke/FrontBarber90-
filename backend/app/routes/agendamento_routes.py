@@ -16,7 +16,7 @@ router = APIRouter(
 
 agendamentos_collection = db["agendamentos"]
 atendidos_collection = db["atendidos"]
-
+desistencias_collection = db["desistencias"]
 
 # =========================================================
 # 📌 Criar agendamento (cliente autenticado)
@@ -242,6 +242,8 @@ def dashboard_admin(admin=Depends(get_admin)):
         "finalizado_em": {"$gte": hoje_inicio, "$lte": hoje_fim}
     })
 
+
+
     pipeline = [
         {
             "$match": {
@@ -277,11 +279,21 @@ def dashboard_admin(admin=Depends(get_admin)):
             "status": ag["status"]
         })
 
+    desistencias_hoje = desistencias_collection.count_documents({
+        "data_desistencia": {
+            "$gte": hoje_inicio,
+            "$lte": hoje_fim
+        }
+    })
+
+    print("DESISTÊNCIAS HOJE:", desistencias_hoje)
+
     return {
         "fila": fila,
         "atendimentosHoje": atendimentos_hoje,
         "barbeirosAtivos": 1,
-        "agendamentos": lista
+        "agendamentos": lista,
+        "desistenciasHoje": desistencias_hoje
     }
 
 # =========================================================
