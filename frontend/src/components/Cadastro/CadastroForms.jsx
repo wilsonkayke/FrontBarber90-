@@ -27,13 +27,13 @@ export default function CadastroUI({
   cadastrar,
 }) {
   return (
-    <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-blue-100 to-gray-800 px-4 py-10">
+    <main className="flex items-center justify-center min-h-screen bg-slate-950 px-4 py-10">
 
       {/* Card */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-6xl grid md:grid-cols-2">
 
         {/* Lado esquerdo */}
-        <div className="hidden md:flex flex-col justify-center items-center bg-blue-700 text-white p-10 relative">
+        <div className="hidden md:flex flex-col justify-center items-center bg-slate-900 text-white p-10 relative">
 
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/20"></div>
@@ -41,15 +41,15 @@ export default function CadastroUI({
           {/* Conteúdo */}
           <div className="relative z-10 text-center">
 
-            <div className="text-6xl mb-6">
+            <div className="text-6xl mb-6 animate-pulse">
               💈
             </div>
 
-            <h1 className="text-5xl font-bold mb-4">
+            <h1 className="text-5xl font-bold mb-4 animate-bounce">
               BarberSpace
             </h1>
 
-            <div className="w-20 h-1 bg-white mx-auto rounded-full mb-8"></div>
+            <div className="w-20 h-1 bg-rose-500 mx-auto rounded-full mb-8"></div>
 
             <h2 className="text-3xl font-semibold mb-4">
               Faça parte da nossa equipe
@@ -107,7 +107,7 @@ export default function CadastroUI({
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
                 placeholder="Digite seu nome completo"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
               />
 
             </div>
@@ -132,7 +132,7 @@ export default function CadastroUI({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
               />
 
             </div>
@@ -157,7 +157,7 @@ export default function CadastroUI({
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Digite sua senha"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
               />
 
               <button
@@ -200,7 +200,7 @@ export default function CadastroUI({
                   setConfirmarSenha(e.target.value)
                 }
                 placeholder="Confirme sua senha"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
               />
 
               <button
@@ -225,7 +225,7 @@ export default function CadastroUI({
           {/* Botão */}
           <button
             onClick={cadastrar}
-            className="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg"
+            className="w-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg"
           >
 
             <UserPlus size={20} />
@@ -241,7 +241,7 @@ export default function CadastroUI({
 
             <a
               href="/login"
-              className="text-blue-700 font-semibold hover:underline"
+              className="text-rose-500 font-semibold hover:underline"
             >
               Entrar
             </a>

@@ -22,35 +22,36 @@ export default function LoginForms({
 }) {
 
   return (
-     <main className="flex items-center justify-center min-h-screen bg-linear-to-r from-slate-100 via-blue-100 to-slate-800 px-4 py-10">
+     <main className="flex items-center justify-center min-h-screen bg-slate-950 px-4 py-10">
 
     {/* Card Principal */}
     <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-6xl grid md:grid-cols-2">
 
-      {/* Lado esquerdo */}
-      <div className="hidden md:flex flex-col justify-center items-center bg-blue-700 text-white p-10 relative">
+      {/* Lado esquerdo (Corrigido para usar o bg original escuro e harmonizar com o seu tema) */}
+      <div className="hidden md:flex flex-col justify-center items-center bg-slate-900 text-white p-10 relative">
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-black/10"></div>
 
         {/* Conteúdo */}
         <div className="relative z-10 text-center">
 
-          <div className="text-7xl mb-6">
+          <div className="text-7xl mb-6 select-none animate-pulse">
             💈
           </div>
 
-          <h1 className="text-5xl font-bold mb-4">
+          <h1 className="text-5xl font-bold mb-4 tracking-tight animate-bounce">
             BarberSpace
           </h1>
 
-          <div className="w-24 h-1 bg-white rounded-full mx-auto mb-8"></div>
+          {/* Linha divisória combinando com o tema suave */}
+          <div className="w-24 h-1 bg-rose-500 rounded-full mx-auto mb-8"></div>
 
           <h2 className="text-3xl font-semibold mb-4">
             Bem-vindo de volta
           </h2>
 
-          <p className="text-blue-100 text-lg leading-relaxed max-w-sm">
+          <p className="text-slate-300 text-lg leading-relaxed max-w-sm">
             Entre na plataforma e gerencie seus agendamentos de forma fácil e rápida.
           </p>
 
@@ -71,14 +72,14 @@ export default function LoginForms({
 
         {/* Mensagem erro */}
         {msgErro && (
-          <div className="bg-red-100 text-red-600 p-3 mb-4 rounded-xl text-sm text-center">
+          <div className="bg-red-50 text-red-600 p-3 mb-4 rounded-xl text-sm text-center border border-red-200">
             {msgErro}
           </div>
         )}
 
         {/* Mensagem sucesso */}
         {msgSucesso && (
-          <div className="bg-green-100 text-green-600 p-3 mb-4 rounded-xl text-sm text-center">
+          <div className="bg-emerald-50 text-emerald-600 p-3 mb-4 rounded-xl text-sm text-center border border-emerald-200">
             {msgSucesso}
           </div>
         )}
@@ -102,7 +103,7 @@ export default function LoginForms({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Digite seu email"
-              className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             />
 
           </div>
@@ -127,7 +128,7 @@ export default function LoginForms({
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               placeholder="Digite sua senha"
-              className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             />
 
             {/* Mostrar senha */}
@@ -149,7 +150,7 @@ export default function LoginForms({
 
             <input
               type="checkbox"
-              className="accent-blue-600"
+              className="accent-rose-600"
             />
 
             Lembrar de mim
@@ -158,7 +159,7 @@ export default function LoginForms({
 
           <a
             href="#"
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm font-medium text-rose-600 hover:text-rose-700 hover:underline"
           >
             Esqueceu a senha?
           </a>
@@ -168,7 +169,7 @@ export default function LoginForms({
         {/* Botão */}
         <button
           onClick={entrar}
-          className="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-3 rounded-xl text-sm sm:text-base font-medium transition duration-200 shadow-lg"
+          className="w-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-3 rounded-xl text-sm sm:text-base font-semibold transition duration-200 shadow-md hover:shadow-rose-600/20"
         >
           Entrar
         </button>
@@ -176,13 +177,13 @@ export default function LoginForms({
         {/* Divisor */}
         <div className="flex items-center gap-4 my-6">
 
-          <div className="flex-1 h-px bg-gray-300"></div>
+          <div className="flex-1 h-px bg-gray-200"></div>
 
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-400 font-medium">
             OU
           </span>
 
-          <div className="flex-1 h-px bg-gray-300"></div>
+          <div className="flex-1 h-px bg-gray-200"></div>
 
         </div>
 
@@ -200,7 +201,7 @@ export default function LoginForms({
 
           <a
             href="/cadastro"
-            className="text-blue-700 font-semibold hover:underline"
+            className="text-rose-600 font-bold hover:text-rose-700 hover:underline"
           >
             Criar conta
           </a>
