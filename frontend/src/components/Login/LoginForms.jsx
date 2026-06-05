@@ -38,7 +38,7 @@ export default function LoginForms({
             </h1>
 
             {/* Linha divisória combinando com o tema suave */}
-            <div className="w-16 md:w-24 h-1 bg-rose-500 rounded-full mx-auto mb-4 md:mb-8"></div>
+            <div className="w-16 md:w-24 h-1 bg-amber-500 rounded-full mx-auto mb-4 md:mb-8"></div>
 
             {/* Escondemos o texto longo no mobile para o formulário não ficar muito lá embaixo */}
             <div className="hidden md:block">
@@ -67,7 +67,7 @@ export default function LoginForms({
 
           {/* Mensagem erro */}
           {msgErro && (
-            <div className="bg-red-50 text-red-600 p-3 mb-4 rounded-xl text-sm text-center border border-red-200">
+            <div className="bg-red-50 text-amber-600 p-3 mb-4 rounded-xl text-sm text-center border border-red-200">
               {msgErro}
             </div>
           )}
@@ -96,7 +96,7 @@ export default function LoginForms({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function LoginForms({
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Digite sua senha"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
               />
 
               {/* Mostrar senha */}
@@ -141,7 +141,7 @@ export default function LoginForms({
 
             <a
               href="#"
-              className="text-sm font-medium text-rose-600 hover:text-rose-700 hover:underline"
+              className="text-sm font-medium text-amber-600 hover:text-amber-700 hover:underline"
             >
               Esqueceu a senha?
             </a>
@@ -150,7 +150,7 @@ export default function LoginForms({
           {/* Botão */}
           <button
             onClick={entrar}
-            className="w-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-3 rounded-xl text-sm sm:text-base font-semibold transition duration-200 shadow-md hover:shadow-rose-600/20"
+            className="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-3 rounded-xl text-sm sm:text-base font-semibold transition duration-200 shadow-md hover:shadow-amber-600/20"
           >
             Entrar
           </button>
@@ -174,7 +174,7 @@ export default function LoginForms({
             Não possui conta?{" "}
             <a
               href="/cadastro"
-              className="text-rose-600 font-bold hover:text-rose-700 hover:underline"
+              className="text-amber-600 font-bold hover:text-amber-700 hover:underline"
             >
               Criar conta
             </a>

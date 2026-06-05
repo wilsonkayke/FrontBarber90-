@@ -33,7 +33,7 @@ export default function CadastroUI({
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-6xl grid md:grid-cols-2">
 
         {/* Lado esquerdo */}
-        <div className="hidden md:flex flex-col justify-center items-center bg-slate-900 text-white p-10 relative">
+        <div className="flex flex-col justify-center items-center bg-slate-900 text-white p-10 relative">
 
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/20"></div>
@@ -41,16 +41,21 @@ export default function CadastroUI({
           {/* Conteúdo */}
           <div className="relative z-10 text-center">
 
-            <div className="text-6xl mb-6 animate-pulse">
-              💈
+            <div className="flex justify-center text-6xl mb-6">
+              <img
+                src="/imagens/logoRedondo.png"
+                alt="Logo BarberSpace"
+                className="h-24 w-auto md:h-24 object-contain select-none"
+              />
             </div>
 
             <h1 className="text-5xl font-bold mb-4 animate-bounce">
               BarberSpace
             </h1>
 
-            <div className="w-20 h-1 bg-rose-500 mx-auto rounded-full mb-8"></div>
+            <div className="w-20 h-1 bg-amber-500 mx-auto rounded-full mb-6"></div>
 
+            <div className="hidden md:block">
             <h2 className="text-3xl font-semibold mb-4">
               Faça parte da nossa equipe
             </h2>
@@ -58,7 +63,7 @@ export default function CadastroUI({
             <p className="text-lg text-blue-100 leading-relaxed max-w-sm">
               Crie sua conta e gerencie agendamentos e muito mais.
             </p>
-
+            </div>
           </div>
         </div>
 
@@ -76,7 +81,7 @@ export default function CadastroUI({
 
           {/* Mensagem erro */}
           {msgErro && (
-            <div className="bg-red-100 text-red-600 p-3 mb-4 rounded-xl text-sm text-center">
+            <div className="bg-red-100 text-amber-600 p-3 mb-4 rounded-xl text-sm text-center">
               {msgErro}
             </div>
           )}
@@ -107,7 +112,7 @@ export default function CadastroUI({
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
                 placeholder="Digite seu nome completo"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
               />
 
             </div>
@@ -132,7 +137,7 @@ export default function CadastroUI({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
               />
 
             </div>
@@ -157,7 +162,7 @@ export default function CadastroUI({
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Digite sua senha"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
               />
 
               <button
@@ -200,7 +205,7 @@ export default function CadastroUI({
                   setConfirmarSenha(e.target.value)
                 }
                 placeholder="Confirme sua senha"
-                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-rose-500 outline-none transition"
+                className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
               />
 
               <button
@@ -225,7 +230,7 @@ export default function CadastroUI({
           {/* Botão */}
           <button
             onClick={cadastrar}
-            className="w-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg"
+            className="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition duration-200 shadow-lg"
           >
 
             <UserPlus size={20} />
@@ -241,7 +246,7 @@ export default function CadastroUI({
 
             <a
               href="/login"
-              className="text-rose-500 font-semibold hover:underline"
+              className="text-amber-500 font-semibold hover:underline"
             >
               Entrar
             </a>
