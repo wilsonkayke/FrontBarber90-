@@ -219,6 +219,8 @@ export default function AgendaPage() {
 
       
       handleAgendar={handleAgendar}
+
+      exit={() => router.push("/")}
     />
   );
 }

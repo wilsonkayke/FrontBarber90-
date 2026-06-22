@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function FilaForms({
   fila,
   exit,
+  sair,
 }) {
 
   const imagens = [ 
@@ -44,6 +45,16 @@ export default function FilaForms({
         py-4 
       "
     >
+
+      <div className="fixed top-0 right-0 z-50">
+        <button
+          onClick={sair}
+          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-bl-xl transition duration-200 shadow-lg semi-transparent backdrop-blur-sm">
+
+          Exit
+
+        </button>
+      </div>
 
       <div className="bg-gray-100/95 flex flex-col shadow-2xl rounded-2xl p-5 mb-65 w-full max-w-md backdrop-blur-sm gap-4">
 
@@ -91,7 +102,7 @@ export default function FilaForms({
                 transition
               "
             >
-              Sair
+              Sair da fila
             </button>
 
           </div>

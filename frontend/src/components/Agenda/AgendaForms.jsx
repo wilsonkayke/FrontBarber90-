@@ -11,6 +11,7 @@ export default function AgendaForm({
   msgErro,
   msgSucesso,
   handleAgendar,
+  exit,
 }) {
   return (
     <main
@@ -201,6 +202,14 @@ export default function AgendaForm({
             >
               Confirmar Agendamento
             </button>
+
+
+            <button
+              onClick={exit}
+              className="min-w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold transition duration-200 shadow-lg semi-bold"
+            >
+              Sair
+            </button>    
           </form>
         </div>
       </div>

@@ -95,6 +95,7 @@ export default function FilaPage() {
       setFila={setFila}
       fila={fila}
       exit={exit}
+      sair={() => router.push("/")}
     />
   );
 }

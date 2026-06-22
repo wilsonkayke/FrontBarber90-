@@ -5,11 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/clientes", label: "Clientes" },
-  { href: "/admin/fila", label: "Fila" },
-  { href: "/admin/servicos", label: "Serviços" },
-  { href: "/admin/config", label: "Configurações" },
+  { href: "/admin", label: "Dashboard" }, 
 ];
 
 export default function Sidebar() {
