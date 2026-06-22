@@ -32,8 +32,7 @@ export default function FilaPage() {
 
       const data = await response.json();
       console.log(data);
-
-      localStorage.clear();
+ 
       router.push("/agenda");
 
     } catch (error) {
