@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, Request
 from app.db.mongo_connection import db
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
@@ -117,3 +117,45 @@ def sair_fila(usuario=Depends(get_current_user)):
         "msg": "Você saiu da fila de espera com sucesso."
     }
     
+
+# =========================================================
+# 📌 Fila do usuário (posição real)
+# =========================================================
+@router.get("/fila")
+async def minha_fila(request: Request, usuario=Depends(get_current_user)):
+
+    await request.app.state.limiter.limit("60/minute")(request)
+
+    print("USUARIO LOGADO:", usuario["id"])
+
+
+    agora = datetime.utcnow()
+
+    agendamentos = list(
+        agendamentos_collection.find({
+            "status": "agendado",
+            "horario": {"$gte": agora}
+        }).sort("horario", 1)
+    )
+
+    total = len(agendamentos)
+    posicao = None
+
+    for index, ag in enumerate(agendamentos):
+        if ag["cliente_id"] == ObjectId(usuario["id"]):
+            posicao = index + 1
+            break
+
+    if posicao is None:
+        return {
+            "posicao": None,
+            "pessoas_a_frente": 0,
+            "total_na_fila": total
+        }
+
+    return {
+    "usuario_logado": usuario["id"],
+    "posicao": posicao,
+    "pessoas_a_frente": posicao - 1 if posicao else 0,
+    "total_na_fila": total
+    }

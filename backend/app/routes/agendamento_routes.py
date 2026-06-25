@@ -294,48 +294,4 @@ def dashboard_admin(admin=Depends(get_admin)):
         "barbeirosAtivos": 1,
         "agendamentos": lista,
         "desistenciasHoje": desistencias_hoje
-    }
-
-# =========================================================
-# 📌 Fila do usuário (posição real)
-# =========================================================
-@router.get("/fila")
-def minha_fila(usuario=Depends(get_current_user)):
-
-    print("USUARIO LOGADO:", usuario["id"])
-
-
-    agora = datetime.utcnow()
-
-    agendamentos = list(
-        agendamentos_collection.find({
-            "status": "agendado",
-            "horario": {"$gte": agora}
-        }).sort("horario", 1)
-    )
-
-    total = len(agendamentos)
-    posicao = None
-
-    for index, ag in enumerate(agendamentos):
-        if ag["cliente_id"] == ObjectId(usuario["id"]):
-            posicao = index + 1
-            break
-
-    if posicao is None:
-        return {
-            "posicao": None,
-            "pessoas_a_frente": 0,
-            "total_na_fila": total
-        }
-
-    return {
-    "usuario_logado": usuario["id"],
-    "posicao": posicao,
-    "pessoas_a_frente": posicao - 1 if posicao else 0,
-    "total_na_fila": total
-    }
-
-
-
-
+    } 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from app.db.mongo_connection import db
 from app.utils.jwt_handler import create_access_token
@@ -98,3 +98,10 @@ async def google_login(dados: GoogleLoginRequest):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/auth/login")
+async def login(request: Request):
+
+    await request.app.state.limiter.limit("5/minute")(request)
+
+    return {"message": "Login processado com sucesso!"}
