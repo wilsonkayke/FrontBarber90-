@@ -1,26 +1,26 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+from bson import ObjectId
+
+#rotas
 from app.db.mongo_connection import db
-from app.utils.jwt_handler import create_access_token
+from app.utils.jwt_handler import create_access_token, create_reset_token, verify_reset_token
+from app.utils.email_service import send_reset_email
+from app.schemas.client_schema import ForgotPasswordRequest, ResetPasswordRequest
 from passlib.context import CryptContext
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from app.schemas.client_schema import GoogleLoginRequest
+from app.schemas.client_schema import GoogleLoginRequest, ClientLogin
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 users_collection = db["clientes"]
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-# ✅ Schema direto aqui
-class LoginRequest(BaseModel):
-    email: str
-    senha: str
-
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto") 
 
 @router.post("/login")
-def login(dados: LoginRequest):
+async def login(request: Request, dados: ClientLogin):
+
+    await request.app.state.limiter.limit("5/minute")(request)
 
     user = users_collection.find_one({"email": dados.email})
 
@@ -99,9 +99,63 @@ async def google_login(dados: GoogleLoginRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/auth/login")
-async def login(request: Request):
+@router.post("/forgot-password")
+async def forgot_password(dados: ForgotPasswordRequest):
 
-    await request.app.state.limiter.limit("5/minute")(request)
+    user = users_collection.find_one({"email": dados.email})
 
-    return {"message": "Login processado com sucesso!"}
+    # Nunca informar se o e-mail existe ou não
+    if not user:
+        return {
+            "msg": "Seu link foi gerado!! (Teste de redefinir senha)"
+        }
+
+    token = create_reset_token(str(user["_id"]))
+
+    reset_link = (
+     f"https://sistemagerenciamentefila.vercel.app/reset-password?token={token}"
+    )
+
+    print(f"\n[TESTE LOCAL] Link de redefinição gerado: {reset_link}\n")
+
+    #send_reset_email(user["email"], reset_link)
+
+    return {
+        "msg": "Link gerado para teste",
+        "reset_link": reset_link
+    }
+
+
+@router.post("/reset-password")
+def reset_password(dados: ResetPasswordRequest):
+
+    user_id = verify_reset_token(dados.token)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Token inválido ou expirado"
+        )
+
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado"
+        )
+
+    nova_senha_hash = pwd_context.hash(dados.nova_senha)
+
+    users_collection.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {
+                "senha": nova_senha_hash
+            }
+        }
+    )
+
+    return {
+        "msg": "Senha alterada com sucesso!"
+    }

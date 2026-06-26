@@ -24,3 +24,29 @@ def verify_token(token: str):
         return payload
     except JWTError:
         return None 
+    
+#Reset token functions (Alterar senha) 
+def create_reset_token(user_id):
+    payload = {
+        "user_id": user_id,
+        "type": "password_resert",
+        "exp": datetime.utcnow() + timedelta(minutes=15)
+    }
+
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_reset_token(token):
+    try:
+       payload = jwt.decode(
+           token,
+           SECRET_KEY,
+           algorithms=[ALGORITHM]
+       )
+
+       if payload.get("type") != "password_resert":
+           return None 
+       
+       return payload.get("user_id")
+    
+    except JWTError:
+        return None
