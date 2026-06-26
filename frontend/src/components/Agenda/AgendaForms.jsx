@@ -47,7 +47,9 @@ export default function AgendaForm({
             </div>
 
             {/* Logo */}
-            <h1 className="text-5xl font-bold mb-4 animate-bounce">BarberSpace</h1>
+            <h1 className="text-5xl font-bold mb-4 animate-bounce">
+              BarberSpace
+            </h1>
 
             <div className="w-24 h-1 bg-white rounded-full mx-auto mb-8"></div>
 
@@ -202,14 +204,15 @@ export default function AgendaForm({
             >
               Confirmar Agendamento
             </button>
-
-
+ 
             <button
               onClick={exit}
               className="min-w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold transition duration-200 shadow-lg semi-bold"
             >
               Sair
-            </button>    
+            </button>
+
+            
           </form>
         </div>
       </div>

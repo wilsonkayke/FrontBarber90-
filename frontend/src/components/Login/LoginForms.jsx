@@ -1,6 +1,7 @@
 "use client";
 
 import { UserPlus, LogIn, User, Eye, EyeOff, Lock } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginForms({
   email,
@@ -139,12 +140,12 @@ export default function LoginForms({
               Lembrar de mim
             </label>
 
-            <a
-              href="#"
+            <Link
+              href="/forgot-password"
               className="text-sm font-medium text-amber-600 hover:text-amber-700 hover:underline"
             >
               Esqueceu a senha?
-            </a>
+            </Link>
           </div>
 
           {/* Botão */}
