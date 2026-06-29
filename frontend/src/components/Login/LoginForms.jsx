@@ -15,34 +15,33 @@ export default function LoginForms({
   entrar,
 }) {
   return (
-    <main className="flex items-center justify-center min-h-screen bg-slate-950 px-4 py-10">
+    /*Pai*/
+    <main className="flex flex-col items-center justify-center min-h-screen bg-slate-950 px-4 py-8 gap-8">
+      
       {/* Card Principal */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-6xl grid md:grid-cols-2">
-        {/* Lado esquerdo (Corrigido para usar o bg original escuro e harmonizar com o seu tema) */}
+        {/* Lado esquerdo */}
         <div className="flex flex-col justify-center items-center bg-slate-900 text-white p-6 sm:p-10 relative">
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/10"></div>
 
-          {/* Conteúdo */}
-          <div className="relative z-10 text-center">
-            {/* SUA NOVA IMAGEM AQUI (Substituindo o emoji antigo 💈) */}
+          {/* Conteúdo */} 
+          <div className="relative z-10 text-center"> 
             <div className="flex justify-center mb-4 md:mb-6">
               <img
-                src="/imagens/logoRedondo.png" // Subistatua pela URL ou caminho da sua imagem
+                src="/imagens/BarberFlowRedondo.png"
                 alt="Logo BarberSpace"
                 className="h-24 w-auto md:h-24 object-contain select-none"
               />
             </div>
 
             <h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 tracking-tight animate-bounce">
-              BarberSpace
-            </h1>
-
-            {/* Linha divisória combinando com o tema suave */}
+              BarberFlow
+            </h1> 
+ 
             <div className="w-16 md:w-24 h-1 bg-amber-500 rounded-full mx-auto mb-4 md:mb-8"></div>
 
-            {/* Escondemos o texto longo no mobile para o formulário não ficar muito lá embaixo */}
-            <div className="hidden md:block">
+            <div className="hidden md:block"> 
               <h2 className="text-3xl font-semibold mb-4">
                 Bem-vindo de volta
               </h2>
@@ -86,8 +85,7 @@ export default function LoginForms({
               Email
             </label>
 
-            <div className="relative">
-              {/* Ícone */}
+            <div className="relative"> 
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 📧
               </div>
@@ -108,8 +106,7 @@ export default function LoginForms({
               Senha
             </label>
 
-            <div className="relative">
-              {/* Ícone */}
+            <div className="relative"> 
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 🔒
               </div>
@@ -121,8 +118,7 @@ export default function LoginForms({
                 placeholder="Digite sua senha"
                 className="w-full border border-gray-300 rounded-xl p-3 pl-12 pr-12 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition"
               />
-
-              {/* Mostrar senha */}
+ 
               <button
                 type="button"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
@@ -182,6 +178,14 @@ export default function LoginForms({
           </p>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="text-slate-400 text-sm text-center">
+        <p>
+          Copyright &copy; 2025-2026 BarberFlow - Todos os direitos reservados
+        </p>
+      </footer>
+      
     </main>
   );
-}
+} 

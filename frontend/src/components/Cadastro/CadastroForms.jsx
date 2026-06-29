@@ -43,14 +43,14 @@ export default function CadastroUI({
 
             <div className="flex justify-center text-6xl mb-6">
               <img
-                src="/imagens/logoRedondo.png"
+                src="/imagens/BarberFlowRedondo.png"
                 alt="Logo BarberSpace"
                 className="h-24 w-auto md:h-24 object-contain select-none"
               />
             </div>
 
             <h1 className="text-5xl font-bold mb-4 animate-bounce">
-              BarberSpace
+              BarberFlow
             </h1>
 
             <div className="w-20 h-1 bg-amber-500 mx-auto rounded-full mb-6"></div>

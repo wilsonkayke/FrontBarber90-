@@ -18,17 +18,23 @@ users_collection = db["clientes"]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto") 
 
 @router.post("/login")
-async def login(request: Request, dados: ClientLogin):
+async def login(dados: ClientLogin):
 
-    await request.app.state.limiter.limit("5/minute")(request)
+    email = dados.email.strip().lower()
 
-    user = users_collection.find_one({"email": dados.email})
+    user = users_collection.find_one({"email": email})
 
     if not user:
-        raise HTTPException(status_code=400, detail="Email ou senha inválidos")
+        raise HTTPException(
+            status_code=400,
+            detail="Email ou senha inválidos"
+        )
 
     if not pwd_context.verify(dados.senha, user["senha"]):
-        raise HTTPException(status_code=400, detail="Email ou senha inválidos")
+        raise HTTPException(
+            status_code=400,
+            detail="Email ou senha inválidos"
+        )
 
     access_token = create_access_token(
         data={

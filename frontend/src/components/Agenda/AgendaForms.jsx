@@ -48,7 +48,7 @@ export default function AgendaForm({
 
             {/* Logo */}
             <h1 className="text-5xl font-bold mb-4 animate-bounce">
-              BarberSpace
+              BarberFlow
             </h1>
 
             <div className="w-24 h-1 bg-white rounded-full mx-auto mb-8"></div>
