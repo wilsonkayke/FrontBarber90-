@@ -73,10 +73,7 @@ export default function AgendaPage() {
           `${API_URL}/agendamentos/horarios?data=${data}`
         );
 
-        const dados = await resposta.json();
-
-        // EXEMPLO BACKEND:
-        // ["08:00", "09:30"]
+        const dados = await resposta.json(); 
 
         const horariosOcupados = Array.isArray(dados)
           ? dados

@@ -50,7 +50,7 @@ export default function FilaPage() {
         console.log("API_URL:", API_URL);
 
         const response = await fetch(
-          `${API_URL}/agendamentos/fila/`,
+          `${API_URL}/fila`,
           {
             headers: getAuthHeaders(),
           }

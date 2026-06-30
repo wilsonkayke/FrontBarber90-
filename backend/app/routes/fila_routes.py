@@ -120,12 +120,11 @@ def sair_fila(usuario=Depends(get_current_user)):
 
 # =========================================================
 # 📌 Fila do usuário (posição real)
+#           Rota fila
 # =========================================================
-@router.get("/fila")
-async def minha_fila(request: Request, usuario=Depends(get_current_user)):
-
-    await request.app.state.limiter.limit("60/minute")(request)
-
+@router.get("/")
+async def minha_fila( usuario=Depends(get_current_user)):
+    
     print("USUARIO LOGADO:", usuario["id"])
 
 
