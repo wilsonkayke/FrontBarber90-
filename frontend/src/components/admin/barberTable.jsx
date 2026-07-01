@@ -65,8 +65,7 @@ export default function BarberTable({
         </div>
 
         {/* Calendário */}
-        <div className="relative">
-
+        <div className="relative"> 
           <button
             onClick={() =>
               setMostrarCalendario(!mostrarCalendario)
@@ -86,7 +85,7 @@ export default function BarberTable({
               }
             `}
           >
-            Calendário
+          📅  Calendário
           </button>
 
           {mostrarCalendario && (
@@ -103,7 +102,7 @@ export default function BarberTable({
                     className="w-full text-left px-4 py-3 hover:bg-blue-50 transition border-b last:border-none"
                   >
                     <div className="font-medium">
-                      {item.data}
+                     📅 {item.data}
                     </div>
 
                     <div className="text-sm text-gray-500">
