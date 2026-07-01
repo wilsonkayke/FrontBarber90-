@@ -6,6 +6,9 @@ import Script from "next/script";
 export const metadata = {
   title: "Barbearia",
   description: "Sistema de agendamento para barbearia",
+  icons: {
+    icon: "/imagens/BarberFlowRedondo.png",
+  }
 };
 
 export default function RootLayout({ children }) {

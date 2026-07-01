@@ -1,132 +1,206 @@
 "use client";
 
-import { useState } from "react";
-
 export default function BarberTable({
   data = [],
   onChamar,
   onFinalizar,
   diaSelecionado,
   setDiaSelecionado,
+  datasDisponiveis = [],
+  mostrarCalendario,
+  setMostrarCalendario,
 }) {
   return (
     <div className="overflow-x-auto">
-      <div className="flex gap-4 mb-4">
-        {/* Div 1 */}
+
+      {/* Filtros */}
+      <div className="flex gap-4 mb-4 flex-wrap">
+
+        {/* Hoje */}
         <div
-          onClick={() => setDiaSelecionado("hoje")}
+          onClick={() => {
+            setDiaSelecionado("hoje");
+            setMostrarCalendario(false);
+          }}
           className={`
-      cursor-pointer
-      p-4
-      rounded-2xl
-      w-35
-      text-center
-      font-bold
-      transition
-      ${
-        diaSelecionado === "hoje"
-          ? "bg-blue-600 text-white"
-          : "bg-slate-200 text-gray-700"
-      }
-    `}
+            cursor-pointer
+            p-4
+            rounded-2xl
+            w-35
+            text-center
+            font-bold
+            transition
+            ${
+              diaSelecionado === "hoje"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-gray-700"
+            }
+          `}
         >
           Hoje
         </div>
 
+        {/* Amanhã */}
         <div
-          onClick={() => setDiaSelecionado("amanha")}
+          onClick={() => {
+            setDiaSelecionado("amanha");
+            setMostrarCalendario(false);
+          }}
           className={`
-      cursor-pointer
-      p-4
-      rounded-2xl
-      w-35
-      text-center
-      font-bold
-      transition
-      ${
-        diaSelecionado === "amanha"
-          ? "bg-blue-600 text-white"
-          : "bg-slate-200 text-gray-700"
-      }
-    `}
+            cursor-pointer
+            p-4
+            rounded-2xl
+            w-35
+            text-center
+            font-bold
+            transition
+            ${
+              diaSelecionado === "amanha"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-gray-700"
+            }
+          `}
         >
           Amanhã
         </div>
 
-        <div
-          onClick={() => setDiaSelecionado("proximos")}
-          className={`
-      cursor-pointer
-      p-4
-      rounded-2xl
-      w-35
-      text-center
-      font-bold
-      transition
-      ${
-        diaSelecionado === "proximos"
-          ? "bg-blue-600 text-white"
-          : "bg-slate-200 text-gray-700"
-      }
-    `}
-        >
-          Próximos
+        {/* Calendário */}
+        <div className="relative">
+
+          <button
+            onClick={() =>
+              setMostrarCalendario(!mostrarCalendario)
+            }
+            className={`
+              cursor-pointer
+              p-4
+              rounded-2xl
+              w-35
+              text-center
+              font-bold
+              transition
+              ${
+                mostrarCalendario
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-200 text-gray-700"
+              }
+            `}
+          >
+            Calendário
+          </button>
+
+          {mostrarCalendario && (
+            <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border z-50 overflow-hidden">
+
+              {datasDisponiveis.length > 0 ? (
+                datasDisponiveis.map((item) => (
+                  <button
+                    key={item.data}
+                    onClick={() => {
+                      setDiaSelecionado(item.data);
+                      setMostrarCalendario(false);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition border-b last:border-none"
+                  >
+                    <div className="font-medium">
+                      {item.data}
+                    </div>
+
+                    <div className="text-sm text-gray-500">
+                      {item.quantidade} agendamento(s)
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-4 text-gray-500">
+                  Nenhuma data encontrada
+                </div>
+              )}
+
+            </div>
+          )}
+
         </div>
 
+        {/* Todos 
         <div
-          onClick={() => setDiaSelecionado("Todos")}
+          onClick={() => {
+            setDiaSelecionado("todos");
+            setMostrarCalendario(false);
+          }}
           className={`
-      cursor-pointer
-      p-4
-      rounded-2xl
-      w-35
-      text-center
-      font-bold
-      transition
-      ${
-        diaSelecionado === "Todos"
-          ? "bg-blue-600 text-white"
-          : "bg-slate-200 text-gray-700"
-      }
-    `}
+            cursor-pointer
+            p-4
+            rounded-2xl
+            w-35
+            text-center
+            font-bold
+            transition
+            ${
+              diaSelecionado === "todos"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-gray-700"
+            }
+          `}
         >
           Todos
         </div>
+        */}
+
       </div>
 
-      {/* <p className="text-center text-white bg-blue-500 font-bold rounded-md py-3 w-35">Hoje</p> */}
+      {/* Tabela */}
 
-      <table className="w-full bg-white rounded-2xl shadow-md overflow-hidden mt-02">
+      <table className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
+ 
         <thead>
+
           <tr className="bg-slate-300 text-left text-gray-700">
+
             <th className="py-4 px-4">#</th>
+
             <th>Nome</th>
+
             <th>Horário</th>
-            <th className="pr-4 px-14">Ações</th> 
+
+            <th className="px-14">Ações</th>
+
           </tr>
+
         </thead>
 
         <tbody>
-          {Array.isArray(data) && data.length > 0 ? (
+
+          {data.length > 0 ? (
+
             data.map((cliente, index) => (
+
               <tr
                 key={cliente._id}
-                className="border-b last:border-none hover:bg-slate-50 transition"
+                className="border-b hover:bg-slate-50 transition"
               >
-                <td className="py-4 px-4 font-medium">{index + 1}</td>
 
-                <td className="font-medium text-gray-700">{cliente.nome}</td>
-
-                <td className="text-gray-600">
-                  {new Date(cliente.horario + "Z").toLocaleTimeString("pt-BR", {
-                    timeZone: "America/Sao_Paulo",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <td className="py-4 px-4 font-medium">
+                  {index + 1}
                 </td>
 
-                <td className="flex gap-2 py-3 pr-4">
-                  {/* Chamar */} 
+                <td className="font-medium text-gray-700">
+                  {cliente.nome}
+                </td>
+
+                <td className="text-gray-600">
+                  {new Date(cliente.horario + "Z").toLocaleTimeString(
+                    "pt-BR",
+                    {
+                      timeZone: "America/Sao_Paulo",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                </td>
+
+                <td className="flex gap-2 py-3">
+
                   <button
                     onClick={onChamar}
                     className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
@@ -134,74 +208,38 @@ export default function BarberTable({
                     Chamar
                   </button>
 
-                  {/* Finalizar */}
-                  <button
+                  <button 
                     onClick={onFinalizar}
                     className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
                   >
                     Finalizar
-                  </button> 
+                  </button>
+
                 </td>
+
               </tr>
+
             ))
+
           ) : (
+
             <tr>
-              <td colSpan="4" className="text-center py-6 text-gray-500">
+
+              <td
+                colSpan="4"
+                className="text-center py-6 text-gray-500"
+              >
                 Nenhum agendamento pendente
               </td>
+
             </tr>
+
           )}
+
         </tbody>
-      </table> 
- 
-      {/*<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        { CARD 1: Próximos dias }
-        <div className="w-full bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4">
-          { Título }
-          <div className="flex items-center gap-2 text-blue-600 font-bold">
-            <span>📅</span> Próximos dias
-          </div>
 
-          { Sua tabela ou lista de dados aqui dentro }
-          <div className="flex flex-col gap-3 text-sm text-gray-700">
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <span>📅 03/06/2025 (Terça-feira)</span>
-              <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold">
-                4
-              </span>
-            </div>
-            {... outras linhas }
-          </div>
+      </table>
 
-          <a
-            href="#"
-            className="text-blue-500 font-medium text-sm mt-auto flex items-center gap-1"
-          >
-            Ver todos os dias →
-          </a>
-        </div>
-
-        { CARD 2: Últimos cortes }
-        <div className="w-full bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4">
-          { Título }
-          <div className="flex items-center gap-2 text-blue-600 font-bold">
-            <span>✂️</span> Últimos cortes
-          </div>
-
-          { Sua tabela ou lista de dados aqui dentro }
-          <div className="text-sm text-gray-700">
-            { Conteúdo da tabela de cortes }
-            <p>Tabela de clientes finalizados...</p>
-          </div>
-
-          <a
-            href="#"
-            className="text-blue-500 font-medium text-sm mt-auto flex items-center gap-1"
-          >
-            Ver histórico completo →
-          </a>
-        </div>
-      </div>*/}
     </div>
   );
-}
+} 

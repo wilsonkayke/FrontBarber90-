@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState("hoje");
+  const [mostrarCalendario, setMostrarCalendario] = useState(false);
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -36,12 +37,40 @@ export default function AdminDashboard() {
         return dataAgendamento.getTime() === amanha.getTime();
       }
 
-      if (diaSelecionado === "proximos") {
-        return dataAgendamento >= depoisDeAmanha;
+      if (diaSelecionado === "todos") {
+        return true;
       }
 
-      return true;
+      // Data escolhida pelo calendário (YYYY-MM-DD)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(diaSelecionado)) {
+        return cliente.horario.slice(0, 10) === diaSelecionado;
+      }
+
+      return false;
     })
+  : [];
+
+  const datasDisponiveis = dashboard?.agendamentos
+  ? Object.values(
+      dashboard.agendamentos.reduce((acc, agendamento) => {
+
+        const data = new Date(agendamento.horario)
+          .toISOString()
+          .split("T")[0];
+
+        if (!acc[data]) {
+          acc[data] = {
+            data,
+            quantidade: 0,
+          };
+        }
+
+        acc[data].quantidade++;
+
+        return acc;
+
+      }, {})
+    )
   : [];
 
   // 🔐 Helper de autenticação
@@ -192,6 +221,16 @@ export default function AdminDashboard() {
             value={dashboard.desistenciasHoje}
           />
 
+          {/* 
+          <CalendarFilter 
+            datasDisponiveis={datasDisponiveis}
+            mostrarCalendario={mostrarCalendario}
+            setMostrarCalendario={setMostrarCalendario}
+            diaSelecionado={diaSelecionado}
+            setDiaSelecionado={setDiaSelecionado}
+          />
+          */}
+
           {/*<StatCard
             title="Barbeiros ativos"
             value={dashboard.barbeirosAtivos}
@@ -207,8 +246,11 @@ export default function AdminDashboard() {
           onFinalizar={finalizarAtendimento}
           diaSelecionado={diaSelecionado}
           setDiaSelecionado={setDiaSelecionado}
+          mostrarCalendario={mostrarCalendario}
+          setMostrarCalendario={setMostrarCalendario}
+          datasDisponiveis={datasDisponiveis}
         />
       </div>
     </AdminLayout>
   );
-}
+} 
