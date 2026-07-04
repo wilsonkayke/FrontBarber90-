@@ -183,42 +183,7 @@ def chamar_proximo(admin=Depends(get_admin)):
         "cliente_id": str(proximo["cliente_id"]),
         "status": proximo["status"]
     }
-
-
-# =========================================================
-# Finalizar atendimento 
-# =========================================================
-
-@router.post("/admin/finalizar")
-def finalizar_atendimento(admin=Depends(get_admin)):
-
-    atendimento = agendamentos_collection.find_one_and_update(
-        {"status": "em_atendimento"},
-        {
-            "$set": {
-                "status": "finalizado",
-                "finalizado_em": datetime.utcnow()
-            }
-        },
-        return_document=ReturnDocument.AFTER
-    )
-
-    if not atendimento:
-        raise HTTPException(
-            status_code=404,
-            detail="Nenhum atendimento em andamento"
-        )
-
-    # 🔥 salvar histórico na collection atendidos
-    atendidos_collection.insert_one(atendimento)
-    agendamentos_collection.delete_one({"_id": atendimento["_id"]})
-
-    return {
-        "message": "Atendimento finalizado",
-        "agendamento_id": str(atendimento["_id"])
-    }
-
-
+ 
 # =========================================================
 # 📊 Dashboard Admin (produção)
 # =========================================================

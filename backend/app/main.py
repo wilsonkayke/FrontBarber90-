@@ -6,7 +6,8 @@ from app.routes.client_routes import router as client_router
 from app.routes.auth_routes import router as auth_router
 from app.routes.agendamento_routes import router as agendamento_router
 from app.routes.fila_routes import router as fila_router
- 
+from app.routes.admin_routes import router as admin_router
+
 app = FastAPI(title="Barbearia API com MongoDB") 
 
 origins = [
@@ -27,6 +28,7 @@ app.include_router(client_router)
 app.include_router(auth_router)
 app.include_router(agendamento_router)
 app.include_router(fila_router)
+app.include_router(admin_router)
 
 @app.get("/")
 def home():

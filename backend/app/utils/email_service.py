@@ -2,15 +2,11 @@ from pathlib import Path
 import os
 import resend
 from dotenv import load_dotenv
-
-# 1. Encontra a raiz do projeto subindo duas pastas a partir deste arquivo (utils -> app -> backend)
+ 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-# 2. Aponta exatamente para o arquivo dentro da pasta frontend
-# Isso vai gerar o caminho: C:\...\FrontBarber90-\frontend\.env.local
+ 
 PATH_TO_ENV = BASE_DIR.parent / "frontend" / ".env.local"
-
-# 3. Carrega o arquivo apontando para o lugar correto
+ 
 load_dotenv(dotenv_path=PATH_TO_ENV)
 
 

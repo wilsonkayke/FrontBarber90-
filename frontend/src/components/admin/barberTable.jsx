@@ -14,57 +14,10 @@ export default function BarberTable({
     <div className="overflow-x-auto">
 
       {/* Filtros */}
-      <div className="flex gap-4 mb-4 flex-wrap">
+      <div className="flex gap-4 mb-4 flex-1">
+ 
 
-        {/* Hoje */}
-        <div
-          onClick={() => {
-            setDiaSelecionado("hoje");
-            setMostrarCalendario(false);
-          }}
-          className={`
-            cursor-pointer
-            p-4
-            rounded-2xl
-            w-35
-            text-center
-            font-bold
-            transition
-            ${
-              diaSelecionado === "hoje"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-gray-700"
-            }
-          `}
-        >
-          Hoje
-        </div>
-
-        {/* Amanhã */}
-        <div
-          onClick={() => {
-            setDiaSelecionado("amanha");
-            setMostrarCalendario(false);
-          }}
-          className={`
-            cursor-pointer
-            p-4
-            rounded-2xl
-            w-35
-            text-center
-            font-bold
-            transition
-            ${
-              diaSelecionado === "amanha"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-gray-700"
-            }
-          `}
-        >
-          Amanhã
-        </div>
-
-        {/* Calendário */}
+      {/* Calendário */}
         <div className="relative"> 
           <button
             onClick={() =>
@@ -121,6 +74,54 @@ export default function BarberTable({
 
         </div>
 
+        {/* Hoje */}
+        <div
+          onClick={() => {
+            setDiaSelecionado("hoje");
+            setMostrarCalendario(false);
+          }}
+          className={`
+            cursor-pointer
+            p-4
+            rounded-2xl
+            w-32
+            text-center
+            font-bold
+            transition
+            ${
+              diaSelecionado === "hoje"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-gray-700"
+            }
+          `}
+        >
+          Hoje
+        </div>
+
+        {/* Amanhã */}
+        <div
+          onClick={() => {
+            setDiaSelecionado("amanha");
+            setMostrarCalendario(false);
+          }}
+          className={`
+            cursor-pointer
+            p-4
+            rounded-2xl
+            w-32
+            text-center
+            font-bold
+            transition
+            ${
+              diaSelecionado === "amanha"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-200 text-gray-700"
+            }
+          `}
+        >
+          Amanhã
+        </div> 
+
         {/* Todos 
         <div
           onClick={() => {
@@ -131,7 +132,7 @@ export default function BarberTable({
             cursor-pointer
             p-4
             rounded-2xl
-            w-35
+            w-32
             text-center
             font-bold
             transition

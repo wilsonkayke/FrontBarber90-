@@ -48,8 +48,13 @@ export default function ForgotPasswordPage() {
         onChange={(e) => setEmail(e.target.value)}
       />
 
-      <button onClick={enviar}>
+      <button onClick={enviar}
+      className="py-2 hover:bg-gray-400 rounded">
         Enviar link
+      </button>
+
+      <button className="px-4 py-2 hover:bg-gray-400 rounded">
+        <a href="/login">Voltar</a>
       </button>
 
       {msg && <p style={{ color: "green" }}>{msg}</p>}

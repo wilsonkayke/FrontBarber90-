@@ -17,6 +17,9 @@ yarn-error.log*
 .env*
 .vercel
 
+#email
+.email_service.py
+
 
 # Typescript
 *.tsbuildinfo

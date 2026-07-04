@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatCard from "../../components/admin/StatCard";
 import BarberTable from "../../components/admin/barberTable";
+import Ralatorio from "../../components/admin/Relatorio";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -14,6 +15,9 @@ export default function AdminDashboard() {
   const [autorizado, setAutorizado] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState("hoje");
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
+
+  const [dadosRelatorioBrutos, setDadosRelatorioBrutos] = useState([]);
+  const [filtroStatus, setFiltroStatus] = useState("todos");
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -49,6 +53,12 @@ export default function AdminDashboard() {
       return false;
     })
   : [];
+
+  const dadosRelatorioFiltrados = dadosRelatorioBrutos.filter((item) => {
+    if (filtroStatus === "finalizados") return item.total_finalizados > 0;
+    if (filtroStatus === "cancelados") return item.total_cancelados > 0;
+    return true; // "todos"
+  })
 
   const datasDisponiveis = dashboard?.agendamentos
   ? Object.values(
@@ -200,6 +210,9 @@ export default function AdminDashboard() {
     };
   }, [autorizado]);
 
+  if (!autorizado) return null;
+  if (!dashboard) return <p className="text-center">Carregando...</p>;
+
   // ⏳ Loading
   if (!autorizado) return null;
   if (!dashboard) return <p className="text-center">Carregando...</p>;
@@ -239,17 +252,17 @@ export default function AdminDashboard() {
           
           
         </div>
-
-        <BarberTable
-          data={dadosFiltrados}
-          onChamar={chamarProximo}
-          onFinalizar={finalizarAtendimento}
-          diaSelecionado={diaSelecionado}
-          setDiaSelecionado={setDiaSelecionado}
-          mostrarCalendario={mostrarCalendario}
-          setMostrarCalendario={setMostrarCalendario}
-          datasDisponiveis={datasDisponiveis}
-        />
+        
+          <BarberTable
+            data={dadosFiltrados}
+            onChamar={chamarProximo}
+            onFinalizar={finalizarAtendimento}
+            diaSelecionado={diaSelecionado}
+            setDiaSelecionado={setDiaSelecionado}
+            mostrarCalendario={mostrarCalendario}
+            setMostrarCalendario={setMostrarCalendario}
+            datasDisponiveis={datasDisponiveis}
+          />
       </div>
     </AdminLayout>
   );
