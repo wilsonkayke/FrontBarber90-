@@ -51,7 +51,7 @@ export default function FilaForms({
           onClick={sair}
           className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-bl-xl transition duration-200 shadow-lg semi-transparent backdrop-blur-sm">
 
-          Exit
+          Sair
 
         </button>
       </div>

@@ -27,7 +27,16 @@ export default function Topbar() {
   }, []);
 
   const sair = () => {
-    localStorage.removeItem("user");
+    // Desabilitar a seleção automática do Google Sign-In
+     if (typeof window !== "undefined" && window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+
+    localStorage.clear();
+    sessionStorage.clear();
+    // Limpar o cookie "g_state"
+    document.cookie = "g_state=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     // Redirecionamento ou lógica de logout que você já usa aqui...
     window.location.href = "/login"; 
   };
