@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      setMsg(data.msg);
+      setMsg(data.msg); 
     } catch (err) {
       setErro("Erro de conexão");
     }

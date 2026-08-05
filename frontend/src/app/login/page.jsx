@@ -1,55 +1,78 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import LoginForms from "../../components/Login/LoginForms";
-
+import Script from "next/script"; // CORREÇÃO 1: Importação do componente de Script nativo do Next.js
+import LoginForms from "../../components/Login/LoginForms"; 
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function LoginPage() {
-
+export default function LoginPage() { 
   const router = useRouter();
 
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-
+  const [senha, setSenha] = useState(""); 
   const [msgErro, setMsgErro] = useState("");
   const [msgSucesso, setMsgSucesso] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const [mostrarSenha, setMostrarSenha] =
-    useState(false);
+  const googleInicializado = useRef(false);
 
-  // =========================
-  // LOGIN GOOGLE
-  // =========================
+  // Função isolada para renderizar o botão com segurança
+  const inicializarEBotarGoogle = () => {
+    // Valida se toda a árvore de objetos do Google está carregada e se a div existe na tela
+    if (!window.google?.accounts?.id || !document.getElementById("googleButton")) {
+      return;
+    }
 
-  useEffect(() => {
-
-    if (!window.google) return;
-
-    window.google.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      callback: handleGoogleLogin,
-    });
-
-    window.google.accounts.id.renderButton(
-      document.getElementById("googleButton"),
-      {
-        theme: "outline",
-        size: "large",
-        width: "100%",
+    try {
+      // Inicializa apenas uma vez na página para evitar erros de re-inicialização
+      if (!googleInicializado.current) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+        });
+        googleInicializado.current = true;
       }
-    );
 
+      // Força a renderização do botão no elemento HTML da sua barbearia
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleButton"),
+        {
+          theme: "outline",
+          size: "large",
+          width: "100%",
+        }
+      );
+    } catch (error) {
+      console.error("Erro ao renderizar botão do Google:", error);
+    }
+  };
+
+  // =========================
+  // MONITORAMENTO DO GOOGLE
+  // =========================
+  
+  // CORREÇÃO 2: Removido o useEffect antigo duplicado que quebrava o código.
+  // Deixamos apenas este que monitora o carregamento e corrige o sumiço do botão.
+  useEffect(() => {
+    inicializarEBotarGoogle();
+
+    // CORREÇÃO 3: Corrigido de 'setIntervel' para 'setInterval'
+    const intervalo = setInterval(() => {
+      if (window.google?.accounts?.id && document.getElementById("googleButton")) {
+        inicializarEBotarGoogle();
+        clearInterval(intervalo); // Desativa o loop assim que o botão aparecer com sucesso
+      }
+    }, 300);
+
+    return () => clearInterval(intervalo); // Limpa a memória se o usuário sair da página
   }, []);
 
   // CALLBACK GOOGLE
   const handleGoogleLogin = async (response) => {
-
-    try {
-
+    try { 
       const googleToken = response.credential;
 
       const req = await fetch(`${API_URL}/auth/google`, {
@@ -73,35 +96,28 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       router.push("/agenda");
-
-    } catch (error) { 
+    } catch (error) {   
       console.error(error);
       setMsgErro("Erro ao conectar");
     }
-  };
-
+  };  
 
   // =========================
   // LOGIN NORMAL
   // =========================
-
-  const entrar = async () => {
-
+  const entrar = async () => {  
     setMsgErro("");
     setMsgSucesso("");
 
-    try {
-
+    try { 
       const response = await fetch(
         `${API_URL}/auth/login`, 
         {
-          method: "POST",
-
+          method: "POST", 
           headers: {
             "Content-Type": "application/json",
           },
-
-          body: JSON.stringify({
+          body: JSON.stringify({  
             email,
             senha,
           }),
@@ -111,89 +127,59 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-
-        if (Array.isArray(data.detail)) {
-
+        if (Array.isArray(data.detail)) { 
           const erros = data.detail
             .map((err) => err.msg)
             .join(", ");
-
-          setMsgErro(erros);
-
+          setMsgErro(erros);  
         } else {
-
-          setMsgErro(
+          setMsgErro( 
             data.detail ||
             "Email ou senha inválidos"
           );
         }
-
-        return;
+        return; 
       }
 
       localStorage.clear(); 
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.user.role);
 
-      localStorage.setItem(
-        "token",
-        data.access_token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
-      localStorage.setItem(
-        "role",
-        data.user.role
-      );
-
-      setMsgSucesso(
-        "Login realizado com sucesso!"
-      );
+      setMsgSucesso("Login realizado com sucesso!");
 
       setTimeout(() => {
-
-        if (
-          data.user.role
-            ?.trim()
-            .toLowerCase() === "admin"
-        ) {
-
+        if (data.user.role?.trim().toLowerCase() === "admin") {
           router.push("/admin");
-
-        } else {
-
+        } else {  
           router.push("/agenda");
         }
-
-      }, 1000);
-
-    } catch (error) {
-
+        }, 1000);
+      } catch (error) {
       console.error(error);
-
-      setMsgErro(
-        "Erro ao conectar com servidor"
-      );
+      setMsgErro("Erro ao conectar com servidor");
     }
   };
 
   return (
-    <LoginForms
-      email={email}
-      senha={senha}
-
-      setEmail={setEmail}
-      setSenha={setSenha}
-
-      mostrarSenha={mostrarSenha}
-      setMostrarSenha={setMostrarSenha}
-
-      msgErro={msgErro}
-      msgSucesso={msgSucesso}
-
-      entrar={entrar}
-    />
+    <>
+      <Script 
+        src="https://google.com" 
+        strategy="afterInteractive"
+        onLoad={inicializarEBotarGoogle}
+      />
+  
+      <LoginForms
+        email={email}
+        senha={senha}
+        setEmail={setEmail}
+        setSenha={setSenha}
+        mostrarSenha={mostrarSenha}
+        setMostrarSenha={setMostrarSenha}
+        msgErro={msgErro}
+        msgSucesso={msgSucesso}
+        entrar={entrar}
+      />
+    </>
   );
-} 
+}
