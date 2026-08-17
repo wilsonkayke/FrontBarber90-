@@ -85,6 +85,9 @@ def sair_fila(usuario=Depends(get_current_user)):
             "id_agendamento": agendamento["_id"],
             "id_cliente": cliente_id,
 
+            # serviço_id que o usuário escolheu para o agendamento
+             "servico_id": agendamento.get("servico_id"),
+
             # Dados úteis para relatórios
             "email": usuario.get("email"),
             "role": usuario.get("role"),
@@ -99,7 +102,7 @@ def sair_fila(usuario=Depends(get_current_user)):
 
             # Controle
             "status_anterior": "agendado",
-            "motivo": "cliente_desistiu_via_app"
+            "motivo": "cliente_desistiu_via_site"
         }
 
         print("=== Documento de desistências ===")

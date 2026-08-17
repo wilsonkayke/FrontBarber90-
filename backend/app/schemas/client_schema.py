@@ -35,10 +35,10 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):  
     token: str
     nova_senha: str
-    confirmar_nova_senha: str
+    confirmar_senha: str 
 
-    @validator("confirmar_nova_senha")
+    @validator("confirmar_senha")
     def senhas_iguais(cls, v, values):
         if "nova_senha" in values and v != values["nova_senha"]:
             raise ValueError("As senhas não coincidem")
-        return v
+        return v    

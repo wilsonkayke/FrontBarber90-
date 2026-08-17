@@ -53,12 +53,21 @@ def criar_agendamento(
             detail="Horário já reservado"
         )
 
+    # if dados.servico_id not in [1, 2, 3, 4, 5]:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail="Serviço inválido."
+    #     )
+
     agendamento = {
         "cliente_id": cliente_oid,
         "horario": dados.horario,
+       # "servico_id": dados.servico_id,
         "status": "agendado",
         "created_at": datetime.now(timezone.utc)
     }
+
+    print("AGENDAMENTO A SER INSERIDO:", agendamento)
 
     #Aquiiiiiiiiiiiiiii
 
@@ -151,112 +160,39 @@ def listar_agendamentos(usuario=Depends(get_current_user)):
 
     return lista
 
-
-
+    
 # =========================================================
-# 📌 Chamar próximo (somente admin)
+# 📌 Aqui eu estou checamos se o usuário se atrasou ou não
 # =========================================================
-@router.post("/admin/chamar")
-def chamar_proximo(admin=Depends(get_admin)):
+@router.get("/{agendamento_id}/status")
+def checar_status_fila(agendamento_id: str):
+    try:
+        oid = ObjectId(agendamento_id)
+    except:
+        raise HTTPException(status_code=400, detail="ID inválido")
 
-    proximo = agendamentos_collection.find_one_and_update(
-        {"status": "agendado"},
-        {
-            "$set": {
-                "status": "em_atendimento",
-                "atendido_em": datetime.utcnow()
-            }
-        },
-        sort=[("horario", 1)],
-        return_document=ReturnDocument.AFTER
-    )
+    agendamento = agendamentos_collection.find_one({"_id": oid})
+    if not agendamento:
+        raise HTTPException(status_code=404, detail="Não encontrado")
 
-    if not proximo:
-        raise HTTPException(
-            status_code=404,
-            detail="Nenhum agendamento pendente"
-        )
+    status_atual = agendamento.get("status")
+    minutos_passados = None
+
+    # Se o barbeiro já chamou, o Python calcula a diferença real usando UTC puro
+    if status_atual == "em_atendimento" and agendamento.get("atendido_em"):
+        atendido_em = agendamento["atendido_em"]
+        
+        # Garante que ambos os objetos datetime usem a mesma referência UTC para o cálculo
+        if atendido_em.tzinfo is None:
+            atendido_em = atendido_em.replace(tzinfo=timezone.utc)
+            
+        agora_utc = datetime.now(timezone.utc)
+        
+        # Calcula a diferença exata em minutos absolutos
+        diferenca = agora_utc - atendido_em
+        minutos_passados = int(diferenca.total_seconds() / 60)
 
     return {
-        "message": "Cliente chamado",
-        "agendamento_id": str(proximo["_id"]),
-        "cliente_id": str(proximo["cliente_id"]),
-        "status": proximo["status"]
+        "status": status_atual,
+        "minutos_passados": minutos_passados
     }
- 
-# =========================================================
-# 📊 Dashboard Admin (produção)
-# =========================================================
-@router.get("/admin/dashboard")
-def dashboard_admin(admin=Depends(get_admin)):
-
-    hoje_inicio = datetime.utcnow().replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-
-    hoje_fim = datetime.utcnow().replace(
-        hour=23, minute=59, second=59, microsecond=999999
-    )
-
-    fila = agendamentos_collection.count_documents({
-        "status": "agendado"
-    })
-
-    atendimentos_hoje = atendidos_collection.count_documents({
-        "status": "finalizado",
-        "finalizado_em": {"$gte": hoje_inicio, "$lte": hoje_fim}
-    })
-
-
-
-    pipeline = [
-        {
-            "$match": {
-                "status": {"$in": ["agendado", "em_atendimento"]}
-            }
-        },
-        {
-            "$lookup": {
-                "from": "clientes",  # nome da collection de clientes ****
-                "localField": "cliente_id",
-                "foreignField": "_id",
-                "as": "cliente_info"
-            }
-        },
-        {
-            "$unwind": "$cliente_info"
-        },
-        {
-            "$sort": {"horario": 1}
-        }
-    ]
-
-    resultados = list(agendamentos_collection.aggregate(pipeline))
-
-    lista = []
-
-    for ag in resultados:
-        lista.append({
-            "_id": str(ag["_id"]),
-            "cliente_id": str(ag["cliente_id"]),
-            "nome": ag["cliente_info"]["usuario"],
-            "horario": ag["horario"],
-            "status": ag["status"]
-        })
-
-    desistencias_hoje = desistencias_collection.count_documents({
-        "data_desistencia": {
-            "$gte": hoje_inicio,
-            "$lte": hoje_fim
-        }
-    })
-
-    print("DESISTÊNCIAS HOJE:", desistencias_hoje)
-
-    return {
-        "fila": fila,
-        "atendimentosHoje": atendimentos_hoje,
-        "barbeirosAtivos": 1,
-        "agendamentos": lista,
-        "desistenciasHoje": desistencias_hoje
-    } 

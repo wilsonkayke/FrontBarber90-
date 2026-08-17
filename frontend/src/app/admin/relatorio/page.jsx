@@ -5,6 +5,14 @@ import Relatorio from "../../../components/admin/Relatorio";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+const servicos = [
+  { id: 1, nome: "Corte de cabelo" },
+  { id: 2, nome: "Barba" },
+  { id: 3, nome: "Corte e barba" },
+  { id: 4, nome: "Corte infantil" },
+  { id: 5, nome: "Sobrancelha" },
+];
+
 export default function RelatorioPage() {
   const [dadosRelatorioBrutos, setDadosRelatorioBrutos] = useState([]);
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -69,6 +77,7 @@ export default function RelatorioPage() {
           <Relatorio
             dadosRelatorio={dadosRelatorioFiltrados}
             filtroStatus={filtroStatus}
+ //           servicos={servicos}
             setFiltroStatus={setFiltroStatus}
           />
         )}

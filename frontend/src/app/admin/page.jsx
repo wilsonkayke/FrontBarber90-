@@ -83,6 +83,39 @@ export default function AdminDashboard() {
     )
   : [];
 
+  const servicos = [
+    {
+      id: 1,
+      nome: "Corte de cabelo",
+      duracao: "15 minutos",
+      preco: 30,
+    },
+    {
+      id: 2,
+      nome: "Barba",
+      duracao: "10 minutos",
+      preco: 15,
+    },
+    {
+      id: 3,
+      nome: "Corte e barba",
+      duracao: "30 minutos",
+      preco: 40,
+    },
+    {
+      id: 4,
+      nome: "Corte infantil",
+      duracao: "20 minutos",
+      preco: 25,
+    },
+    {
+      id: 5,
+      nome: "Sobrancelha",
+      duracao: "5 minutos",
+      preco: 5,
+    },
+  ];
+
   // 🔐 Helper de autenticação
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
@@ -259,6 +292,7 @@ export default function AdminDashboard() {
             onFinalizar={finalizarAtendimento}
             diaSelecionado={diaSelecionado}
             setDiaSelecionado={setDiaSelecionado}
+//            servicos={servicos}
             mostrarCalendario={mostrarCalendario}
             setMostrarCalendario={setMostrarCalendario}
             datasDisponiveis={datasDisponiveis}

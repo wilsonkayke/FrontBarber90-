@@ -1,14 +1,15 @@
-"use client";
+'use client';
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { CalendarDays, Clock3, CheckCircle2, Scissors } from "lucide-react";
 
-export default function AgendaForm({
+export default function UserPage({
   data,
   setData,
   servico,
   setServico,
-  alertaFila,
-  servicos = [],
   horarios = [],
   horarioSelecionado,
   setHorarioSelecionado,
@@ -85,17 +86,6 @@ export default function AgendaForm({
         {/* LADO DIREITO */}
         <div className="p-5 sm:p-6 flex flex-col justify-center">
           {/* Título */}
-
-          {alertaFila && (
-        <div className={`w-full max-w-md mx-auto mb-6 p-4 rounded-xl text-center border font-medium text-sm animate-pulse ${
-          alertaFila.tipo === 'chamado'
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-            : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-        }`}>
-          {alertaFila.mensagem}
-        </div>
-      )}
-
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
             Agendamento
           </h1>
@@ -139,11 +129,7 @@ export default function AgendaForm({
                   className="w-full border border-gray-300 rounded-xl p-3 pl-12 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
                 />
               </div>
-            </div>
-            {/* <CalendarDays
-                  size={20}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                     
+
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   Serviços
@@ -154,12 +140,10 @@ export default function AgendaForm({
                   onChange={(e) => setServico(e.target.value)}
                   className="w-full border border-gray-300 rounded-xl p-3 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
                 >
-                 <option value="">Selecione um serviço</option>
-                 {servicos.map((item) => (
-                  <option key={item.id} value={item.id}>
-                      {item.nome} - R${item.preco}
-                  </option>
-                 ))}
+                  <option value="">Selecione um serviço</option>
+                  <option value="Corte de Cabelo">Corte de Cabelo</option>
+                  <option value="Barba">Barba</option>
+                  <option value="Corte e Barba">Corte e Barba</option>
                 </select>
               </div>
             </div>
@@ -248,10 +232,12 @@ export default function AgendaForm({
               className="min-w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold transition duration-200 shadow-lg semi-bold"
             >
               Sair
-            </button> 
+            </button>
+
+            
           </form>
         </div>
       </div>
     </main>
   );
-} 
+}

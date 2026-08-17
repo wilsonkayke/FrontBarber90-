@@ -105,33 +105,77 @@ async def google_login(dados: GoogleLoginRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/forgot-password")
-async def forgot_password(dados: ForgotPasswordRequest):
+#@router.post("/forgot-password")
+#async def forgot_password(dados: ForgotPasswordRequest):
+    # Padroniza o e-mail para evitar problemas de caixa alta/baixa
+    email_cliente = dados.email.strip().lower()
+    
+    user = users_collection.find_one({"email": email_cliente})
 
-    user = users_collection.find_one({"email": dados.email})
-
-    # Nunca informar se o e-mail existe ou não
+    # Segurança: Mantém a mesma mensagem de sucesso mesmo se o usuário não existir
     if not user:
         return {
-            "msg": "Seu link foi gerado!! (Teste de redefinir senha)"
+            "msg": "Se o e-mail estiver cadastrado, um link de redefinição será enviado."
         }
 
+    # Gera o token seguro de reset
     token = create_reset_token(str(user["_id"]))
 
+    # Seu link oficial apontando para a produção na Vercel
     reset_link = (
-     f"https://sistemagerenciamentefila.vercel.app/reset-password?token={token}"
+        f"https://sistemagerenciamentefila.vercel.app/reset-password?token={token}"
     )
 
-    print(f"\n[TESTE LOCAL] Link de redefinição gerado: {reset_link}\n")
+    print(f"\n[SISTEMA DE FILA] Link de redefinição gerado para {email_cliente}: {reset_link}\n")
 
-    #send_reset_email(user["email"], reset_link)
+    # Dispara o e-mail através do serviço do Resend com tratamento de erro isolado
+    try:
+        send_reset_email(email_cliente, reset_link)
+    except Exception as e:
+        # Registra o erro no terminal do backend para você debugar, 
+        # mas não quebra a resposta HTTP do usuário final
+        print(f"⚠️ Erro ao disparar e-mail de recuperação: {str(e)}")
+        
+        # Opcional: Em ambiente local, você pode retornar o link no console caso o Resend falhe por restrição de sandbox
+        return {
+            "msg": "Se o e-mail estiver cadastrado, um link de redefinição será enviado.",
+            "debug_local_link": reset_link  # Remova essa linha quando o domínio próprio estiver verificado
+        }
+
+ #   return {
+ #       "msg": "Se o e-mail estiver cadastrado, um link de redefinição será enviado."
+ #   }
+
+@router.post("/forgot-password")
+async def forgot_password(dados: ForgotPasswordRequest):
+    # Padroniza o e-mail para evitar problemas de caixa alta/baixa
+    email_cliente = dados.email.strip().lower()
+    
+    user = users_collection.find_one({"email": email_cliente})
+
+    # Segurança: Mantém a mesma mensagem mesmo se o usuário não existir
+    if not user:
+        return {
+            "msg": "Instruções enviadas com sucesso.",
+            "status": "mock_mode"
+        }
+
+    # Gera o token seguro de redefinição
+    token = create_reset_token(str(user["_id"]))
+
+    # Link oficial apontando para a produção na Vercel
+    reset_link = (
+        f"https://vercel.app{token}"
+    )
+
+    # 📌 IMPORTANTE: O link continuará aparecendo no console da Render para você poder testar e simular!
+    print(f"\n[BARBERFLOW AMBIENTE DE TESTE] Link de redefinição gerado para {email_cliente}: {reset_link}\n")
 
     return {
-        "msg": "Link gerado para teste",
-        "reset_link": reset_link
+        "msg": "Instruções enviadas com sucesso.",
+        "status": "mock_mode"
     }
-
-
+    
 @router.post("/reset-password")
 def reset_password(dados: ResetPasswordRequest):
 

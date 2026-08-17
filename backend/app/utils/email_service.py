@@ -20,7 +20,7 @@ def send_reset_email(to_email: str, reset_link: str):
 
     params = {
         "from": "onboarding@resend.dev",
-        "to": lenevangelista86@gmail.com,
+        "to": "agendabarberf@gmail.com",
         "subject": "Redefinição de senha",
         "html": f"""
             <h2>Redefinição de senha</h2>
