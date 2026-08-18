@@ -77,7 +77,7 @@ export default function RelatorioPage() {
           <Relatorio
             dadosRelatorio={dadosRelatorioFiltrados}
             filtroStatus={filtroStatus}
- //           servicos={servicos}
+            servicos={servicos}
             setFiltroStatus={setFiltroStatus}
           />
         )}

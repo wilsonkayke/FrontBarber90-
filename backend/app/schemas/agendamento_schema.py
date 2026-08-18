@@ -10,7 +10,7 @@ class StatusAgendamento(str, Enum):
 
 class AgendamentoCreate(BaseModel):
     horario: datetime
-   # servico_id: int  # ID do serviço selecionado
+    servico_id: int  # ID do serviço selecionado
 
 class AgendamentoResponse(AgendamentoCreate):
     id: str

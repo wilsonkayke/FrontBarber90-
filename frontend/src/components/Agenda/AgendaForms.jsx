@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock3, CheckCircle2, Scissors } from "lucide-react";
+import { CalendarDays, CheckCircle2, Scissors } from "lucide-react";
 
 export default function AgendaForm({
   data,
@@ -18,23 +18,11 @@ export default function AgendaForm({
   exit,
 }) { 
   return (
-      <main
+    <main
       style={{
         backgroundImage: "url('/imagens/principal.jpg')",
       }}
-      className="
-    bg-transparent
-    opacity-97
-    bg-cover
-    bg-center
-    bg-no-repeat
-    min-h-screen
-    flex
-    items-center
-    justify-center
-    px-4
-    py-4
-  "
+      className="bg-transparent opacity-97 bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center px-4 py-4"
     >
       {/* Container */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-4xl grid md:grid-cols-2">
@@ -69,13 +57,11 @@ export default function AgendaForm({
             <div className="mt-10 space-y-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <h3 className="font-semibold mb-1">Atendimento</h3>
-
                 <p className="text-sm text-amber-100">Quarta à sábado</p>
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <h3 className="font-semibold mb-1">Funcionamento</h3>
-
                 <p className="text-sm text-amber-100">08:00 às 18:00</p>
               </div>
             </div>
@@ -84,17 +70,16 @@ export default function AgendaForm({
 
         {/* LADO DIREITO */}
         <div className="p-5 sm:p-6 flex flex-col justify-center">
-          {/* Título */}
-
+          {/* Alerta de Fila */}
           {alertaFila && (
-        <div className={`w-full max-w-md mx-auto mb-6 p-4 rounded-xl text-center border font-medium text-sm animate-pulse ${
-          alertaFila.tipo === 'chamado'
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-            : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-        }`}>
-          {alertaFila.mensagem}
-        </div>
-      )}
+            <div className={`w-full max-w-md mx-auto mb-6 p-4 rounded-xl text-center border font-medium text-sm animate-pulse ${
+              alertaFila.tipo === 'chamado'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+            }`}>
+              {alertaFila.mensagem}
+            </div>
+          )}
 
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
             Agendamento
@@ -127,10 +112,10 @@ export default function AgendaForm({
               </label>
 
               <div className="relative">
-                {/* <CalendarDays
+                <CalendarDays
                   size={20}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />*/}
+                />
 
                 <input
                   type="date"
@@ -140,28 +125,25 @@ export default function AgendaForm({
                 />
               </div>
             </div>
-            {/* <CalendarDays
-                  size={20}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                     
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Serviços
-                </label>
-               
-                <select
-                  value={servico}
-                  onChange={(e) => setServico(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl p-3 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
-                >
-                 <option value="">Selecione um serviço</option>
-                 {servicos.map((item) => (
+
+            {/* SERVIÇOS */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">
+                Serviços
+              </label>
+             
+              <select
+                value={servico}
+                onChange={(e) => setServico(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl p-3 text-sm sm:text-base focus:ring-2 focus:ring-amber-500 outline-none transition"
+              >
+                <option value="">Selecione um serviço</option>
+                {servicos.map((item) => (
                   <option key={item.id} value={item.id}>
-                      {item.nome} - R${item.preco}
+                    {item.nome} - R${item.preco}
                   </option>
-                 ))}
-                </select>
-              </div>
+                ))}
+              </select>
             </div>
 
             {/* HORÁRIOS */}
@@ -177,28 +159,25 @@ export default function AgendaForm({
               </div>
 
               {/* GRID */}
-              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2">
+              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2 mt-2">
                 {horarios.map((item) => (
                   <button
                     key={item.hora}
                     type="button"
                     disabled={item.ocupado}
-                    onClick={() =>
-                      !item.ocupado && setHorarioSelecionado(item.hora)
-                    }
+                    onClick={() => !item.ocupado && setHorarioSelecionado(item.hora)}
                     className={`
-    p-2 rounded-xl transition duration-200
-    flex flex-col items-center justify-center
-    min-h-20
-
-    ${
-      item.ocupado
-        ? "bg-red-100 text-red-500 cursor-not-allowed"
-        : horarioSelecionado === item.hora
-          ? "bg-amber-700 text-white scale-105 shadow-lg"
-          : "bg-amber-600 hover:bg-amber-900 text-white"
-    }
-  `}
+                      p-2 rounded-xl transition duration-200
+                      flex flex-col items-center justify-center
+                      min-h-20
+                      ${
+                        item.ocupado
+                          ? "bg-red-100 text-red-500 cursor-not-allowed"
+                          : horarioSelecionado === item.hora
+                            ? "bg-amber-700 text-white scale-105 shadow-lg"
+                            : "bg-amber-600 hover:bg-amber-900 text-white"
+                      }
+                    `}
                   >
                     {/* HORÁRIO */}
                     <span className="font-bold text-lg">{item.hora}</span>
@@ -224,11 +203,8 @@ export default function AgendaForm({
 
                   <ul className="text-sm text-amber-700 space-y-1">
                     <li>• Escolha uma data disponível</li>
-
                     <li>• Selecione um horário livre</li>
-
                     <li>• Confirme seu agendamento</li>
-
                     <li>• Aguarde seu atendimento</li>
                   </ul>
                 </div>
@@ -242,16 +218,9 @@ export default function AgendaForm({
             >
               Confirmar Agendamento
             </button>
- 
-            <button
-              onClick={exit}
-              className="min-w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold transition duration-200 shadow-lg semi-bold"
-            >
-              Sair
-            </button> 
           </form>
         </div>
       </div>
     </main>
   );
-} 
+}

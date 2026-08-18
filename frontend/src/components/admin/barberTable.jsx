@@ -137,21 +137,16 @@ export default function BarberTable({
           Todos
         </div>
         */}
-      </div>
+      </div>  
 
-      {/* Tabela */}
-
+      {/* Tabela */}  
       <table className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
         <thead>
           <tr className="bg-slate-300 text-left text-gray-700">
             <th className="py-4 px-4">#</th>
-
-            <th>Nome</th>
-
-           {/* Tabela <th>Serviço</th> */}
-
-            <th>Horário</th>
-
+            <th>Nome</th> 
+            <th>Serviço</th>
+            <th>Horário</th>  
             <th className="px-14">Ações</th>
           </tr>
         </thead>
@@ -163,17 +158,17 @@ export default function BarberTable({
                 key={cliente._id}
                 className="border-b hover:bg-slate-50 transition"
               >
-                <td className="py-4 px-4 font-medium">{index + 1}</td>
+                <td className="py-4 px-4 font-medium">{index + 1}</td>  
+                <td className="font-medium text-gray-700">{cliente.nome}</td> 
 
-                <td className="font-medium text-gray-700">{cliente.nome}</td>
-{/* Tabela <th>Serviço</th> 
-
+                {/* Nome do Serviço */}
                 <td className="text-gray-600">
                   {servicos.find(
                     (s) => Number(s.id) === Number(cliente.servico_id)
                   )?.nome || "Serviço não encontrado"}
                 </td>
-*/}
+
+                {/* Horário */}
                 <td className="text-gray-600">
                   {new Date(cliente.horario + "Z").toLocaleTimeString("pt-BR", {
                     timeZone: "America/Sao_Paulo",
@@ -182,16 +177,17 @@ export default function BarberTable({
                   })}
                 </td>
 
-                <td className="flex gap-2 py-3">
+                {/* Ações */}
+                <td className="flex gap-2 py-3 px-14">
                   <button 
-                    onClick={onChamar}
+                    onClick={() => onChamar(cliente)}
                     className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
                   >
                     Chamar
                   </button>
 
                   <button
-                    onClick={onFinalizar}
+                    onClick={() => onFinalizar(cliente)}
                     className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
                   >
                     Finalizar
@@ -201,7 +197,7 @@ export default function BarberTable({
             ))
           ) : (
             <tr>
-              <td colSpan="4" className="text-center py-6 text-gray-500">
+              <td colSpan="5" className="text-center py-6 text-gray-500">
                 Nenhum agendamento pendente
               </td>
             </tr>
@@ -210,4 +206,4 @@ export default function BarberTable({
       </table>
     </div>
   );
-}
+} 

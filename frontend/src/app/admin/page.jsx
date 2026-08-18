@@ -292,7 +292,7 @@ export default function AdminDashboard() {
             onFinalizar={finalizarAtendimento}
             diaSelecionado={diaSelecionado}
             setDiaSelecionado={setDiaSelecionado}
-//            servicos={servicos}
+            servicos={servicos}
             mostrarCalendario={mostrarCalendario}
             setMostrarCalendario={setMostrarCalendario}
             datasDisponiveis={datasDisponiveis}

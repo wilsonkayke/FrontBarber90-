@@ -128,7 +128,7 @@ export default function AgendaPage() {
     setMsgErro("");
     setMsgSucesso("");
 
-    if (!data || !horarioSelecionado ) {
+    if (!data || !horarioSelecionado || !servico) {
       setMsgErro("Escolha uma data, um horário e um serviço!");
       return;
     }

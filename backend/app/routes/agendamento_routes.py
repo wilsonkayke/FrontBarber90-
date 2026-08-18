@@ -53,16 +53,16 @@ def criar_agendamento(
             detail="Horário já reservado"
         )
 
-    # if dados.servico_id not in [1, 2, 3, 4, 5]:
-    #     raise HTTPException(
-    #         status_code=400,
-    #         detail="Serviço inválido."
-    #     )
+    if dados.servico_id not in [1, 2, 3, 4, 5]:
+        raise HTTPException(
+            status_code=400,
+            detail="Serviço inválido."
+        )
 
     agendamento = {
         "cliente_id": cliente_oid,
         "horario": dados.horario,
-       # "servico_id": dados.servico_id,
+        "servico_id": dados.servico_id,
         "status": "agendado",
         "created_at": datetime.now(timezone.utc)
     }

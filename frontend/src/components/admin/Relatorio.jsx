@@ -4,7 +4,7 @@ import React from "react";
 
 export default function Relatorio({
   dadosRelatorio = [],
-  //servicos = [],
+  servicos = [],
   filtroStatus = "todos",
   setFiltroStatus,
 }) {
@@ -57,7 +57,7 @@ export default function Relatorio({
 
             <th>Data do Atendimento</th>
 
-            {/* Finalizados   <th>Serviços</th> */}
+            <th>Serviços</th> 
 
             {/* Finalizados */}
             {filtroStatus !== "cancelados" && (
@@ -81,7 +81,7 @@ export default function Relatorio({
               /*
                * Filtra os serviços de acordo com o botão selecionado.
                */
-              /*              const servicosDoDia = item.servicos
+               const servicosDoDia = item.servicos
                 ?.filter((servicoItem) => {
                   if (filtroStatus === "finalizados") {
                     return servicoItem.status === "finalizado";
@@ -94,9 +94,7 @@ export default function Relatorio({
                   return true;
                 })
                 .map((servicoItem) => {
-                  /*
-                   * Procura o nome do serviço pelo ID.
-                   
+                  
                   const servicoEncontrado = servicos.find(
                     (s) =>
                       Number(s.id) === Number(servicoItem.servico_id)
@@ -109,7 +107,6 @@ export default function Relatorio({
                       "Serviço não encontrado",
                   };
                 }) || [];
-*/
               return (
                 <tr
                   key={item.data || index}
@@ -125,12 +122,7 @@ export default function Relatorio({
                     {item.data ? item.data.split("-").reverse().join("/") : "N/A"}
                   </td>
 
-                  {/* Data 
-                  <td className="font-bold text-gray-700">
-                    {item.data.split("-").reverse().join("/")}
-                  </td>
-
-                  {/* Serviços 
+                  {/* Serviços*/} 
                   <td className="text-gray-600 py-3">
                     {servicosDoDia.length > 0 ? (
                       <div className="flex flex-col gap-1">
@@ -148,7 +140,6 @@ export default function Relatorio({
                       </span>
                     )}
                   </td>
-*/}
                   {/* Finalizados */}
                   {filtroStatus !== "cancelados" && (
                     <td className="text-center text-green-600 font-bold">

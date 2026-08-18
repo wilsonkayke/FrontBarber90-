@@ -313,7 +313,7 @@ def dashboard_admin(admin=Depends(get_admin)):
             "cliente_id": str(ag["cliente_id"]),
             "nome": ag["cliente_info"]["usuario"],
             "horario": ag["horario"],
-           # "servico_id": ag["servico_id"],
+            "servico_id": ag["servico_id"],
             "status": ag["status"]
         })
 
