@@ -10,6 +10,8 @@ const API_URL =
 export default function FilaPage() {
   const [fila, setFila] = useState(null);
   const router = useRouter();
+  const [nomeUser, setNomeUser] = useState(null);
+
 
   const getAuthHeaders = () => ({
     "Content-Type": "application/json",

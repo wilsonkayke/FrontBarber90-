@@ -4,24 +4,62 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import AgendaForm from "../../components/Agenda/AgendaForms";
+import NavBar from "../../components/Agenda/Sidbar";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function AgendaPage() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [data, setData] = useState("");
   const [horarioSelecionado, setHorarioSelecionado] = useState("");
   const [servico, setServico] = useState("");
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
-  
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  const [nomeUser, setNomeUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      const dadosSalvo = localStorage.getItem("user");
+      if (dadosSalvo) {
+        try {
+          const usuarioObjeto = JSON.parse(dadosSalvo);
+          return usuarioObjeto.usuario || "";
+        } catch (e) {
+          console.error("Erro ao analisar o JSON do usuário:", e);
+        }
+      }
+    }
+    return "";
+  });
+
+  function alternarMenu() {
+    setMenuAberto(!menuAberto);
+  }
+
   // 🆕 STATE ADICIONADO: Controla os alertas de fila
   const [alertaFila, setAlertaFila] = useState(null);
 
   const horariosFixos = [
-    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-    "16:00", "16:30", "17:00", "17:30",
+    "08:00",
+    "08:30",
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+    "13:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+    "17:00",
+    "17:30",
   ];
 
   const servicos = [
@@ -42,63 +80,67 @@ export default function AgendaPage() {
 
   // 🆕 EFFECT ADICIONADO: Intercepta o usuário que reabriu a aba
   useEffect(() => {
-  const agendamentoId = localStorage.getItem("id_agendamento");
-  if (!agendamentoId) return;
+    const agendamentoId = localStorage.getItem("id_agendamento");
+    if (!agendamentoId) return;
 
-  const checarStatusFila = async () => {
-    try {
-      const resposta = await fetch(`${API_URL}/agendamentos/${agendamentoId}/status`);
-      if (!resposta.ok) {
-        localStorage.removeItem("id_agendamento");
-        return;
-      }
-
-      const dados = await resposta.json();
-
-      // TESTE 1: Ainda não foi chamado. Volta para a fila.
-      if (dados.status === "agendado") {
-        router.push("/fila");
-        return;
-      }
-
-      // TESTE 2 e 3: O barbeiro chamou!
-      if (dados.status === "em_atendimento" && dados.minutos_passados !== null) {
-        
-        // Garante que o valor nunca seja negativo por delay de rede
-        const minutos = Math.max(0, dados.minutos_passados);
-
-        if (minutos <= 15) {
-          setAlertaFila({
-            mensagem: `🚨 Corre! Você foi chamado há ${minutos} minutos. Se desloque até a barbearia! (75)9 9293-9090`,
-            tipo: "chamado"
-          });
-        } else {
-          setAlertaFila({
-            mensagem: `⚠️ Você foi chamado anteriormente (há ${minutos} minutos), mas o tempo limite de espera expirou.`,
-            tipo: "atraso"
-          });
+    const checarStatusFila = async () => {
+      try {
+        const resposta = await fetch(
+          `${API_URL}/agendamentos/${agendamentoId}/status`,
+        );
+        if (!resposta.ok) {
+          localStorage.removeItem("id_agendamento");
+          return;
         }
 
-        // Limpa o ID para permitir novos agendamentos futuros
+        const dados = await resposta.json();
+
+        // TESTE 1: Ainda não foi chamado. Volta para a fila.
+        if (dados.status === "agendado") {
+          router.push("/fila");
+          return;
+        }
+
+        // TESTE 2 e 3: O barbeiro chamou!
+        if (
+          dados.status === "em_atendimento" &&
+          dados.minutos_passados !== null
+        ) {
+          // Garante que o valor nunca seja negativo por delay de rede
+          const minutos = Math.max(0, dados.minutos_passados);
+
+          if (minutos <= 15) {
+            setAlertaFila({
+              mensagem: `🚨 Corre! Você foi chamado há ${minutos} minutos. Se desloque até a barbearia! (75)9 9293-9090`,
+              tipo: "chamado",
+            });
+          } else {
+            setAlertaFila({
+              mensagem: `⚠️ Você foi chamado anteriormente (há ${minutos} minutos), mas o tempo limite de espera expirou.`,
+              tipo: "atraso",
+            });
+          }
+
+          // Limpa o ID para permitir novos agendamentos futuros
+          localStorage.removeItem("id_agendamento");
+        }
+      } catch (erro) {
+        console.error("Erro na checagem da fila:", erro);
         localStorage.removeItem("id_agendamento");
       }
-    } catch (erro) {
-      console.error("Erro na checagem da fila:", erro);
-      localStorage.removeItem("id_agendamento");
-    }
-  };
+    };
 
-  checarStatusFila();
-}, [router]);
+    checarStatusFila();
+  }, [router]);
   // BUSCAR HORÁRIOS OCUPADOS (Mantido original)
-  useEffect(() => { 
+  useEffect(() => {
     if (!data) {
       setHorariosDisponiveis(horariosFixos);
       return;
     }
 
     const buscarHorarios = async () => {
-      try { 
+      try {
         const resposta = await fetch(
           `${API_URL}/agendamentos/horarios?data=${data}`,
         );
@@ -112,18 +154,18 @@ export default function AgendaPage() {
             ocupado: horariosOcupados.includes(horario),
           })),
         );
-      } catch (erro) {  
+      } catch (erro) {
         console.error(erro);
         setHorariosDisponiveis(horariosFixos);
       }
     };
 
     buscarHorarios();
-  }, [data]); 
+  }, [data]);
 
   // AGENDAR
   const handleAgendar = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
     setMsgErro("");
     setMsgSucesso("");
@@ -133,7 +175,7 @@ export default function AgendaPage() {
       return;
     }
 
-    try { 
+    try {
       const token = localStorage.getItem("token");
       const [ano, mes, dia] = data.split("-");
       const [horaSel, minutoSel] = horarioSelecionado.split(":");
@@ -183,17 +225,17 @@ export default function AgendaPage() {
 
       // REDIRECIONAR
       setTimeout(() => {
-        router.push("/fila"); 
-      }, 2000); 
+        router.push("/fila");
+      }, 2000);
     } catch (erro) {
-      console.error(erro);  
+      console.error(erro);
       setMsgErro("Erro ao conectar com o servidor");
     }
   };
 
   return (
     <AgendaForm
-      data={data} 
+      data={data}
       setData={setData}
       servico={servico}
       setServico={setServico}
@@ -203,10 +245,13 @@ export default function AgendaPage() {
       setHorarioSelecionado={setHorarioSelecionado}
       msgErro={msgErro}
       msgSucesso={msgSucesso}
-      handleAgendar={handleAgendar} 
+      handleAgendar={handleAgendar}
       exit={() => router.push("/")}
       // 🆕 PROP PASSADA: Disponibiliza o estado para o componente interno renderizar
-      alertaFila={alertaFila} 
+      alertaFila={alertaFila}
+      nomeUser={nomeUser}
+      isOpen={menuAberto}
+      onClose={alternarMenu}
     />
   );
 }

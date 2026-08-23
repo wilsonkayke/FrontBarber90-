@@ -40,6 +40,7 @@ async def login(dados: ClientLogin):
         data={
             "id": str(user["_id"]),
             "email": user["email"],
+            "usuario": user.get("usuario", user["email"]),
             "role": user.get("role", "cliente")
         }
     )
@@ -50,6 +51,7 @@ async def login(dados: ClientLogin):
         "user": {
             "id": str(user["_id"]),
             "email": user["email"],
+            "usuario": user.get("usuario", user["email"]),
             "role": user.get("role", "cliente")
         }
     }

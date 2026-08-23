@@ -1,8 +1,11 @@
 "use client";
 
 import { CalendarDays, CheckCircle2, Scissors } from "lucide-react";
+import { useEffect, useState } from 'react';
+import AgendaSidbar from "./Sidbar";
 
 export default function AgendaForm({
+  nomeUser,
   data,
   setData,
   servico,
@@ -16,14 +19,37 @@ export default function AgendaForm({
   msgSucesso,
   handleAgendar,
   exit,
+  isOpen,
+  onClose,
+
 }) { 
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+  setMounted(true);
+}, []);
+
   return (
     <main
       style={{
         backgroundImage: "url('/imagens/principal.jpg')",
       }}
-      className="bg-transparent opacity-97 bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center px-4 py-4"
+      className="relative bg-transparent bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center px-4 py-4"
     >
+       
+{/* Cabeçalho do formulário com o Botão de Gaveta acoplado */}
+<div className="absolute top-4 right-4 z-30">
+  <AgendaSidbar
+    onOptionsClick={(action) => {
+      if (action === "FILA_ATENDIMENTO") {
+        console.log("Ação recebida no Form: Fila de atendimento clicada");
+      }
+    }}
+  />
+</div>
+     
+    
       {/* Container */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-4xl grid md:grid-cols-2">
         {/* LADO ESQUERDO */}
@@ -68,6 +94,15 @@ export default function AgendaForm({
           </div>
         </div>
 
+        {/* 1. Fundo Escuro (Backdrop) - CORRIGIDO SEM 'cn' */}
+       <div
+        onClick={onClose}
+        className={`
+          fixed inset-0 bg-black/50 z-40 transition-opacity duration-300
+          ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+        `}
+      />
+
         {/* LADO DIREITO */}
         <div className="p-5 sm:p-6 flex flex-col justify-center">
           {/* Alerta de Fila */}
@@ -88,6 +123,13 @@ export default function AgendaForm({
           <p className="text-gray-500 mt-2 mb-8">
             Escolha uma data e um horário disponível
           </p>
+
+           <div className="mb-6 border-b pb-4">
+        <h2 className="text-xl font-bold text-gray-800">
+          Olá, <span className="text-orange-400">
+  {mounted ? (nomeUser || "Cliente") : "Cliente"}</span>!
+        </h2>
+      </div>
 
           {/* Mensagem erro */}
           {msgErro && (
