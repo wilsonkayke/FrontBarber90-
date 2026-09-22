@@ -71,9 +71,7 @@ export default function FilaPage() {
         }
 
         const data = await response.json();
-
-        console.log("DADOS:", data);
-
+        
         if (ativo) {
           setFila(data);
         } 
