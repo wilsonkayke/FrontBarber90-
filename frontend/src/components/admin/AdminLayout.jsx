@@ -8,7 +8,7 @@ import Topbar from "./Topbar";
 export default function AdminLayout({ children }) {
   const [open, setOpen] = useState(false);
    return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-100">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
 
       {/* Sidebar */}
       <div className={`

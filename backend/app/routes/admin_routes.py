@@ -2,13 +2,14 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_current_user, get_admin
 from app.schemas.agendamento_schema import AgendamentoCreate
 from app.services.relatorio_service import buscar_relatorio_atendimentos_por_dia
+from app.schemas.servico_schema import ServicoResponse
 
 
 router = APIRouter(
@@ -46,10 +47,20 @@ def finalizar_atendimento(admin=Depends(get_admin)):
             detail="Nenhum atendimento em andamento"
         )
 
-    # 🔥 salvar histórico na collection atendidos
-    atendidos_collection.insert_one(atendimento)
-    agendamentos_collection.delete_one({"_id": atendimento["_id"]})
+    historico = {
+        "cliente_id": atendimento["cliente_id"],
+        "servico_id": atendimento["servico_id"],
+        "preco": atendimento["preco"],
+        "horario": atendimento["horario"],
+        "status": "finalizado",
+        "created_at": atendimento["created_at"],
+        "atendido_em": atendimento.get("atendido_em"),
+        "finalizado_em": atendimento["finalizado_em"]
+    }
 
+    atendidos_collection.insert_one(historico)
+
+    # Remover da fila de agendamentos
     agendamentos_collection.delete_one({
         "_id": atendimento["_id"]
     })
@@ -57,173 +68,7 @@ def finalizar_atendimento(admin=Depends(get_admin)):
     return {
         "message": "Atendimento finalizado",
         "agendamento_id": str(atendimento["_id"])
-    }
-
-
-@router.get("/admin/dashboard/relatorio-atendimentos")
-async def get_relatorio_atendimentos(
-    _admin=Depends(get_admin)
-):
-    try:
-
-        pipeline = [
-
-            # =====================================================
-            # 1. PEGA OS ATENDIMENTOS FINALIZADOS
-            # =====================================================
-            {
-                "$match": {
-                    "status": "finalizado"
-                }
-            },
-
-            # Criamos um status próprio para o relatório
-            {
-                "$set": {
-                    "status_relatorio": "finalizado",
-                    "data_base": "$horario"
-                }
-            },
-
-            # =====================================================
-            # 2. JUNTA AS DESISTÊNCIAS
-            # =====================================================
-            {
-                "$unionWith": {
-                    "coll": "desistencias",
-                    "pipeline": [
-
-                        {
-                            "$set": {
-                                "status_relatorio": "cancelado",
-                                "data_base": "$data_agendamento"
-                            }
-                        }
-
-                    ]
-                }
-            },
-
-            # =====================================================
-            # 3. PEGAMOS DATA + SERVIÇO + STATUS
-            # =====================================================
-            {
-                "$project": {
-                    "status_relatorio": 1,
-                    "servico_id": 1,
-
-                    "data_formatada": {
-                        "$dateToString": {
-                            "format": "%Y-%m-%d",
-                            "date": "$data_base",
-                            "timezone": "America/Sao_Paulo"
-                        }
-                    }
-                }
-            },
-
-            # =====================================================
-            # 4. AGRUPA POR DATA + SERVIÇO + STATUS
-            # =====================================================
-            {
-                "$group": {
-                    "_id": {
-                        "data": "$data_formatada",
-                        "servico_id": "$servico_id",
-                        "status": "$status_relatorio"
-                    },
-
-                    "total": {
-                        "$sum": 1
-                    }
-                }
-            },
-
-            # =====================================================
-            # 5. AGRUPA NOVAMENTE POR DATA
-            # =====================================================
-            {
-                "$group": {
-                    "_id": "$_id.data",
-
-                    "servicos": {
-                        "$push": {
-                            "servico_id": "$_id.servico_id",
-                            "status": "$_id.status",
-                            "total": "$total"
-                        }
-                    },
-
-                    "total_finalizados": {
-                        "$sum": {
-                            "$cond": [
-                                {
-                                    "$eq": [
-                                        "$_id.status",
-                                        "finalizado"
-                                    ]
-                                },
-                                "$total",
-                                0
-                            ]
-                        }
-                    },
-
-                    "total_cancelados": {
-                        "$sum": {
-                            "$cond": [
-                                {
-                                    "$eq": [
-                                        "$_id.status",
-                                        "cancelado"
-                                    ]
-                                },
-                                "$total",
-                                0
-                            ]
-                        }
-                    }
-                }
-            },
-
-            # =====================================================
-            # 6. FORMATO FINAL PARA O FRONTEND
-            # =====================================================
-            {
-                "$project": {
-                    "_id": 0,
-                    "data": "$_id",
-                    "servicos": 1,
-                    "total_finalizados": 1,
-                    "total_cancelados": 1
-                }
-            },
-
-            # =====================================================
-            # 7. MAIS RECENTE PRIMEIRO
-            # =====================================================
-            {
-                "$sort": {
-                    "data": -1
-                }
-            }
-        ]
-
-        # IMPORTANTE:
-        # Agora começamos pela coleção de atendidos,
-        # pois ela contém os finalizados.
-        cursor = atendidos_collection.aggregate(pipeline)
-
-        resultado = list(cursor)
-
-        return resultado
-
-    except Exception as e:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao gerar relatório de atendimentos: {str(e)}"
-        )
+    }  
 
 # =========================================================
 # 📌 Chamar próximo (somente admin)
@@ -277,9 +122,7 @@ def dashboard_admin(admin=Depends(get_admin)):
     atendimentos_hoje = atendidos_collection.count_documents({
         "status": "finalizado",
         "finalizado_em": {"$gte": hoje_inicio, "$lte": hoje_fim}
-    })
-
-
+    })  
 
     pipeline = [
         {
@@ -314,6 +157,7 @@ def dashboard_admin(admin=Depends(get_admin)):
             "nome": ag["cliente_info"]["usuario"],
             "horario": ag["horario"],
             "servico_id": ag["servico_id"],
+            "preco": ag["preco"],
             "status": ag["status"]
         })
 
@@ -333,3 +177,425 @@ def dashboard_admin(admin=Depends(get_admin)):
         "agendamentos": lista,
         "desistenciasHoje": desistencias_hoje
     } 
+
+
+@router.get("/admin/dashboard/relatorio-atendimentos")
+async def get_relatorio_atendimentos(
+    data_inicio: str | None = None,
+    data_fim: str | None = None,
+    _admin=Depends(get_admin)
+):
+    
+    inicio = None
+    fim = None
+    
+    if data_inicio:
+        inicio = datetime.fromisoformat(data_inicio).replace(
+            tzinfo=timezone.ut
+        )
+        
+    if data_fim:
+        fim = datetime.fromisoformat(data_fim).replace(
+            tzinfo=timezone.utc
+        ) + timedelta(days=1)
+
+    try:
+        
+        filtro_finalizados = {
+            "status": "finalizado"
+        }
+        
+        if inicio and fim:
+            filtro_finalizados["finalizado_em"] = {
+                "$gte": inicio,
+                "$lt": fim
+            }
+
+        pipeline = [
+
+             {
+        "$match": filtro_finalizados
+    },
+
+    {
+        "$set": {
+            "status_relatorio": "finalizado",
+            "data_base": "$finalizado_em"
+        }
+    },
+
+    {
+        "$unionWith": {
+            "coll": "desistencias",
+            "pipeline": [
+                {
+                    "$match": (
+                        {
+                            "data_agendamento": {
+                                "$gte": inicio,
+                                "$lt": fim
+                            }
+                        }
+                        if inicio and fim
+                        else {}
+                    )
+                },
+                {
+                    "$set": {
+                        "status_relatorio": "cancelado",
+                        "data_base": "$data_agendamento"
+                    }
+                }
+            ]
+        }
+    },
+
+            # =====================================================
+            # 4. FORMATA A DATA E MANTÉM OS CAMPOS NECESSÁRIOS
+            # =====================================================
+            {
+                "$project": {
+                    "status_relatorio": 1,
+                    "servico_id": 1,
+                    "preco": 1,
+                    "data_base": 1,
+
+                    "data_formatada": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d",
+                            "date": "$data_base",
+                            "timezone": "America/Sao_Paulo"
+                        }
+                    }
+                }
+            },
+
+            # =====================================================
+            # 5. AGRUPA POR:
+            #    DATA + SERVIÇO + STATUS
+            # =====================================================
+            {
+                "$group": {
+                    "_id": {
+                        "data": "$data_formatada",
+                        "servico_id": "$servico_id",
+                        "status": "$status_relatorio"
+                    },
+
+                    # Quantidade de atendimentos/desistências
+                    "total": {
+                        "$sum": 1
+                    },
+
+                    # Soma o preço somente dos atendimentos finalizados
+                    "valor_total": {
+                        "$sum": {
+                            "$cond": [
+                                {
+                                    "$eq": [
+                                        "$status_relatorio",
+                                        "finalizado"
+                                    ]
+                                },
+                                {
+                                    "$ifNull": [
+                                        "$preco",
+                                        0
+                                    ]
+                                },
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+
+            # =====================================================
+            # 6. AGRUPA NOVAMENTE POR DATA
+            # =====================================================
+            {
+                "$group": {
+                    "_id": "$_id.data",
+
+                    # Detalhamento por serviço
+                    "servicos": {
+                        "$push": {
+                            "servico_id": "$_id.servico_id",
+                            "status": "$_id.status",
+                            "total": "$total",
+                            "valor_total": "$valor_total"
+                        }
+                    },
+
+                    # Total de atendimentos finalizados no dia
+                    "total_finalizados": {
+                        "$sum": {
+                            "$cond": [
+                                {
+                                    "$eq": [
+                                        "$_id.status",
+                                        "finalizado"
+                                    ]
+                                },
+                                "$total",
+                                0
+                            ]
+                        }
+                    },
+
+                    # Total de desistências no dia
+                    "total_cancelados": {
+                        "$sum": {
+                            "$cond": [
+                                {
+                                    "$eq": [
+                                        "$_id.status",
+                                        "cancelado"
+                                    ]
+                                },
+                                "$total",
+                                0
+                            ]
+                        }
+                    },
+
+                    # Faturamento daquele dia
+                    "faturamento": {
+                        "$sum": "$valor_total"
+                    }
+                }
+            },
+
+            # =====================================================
+            # 7. TRANSFORMA A DATA STRING EM DATETIME
+            # =====================================================
+            {
+                "$set": {
+                    "data_datetime": {
+                        "$dateFromString": {
+                            "dateString": "$_id",
+                            "format": "%Y-%m-%d",
+                            "timezone": "America/Sao_Paulo"
+                        }
+                    }
+                }
+            },
+
+            # =====================================================
+            # 8. CALCULA OS INDICADORES GERAIS
+            # =====================================================
+            {
+                "$group": {
+                    
+                    "_id": None,
+
+                    # =================================================
+                    # FATURAMENTO TOTAL
+                    #
+                    # Soma todo o histórico de faturamentos.
+                    # Não é:
+                    # hoje + semana + mês
+                    #
+                    # porque esses períodos se sobrepõem.
+                    # =================================================
+                    "faturamentoTotal": {
+                        "$sum": "$faturamento"
+                    },
+
+                    # =================================================
+                    # FATURAMENTO DE HOJE
+                    # =================================================
+                    "faturamentoHoje": {
+                        "$sum": {
+                            "$cond": [
+
+                                {
+                                    "$eq": [
+                                        "$data_datetime",
+                                        {
+                                            "$dateTrunc": {
+                                                "date": "$$NOW",
+                                                "unit": "day",
+                                                "timezone": "America/Sao_Paulo"
+                                            }
+                                        }
+                                    ]
+                                },
+
+                                "$faturamento",
+
+                                0
+                            ]
+                        }
+                    },
+
+                    # =================================================
+                    # FATURAMENTO DA SEMANA
+                    #
+                    # Semana começa na segunda-feira.
+                    # =================================================
+                    "faturamentoSemana": {
+                        "$sum": {
+                            "$cond": [
+
+                                {
+                                    "$and": [
+
+                                        {
+                                            "$gte": [
+                                                "$data_datetime",
+                                                {
+                                                    "$dateTrunc": {
+                                                        "date": "$$NOW",
+                                                        "unit": "week",
+                                                        "startOfWeek": "monday",
+                                                        "timezone": "America/Sao_Paulo"
+                                                    }
+                                                }
+                                            ]
+                                        },
+
+                                        {
+                                            "$lt": [
+                                                "$data_datetime",
+                                                {
+                                                    "$dateAdd": {
+                                                        "startDate": {
+                                                            "$dateTrunc": {
+                                                                "date": "$$NOW",
+                                                                "unit": "week",
+                                                                "startOfWeek": "monday",
+                                                                "timezone": "America/Sao_Paulo"
+                                                            }
+                                                        },
+                                                        "unit": "week",
+                                                        "amount": 1
+                                                    }
+                                                }
+                                            ]
+                                        }
+
+                                    ]
+                                },
+
+                                "$faturamento",
+
+                                0
+                            ]
+                        }
+                    },
+
+                    # =================================================
+                    # FATURAMENTO DO MÊS
+                    # =================================================
+                    "faturamentoMes": {
+                        "$sum": {
+                            "$cond": [
+
+                                {
+                                    "$and": [
+
+                                        {
+                                            "$gte": [
+                                                "$data_datetime",
+                                                {
+                                                    "$dateTrunc": {
+                                                        "date": "$$NOW",
+                                                        "unit": "month",
+                                                        "timezone": "America/Sao_Paulo"
+                                                    }
+                                                }
+                                            ]
+                                        },
+
+                                        {
+                                            "$lt": [
+                                                "$data_datetime",
+                                                {
+                                                    "$dateAdd": {
+                                                        "startDate": {
+                                                            "$dateTrunc": {
+                                                                "date": "$$NOW",
+                                                                "unit": "month",
+                                                                "timezone": "America/Sao_Paulo"
+                                                            }
+                                                        },
+                                                        "unit": "month",
+                                                        "amount": 1
+                                                    }
+                                                }
+                                            ]
+                                        }
+
+                                    ]
+                                },
+
+                                "$faturamento",
+
+                                0
+                            ]
+                        }
+                    },
+
+                    # =================================================
+                    # RELATÓRIO DIÁRIO
+                    # =================================================
+                    "relatorio": {
+                        "$push": {
+                            "data": "$_id",
+                            "servicos": "$servicos",
+                            "total_finalizados": "$total_finalizados",
+                            "total_cancelados": "$total_cancelados",
+                            "faturamento": "$faturamento"
+                        }
+                    }
+                }
+            },
+
+            # =====================================================
+            # 9. ORGANIZA O RETORNO FINAL
+            # =====================================================
+            {
+                "$project": {
+                    "_id": 0,
+                    "faturamentoHoje": 1,
+                    "faturamentoSemana": 1,
+                    "faturamentoMes": 1,
+                    "faturamentoTotal": 1,
+                    "relatorio": 1
+                }
+            }
+        ]
+
+        # =========================================================
+        # 10. EXECUTA O PIPELINE
+        # =========================================================
+        resultado = list(
+            atendidos_collection.aggregate(pipeline)
+        )
+
+        # =========================================================
+        # 11. RETORNA O RESULTADO
+        # =========================================================
+        if resultado:
+            return resultado[0]
+
+        return {
+            "faturamentoHoje": 0,
+            "faturamentoSemana": 0,
+            "faturamentoMes": 0,
+            "faturamentoTotal": 0,
+            "relatorio": []
+        }
+
+    except Exception as e:
+
+        print(
+            "ERRO NO RELATÓRIO DE ATENDIMENTOS:",
+            e
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao gerar relatório de atendimentos."
+        )

@@ -12,11 +12,11 @@ export default function BarberTable({
   setMostrarCalendario,
 }) {
   return (
-    <div className="overflow-x-auto">
-      {/* Filtros */} 
+    <div className="relative overflow-x-auto">
+      {/* Filtros */}
       <div className="flex gap-4 mb-4 flex-1">
         {/* Calendário */}
-        <div className="relative">
+        <div className="">
           <button
             onClick={() => setMostrarCalendario(!mostrarCalendario)}
             className={`
@@ -38,7 +38,7 @@ export default function BarberTable({
           </button>
 
           {mostrarCalendario && (
-            <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border z-50 overflow-hidden">
+            <div className="absolute top-10 left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border z-50 overflow-hidden">
               {datasDisponiveis.length > 0 ? (
                 datasDisponiveis.map((item) => (
                   <button
@@ -137,16 +137,16 @@ export default function BarberTable({
           Todos
         </div>
         */}
-      </div>  
+      </div>
 
-      {/* Tabela */}  
+      {/* Tabela */}
       <table className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
         <thead>
           <tr className="bg-slate-300 text-left text-gray-700">
             <th className="py-4 px-4">#</th>
-            <th>Nome</th> 
+            <th>Nome</th>
             <th>Serviço</th>
-            <th>Horário</th>  
+            <th>Horário</th>
             <th className="px-14">Ações</th>
           </tr>
         </thead>
@@ -156,15 +156,15 @@ export default function BarberTable({
             data.map((cliente, index) => (
               <tr
                 key={cliente._id}
-                className="border-b hover:bg-slate-50 transition"
+                className=" border-b hover:bg-slate-50 transition"
               >
-                <td className="py-4 px-4 font-medium">{index + 1}</td>  
-                <td className="font-medium text-gray-700">{cliente.nome}</td> 
+                <td className="py-4 px-4 font-medium">{index + 1}</td>
+                <td className="font-medium text-gray-700">{cliente.nome}</td>
 
                 {/* Nome do Serviço */}
                 <td className="text-gray-600">
                   {servicos.find(
-                    (s) => Number(s.id) === Number(cliente.servico_id)
+                    (s) => Number(s.id) === Number(cliente.servico_id),
                   )?.nome || "Serviço não encontrado"}
                 </td>
 
@@ -179,7 +179,7 @@ export default function BarberTable({
 
                 {/* Ações */}
                 <td className="flex gap-2 py-3 px-14">
-                  <button 
+                  <button
                     onClick={() => onChamar(cliente)}
                     className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
                   >
@@ -204,6 +204,21 @@ export default function BarberTable({
           )}
         </tbody>
       </table>
+      {/* 
+      <table className="w-full bg-white flex flex-col md:flex-row justify-between rounded-2xl shadow-md overflow-hidden mt-6">
+        <div className="ml-4 mr-4">
+          <div className="bg-gray-300/95 flex flex-col shadow-2xl rounded-2xl p-5 mb-65 w-full max-w-md gap-4 mt-5">
+            <p className="text-lg font-semibold">
+              Total de faturamento: R$ 0,00
+            </p>
+          </div>
+
+          <div className="bg-gray-300/95 flex shadow-2xl rounded-2xl p-5 mb-65 w-full max-w-md gap-4 mt-5">
+            <p className="text-lg font-semibold">Total de gastos: R$ 0,00</p>
+          </div>
+        </div>
+      </table>
+      */}
     </div>
   );
-} 
+}

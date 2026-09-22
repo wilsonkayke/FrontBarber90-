@@ -12,6 +12,9 @@ router = APIRouter(
 )
 
 clientes_collection = db["clientes"]
+atendidos_collection = db["atendidos"]
+servicos_collection = db["servicos"]
+desistencias_collection = db ["desistencias"]
 
 
 # 🔐 Área protegida (usuário autenticado)
@@ -66,6 +69,77 @@ def listar_clientes(admin = Depends(get_admin)):
 
     return clientes
 
+
+# 📊 Histórico e gastos do cliente
+@router.get("/meu-historico")
+def meu_historico(usuario_logado=Depends(get_current_user)):
+
+    cliente_id = ObjectId(usuario_logado["id"])
+    
+    desistencias = list(
+                desistencias_collection.find({
+                    "id_cliente": cliente_id
+                })
+            )
+            
+    quantidade_cancelamentos = len(desistencias)
+
+    atendimentos = list(
+        atendidos_collection.find({
+            "cliente_id": cliente_id,
+            "status": "finalizado"
+        }).sort("finalizado_em", -1)
+    )
+
+    total_gasto = 0
+    quantidade_atendimentos = len(atendimentos)
+
+    historico = []
+    servicos_quantidade = {}
+
+    for atendimento in atendimentos:
+
+        preco = atendimento.get("preco", 0)
+        servico_id = atendimento.get("servico_id")
+
+        total_gasto += preco
+
+        # Buscar nome do serviço
+        servico = servicos_collection.find_one({
+            "_id": servico_id
+        })
+
+        nome_servico = (
+            servico["nome"]
+            if servico
+            else "Serviço não encontrado"
+        )
+
+        # Contar quantidade de cada serviço
+        if servico_id not in servicos_quantidade:
+            servicos_quantidade[servico_id] = {
+                "servico_id": servico_id,
+                "nome": nome_servico,
+                "quantidade": 0
+            }
+
+        servicos_quantidade[servico_id]["quantidade"] += 1
+
+        historico.append({
+            "data": atendimento.get("finalizado_em"),
+            "servico_id": servico_id,
+            "servico": nome_servico,
+            "preco": preco
+        })
+        
+    return {
+        "quantidade_atendimentos": quantidade_atendimentos,
+        "total_gasto": total_gasto,
+        "quantidade_cancelamentos": quantidade_cancelamentos,
+        "historico": historico,
+        "servicos": list(servicos_quantidade.values())
+    }
+                          
 
 # ✅ Buscar cliente por ID
 @router.get("/{cliente_id}")

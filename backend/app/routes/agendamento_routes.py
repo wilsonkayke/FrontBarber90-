@@ -17,6 +17,8 @@ router = APIRouter(
 agendamentos_collection = db["agendamentos"]
 atendidos_collection = db["atendidos"]
 desistencias_collection = db["desistencias"]
+servicos_collection = db["servicos"]
+clientes_collection = db["clientes"]
 
 # =========================================================
 # 📌 Criar agendamento (cliente autenticado)
@@ -53,16 +55,22 @@ def criar_agendamento(
             detail="Horário já reservado"
         )
 
-    if dados.servico_id not in [1, 2, 3, 4, 5]:
+    servico = servicos_collection.find_one({
+    "_id": dados.servico_id,
+    "status": "ativo"
+    })
+
+    if not servico:
         raise HTTPException(
             status_code=400,
-            detail="Serviço inválido."
+            detail="Serviço inválido ou indisponível."
         )
 
     agendamento = {
         "cliente_id": cliente_oid,
         "horario": dados.horario,
         "servico_id": dados.servico_id,
+        "preco": servico["preco"],
         "status": "agendado",
         "created_at": datetime.now(timezone.utc)
     }
@@ -77,55 +85,86 @@ def criar_agendamento(
         "message": "Agendamento criado com sucesso",
         "agendamento_id": str(result.inserted_id)
     }
-
-
+   
+   
 # =========================================================
 # 📌 Buscar horários ocupados por data
 # =========================================================
 
 @router.get("/horarios")
 def horarios_ocupados(data: str):
+    # 1. Define o fuso horário de Brasília
+    tz_brasilia = ZoneInfo("America/Sao_Paulo")
 
-    inicio_local = datetime.strptime(data, "%Y-%m-%d")
+    # 2. Converte a string. Usamos o combine para garantir que o datetime nasça com o fuso correto
+    data_com_fuso = datetime.strptime(data, "%Y-%m-%d").date()
+    inicio_local = datetime.combine(data_com_fuso, datetime.min.time(), tzinfo=tz_brasilia)
+    
+    fim_local = inicio_local + timedelta(days=1)
 
-    inicio_utc = inicio_local.replace(
-        tzinfo=timezone.utc
-    )
+    # 3. Converte o intervalo local para UTC para consultar o MongoDB
+    inicio_utc = inicio_local.astimezone(timezone.utc)
+    fim_utc = fim_local.astimezone(timezone.utc)
 
-    fim_utc = inicio_utc + timedelta(days=1)
+    # 4. Busca no banco (Garante que você tem um índice no campo "horario" no MongoDB!)
+    agendamentos = agendamentos_collection.find({
+        "horario": {
+            "$gte": inicio_utc,
+            "$lt": fim_utc
+        },
+        "status": "agendado"
+    })
 
-    agendamentos = list(
-        agendamentos_collection.find({
-            "horario": {
-                "$gte": inicio_utc,
-                "$lt": fim_utc
-            },
-            "status": "agendado"
-        })
-    )
-
-    horarios = []
-
-    for ag in agendamentos:
-
-        print(
-            "HORARIO BANCO:",
-            ag["horario"],
-            "TZ:",
-            ag["horario"].tzinfo
-        )
-
-        horario = (
-            ag["horario"]
-            .astimezone(
-                ZoneInfo("America/Sao_Paulo")
-            )
-            .strftime("%H:%M")
-        )
-
-        horarios.append(horario)
+    # 5. Converte de UTC para Brasília e formata (em apenas uma linha)
+    horarios = [
+    ag["horario"].replace(tzinfo=timezone.utc).astimezone(tz_brasilia).strftime("%H:%M")
+    for ag in agendamentos
+]
 
     return horarios
+
+
+# =========================================================
+# Dados do agendamento do cliente
+# ========================================================= 
+@router.get("/meu-agendamento")
+def meu_agendamento(usuario_logado=Depends(get_current_user)):
+
+    cliente_id = ObjectId(usuario_logado["id"])
+
+    agendamento = agendamentos_collection.find_one(
+        {
+            "cliente_id": cliente_id,
+            "status": {
+                "$in": ["agendado", "na_fila", "aguardando"]
+            }
+        },
+        sort=[("horario", -1)]
+    )
+
+    if not agendamento:
+        return {
+            "agendamento": None
+        }
+
+    cliente = clientes_collection.find_one({
+        "_id": agendamento["cliente_id"]
+    })
+
+    servico = servicos_collection.find_one({
+        "_id": agendamento.get("servico_id")
+    })
+
+    return {
+        "agendamento": {
+            "id": str(agendamento["_id"]),
+            "nome_cliente": cliente["usuario"] if cliente else "Cliente não encontrado",
+            "servico": servico["nome"] if servico else "Serviço não encontrado",
+            "horario": agendamento.get("horario"),
+            "preco": agendamento.get("preco", 0),
+            "status": agendamento.get("status")
+        }
+    }
 
 
 # =========================================================

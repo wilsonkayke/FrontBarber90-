@@ -9,10 +9,10 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-slate-900 border-r border-slate-200 flex flex-col p-4 space-y-2">
+    <aside className="w-64 h-screen sticky top-0 flex flex-col p-4 space-y-2">
       
       {/* Logo ou Título do seu App */}
-      <div className="px-4 py-6 font-black text-xl text-blue-600 tracking-wider">
+      <div className="px-4 py-6 font-black text-xl text-white tracking-wider">
         BARBER FLOW
       </div>
 
@@ -22,10 +22,10 @@ export default function Sidebar() {
         <Link
           href="/admin"
           className={`
-            flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
+            flex items-center bg-blue-100 gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
             ${
               pathname === "/admin"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                ? "bg-green-700 text-white shadow-md shadow-gray-200"
                 : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
             }
           `}
@@ -37,10 +37,10 @@ export default function Sidebar() {
         <Link
           href="/admin/relatorio"
           className={`
-            flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
+            flex items-center bg-blue-100 gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
             ${
               pathname === "/admin/relatorio"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                ? "bg-green-700 text-white shadow-md shadow-gray-200"
                 : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
             }
           `}

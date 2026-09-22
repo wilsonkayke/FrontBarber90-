@@ -16,8 +16,9 @@ class AgendamentoResponse(AgendamentoCreate):
     id: str
     cliente_id: str
     status: StatusAgendamento
+    preco: float
     created_at: datetime
-    atendimento_em: Optional[datetime] = None
+    atendido_em: Optional[datetime] = None
 
     class Config:
         populate_by_name = True

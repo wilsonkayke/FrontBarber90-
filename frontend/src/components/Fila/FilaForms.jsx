@@ -1,152 +1,77 @@
-'use client';
+"use client";
 
 import { useState } from "react";
+import AgendaTopbar from "../Agenda/AgendaTopbar";
+import Footer from "../Agenda/Footer";
+import DCliente from "./DCliente";
 
-export default function FilaForms({
-  fila,
-  exit,
-  sair,
-}) {
-
-  const imagens = [ 
+export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
+  const imagens = [
     "/imagens/Reflexo.jpg",
     "/imagens/Nevou.jpg",
     "/imagens/Moicano.jpg",
-  ]
+  ];
 
   const [index, setIndex] = useState(0);
 
   const proximo = () => {
-    setIndex((prev) =>
-      prev === imagens.length - 1 ? 0 : prev + 1
-    );
+    setIndex((prev) => (prev === imagens.length - 1 ? 0 : prev + 1));
   };
 
   const anterior = () => {
-    setIndex((prev) =>
-      prev === 0 ? imagens.length - 1 : prev - 1
-    );
+    setIndex((prev) => (prev === 0 ? imagens.length - 1 : prev - 1));
   };
 
   return (
-    <main
+    // CONTÊINER PRINCIPAL: Ocupa no mínimo a tela inteira e define o fluxo flex vertical
+    <div
       style={{
-        backgroundImage: "url('/imagens/principal.jpg')"
+        backgroundImage: "url('/imagens/principal.jpg')",
       }}
-      className="
-        bg-cover
-        bg-center
-        bg-no-repeat
-        min-h-screen
-        flex
-        items-center
-        justify-center
-        px-4
-        py-4 
-      "
+      className="bg-cover bg-center bg-no-repeat min-h-screen flex flex-col justify-between"
     >
+      <AgendaTopbar nomeUser={nomeUser} />
+      <main className="relative z-10 flex-grow flex items-center justify-center px-4 py-8 mt-5">
+        <div className="bg-gray-400/95 flex flex-col shadow-2xl rounded-2xl p-5 w-full max-w-5xl backdrop-blur-sm gap-4">
+          <h1 className="text-white text-2xl font-bold text-center mb-6">
+            Acompanhamento da Fila
+          </h1>
 
-      <div className="fixed top-0 right-0 z-50">
-        <button
-          onClick={sair}
-          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-bl-xl transition duration-200 shadow-lg semi-transparent backdrop-blur-sm">
+          <DCliente agendamento={agendamento} />
 
-          Sair
+          {!fila ? (
+            <p className="text-center text-gray-600">Carregando...</p>
+          ) : fila.posicao === null ? (
+            <p className="text-center font-bold text-white">Você foi chamado</p>
+          ) : (
+            <div className="bg-gray-600/70 backdrop-blur-sm rounded-2xl space-y-3 text-center">
+              <p className="text-white font-semibold mt-4">
+                Sua posição: {fila.posicao}°
+              </p>
 
-        </button>
-      </div>
+              <p className="text-white font-bold">
+                Pessoas à frente: {fila.pessoas_a_frente}
+              </p>
 
-      <div className="bg-gray-100/95 flex flex-col shadow-2xl rounded-2xl p-5 mb-65 w-full max-w-md backdrop-blur-sm gap-4">
+              <p className="text-white font-bold">
+                Total na fila: {fila.total_na_fila}
+              </p>
 
-        <h1 className="text-2xl font-bold text-center mb-6">
-          Acompanhamento da Fila
-        </h1>
+              <div className="border-t border-gray-100 pt-4 mt-4"></div>
 
-        {!fila ? (
-
-          <p className="text-center text-gray-600">
-            Carregando...
-          </p>
-
-        ) : fila.posicao === null ? (
-
-          <p className="text-center text-gray-600">
-            Você foi chamado
-          </p>
-
-        ) : (
-
-          <div className="space-y-3 text-center">
-
-            <p className="text-lg font-semibold">
-              Sua posição: {fila.posicao}°
-            </p>
-
-            <p>
-              Pessoas à frente: {fila.pessoas_a_frente}
-            </p>
-
-            <p>
-              Total na fila: {fila.total_na_fila}
-            </p>
-
-            <button
-              onClick={exit}
-              className="
-                bg-red-700
-                text-white
-                px-4
-                py-2
-                rounded-xl
-                hover:bg-red-800
-                transition
-              "
-            >
-              Sair da fila
-            </button>
-
-          </div>
-        )}
-
-      </div>
-      
-      {/* Imagem Carrossel */}
-      <div className="flex
-        flex-col
-        items-center
-        gap-3
-        absolute
-        bottom-5
-        right-5
-        mt-5
-        ">
-
-        <img
-          src={imagens[index]}
-          alt="carousel"
-          className="w-48 h-48 object-cover rounded-full shadow-lg"
-        />
-
-        <div className="flex gap-5 ">
-          <button
-            onClick={anterior}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-400 transition"
-          >
-            Anterior
-          </button>
-          <button
-            onClick={proximo}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-400 transition"
-          >
-            {/*→*/}
-            Próximo
-          </button>
+              <button
+                onClick={exit}
+                className="bg-red-700 text-white px-4 py-2 mb-4 rounded-xl hover:bg-red-800 transition"
+              >
+                Sair da fila
+              </button>
+            </div>
+          )}
         </div>
-
-        
+      </main>
+      <div>
+        <Footer />
       </div>
-        
-
-    </main>
-  );
-}
+    </div> // Fecha o contêiner principal corretamente
+  ); // Fecha o return
+} // Fecha a função FilaForms

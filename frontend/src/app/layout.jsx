@@ -2,6 +2,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
+import AuthProvider from "../components/AuthContext/AuthContext";
 
 export const metadata = {
   title: "Barbearia",
@@ -12,18 +13,21 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return ( 
+  return (
     <html lang="pt-BR">
       <body>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
 
         <Analytics />
         <SpeedInsights />
+
         <Script
           src="https://accounts.google.com/gsi/client"
-          strategy="afterInteractive" />
-
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
-} 
+}

@@ -2,11 +2,64 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAgenda } from "../../components/Agenda/AgendaLayout";
 
 import AgendaForm from "../../components/Agenda/AgendaForms";
-import NavBar from "../../components/Agenda/Sidbar";
+import AgendaSidbar from "../../components/Agenda/Sidbar";
+import AgendaLayout from "../../components/Agenda/AgendaLayout";
+import AgendaTopbar from "../../components/Agenda/AgendaTopbar";
+import AgendaRelatorio from "../../components/Agenda/AgendaRelatorio";
+
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function AgendaContent({
+  data,
+  setData,
+  servico,
+  setServico,
+  servicos,
+  horariosDisponiveis,
+  horarioSelecionado,
+  setHorarioSelecionado,
+  msgErro,
+  msgSucesso,
+  handleAgendar,
+  alertaFila,
+  nomeUser,
+  menuAberto,
+  alternarMenu,
+}) {
+  const { currentAction } = useAgenda();
+
+  if (currentAction === "Historico") {
+    return <AgendaRelatorio />;
+  }
+
+  return (
+    <AgendaForm
+      data={data}
+      setData={setData}
+      servico={servico}
+      setServico={setServico}
+      servicos={servicos}
+      horarios={horariosDisponiveis}
+      horarioSelecionado={horarioSelecionado}
+      setHorarioSelecionado={setHorarioSelecionado}
+      msgErro={msgErro}
+      msgSucesso={msgSucesso}
+      handleAgendar={handleAgendar}
+      exit={() => {}}
+      alertaFila={alertaFila}
+      nomeUser={nomeUser}
+      isOpen={menuAberto}
+      onClose={alternarMenu}
+    />
+  );
+}
+
+
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -16,6 +69,7 @@ export default function AgendaPage() {
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
   const [menuAberto, setMenuAberto] = useState(false);
+  const [carregando, setCarregando] = useState("");
 
   const [nomeUser, setNomeUser] = useState(() => {
     if (typeof window !== "undefined") {
@@ -65,7 +119,7 @@ export default function AgendaPage() {
   const servicos = [
     { id: 1, nome: "Corte de cabelo", duracao: "15 minutos", preco: 30 },
     { id: 2, nome: "Barba", duracao: "10 minutos", preco: 15 },
-    { id: 3, nome: "Corte e barba", duracao: "30 minutos", preco: 40 },
+    { id: 3, nome: "Corte e barba", duracao: "20 minutos", preco: 45 },
     { id: 4, nome: "Corte infantil", duracao: "20 minutos", preco: 25 },
     { id: 5, nome: "Sobrancelha", duracao: "5 minutos", preco: 5 },
   ];
@@ -134,18 +188,22 @@ export default function AgendaPage() {
   }, [router]);
   // BUSCAR HORÁRIOS OCUPADOS (Mantido original)
   useEffect(() => {
-    if (!data) {
-      setHorariosDisponiveis(horariosFixos);
-      return;
-    }
+  if (!data) {
+    // Transforma os horários fixos no mesmo formato de objeto
+    setHorariosDisponiveis(horariosFixos.map(h => ({ hora: h, ocupado: false })));
+    return;
+  }
 
-    const buscarHorarios = async () => {
-      try {
-        const resposta = await fetch(
-          `${API_URL}/agendamentos/horarios?data=${data}`,
-        );
+  // 1. Variável de controle para evitar condições de corrida (race conditions)
+  let active = true;
 
-        const dados = await resposta.json();
+  const buscarHorarios = async () => {
+    try {
+      const resposta = await fetch(`${API_URL}/agendamentos/horarios?data=${data}`);
+      const dados = await resposta.json();
+      
+      // 2. Só atualiza o estado se esta ainda for a última requisição feita pelo usuário
+      if (active) {
         const horariosOcupados = Array.isArray(dados) ? dados : [];
 
         setHorariosDisponiveis(
@@ -154,14 +212,26 @@ export default function AgendaPage() {
             ocupado: horariosOcupados.includes(horario),
           })),
         );
-      } catch (erro) {
-        console.error(erro);
-        setHorariosDisponiveis(horariosFixos);
       }
-    };
+    } catch (erro) {
+      console.error(erro);
+      if (active) {
+        setHorariosDisponiveis(horariosFixos.map(h => ({ hora: h, ocupado: false })));
+      }
+    } finally {
+      if (active) {
+        setCarregando(false);
+      }
+    }
+  };
 
-    buscarHorarios();
-  }, [data]);
+  buscarHorarios();
+
+  // 3. Função de limpeza (cleanup): roda se a 'data' mudar antes da requisição atual terminar
+  return () => {
+    active = false;
+  };
+}, [data]);
 
   // AGENDAR
   const handleAgendar = async (e) => {
@@ -234,24 +304,33 @@ export default function AgendaPage() {
   };
 
   return (
-    <AgendaForm
+    <AgendaLayout
+    nomeUser={nomeUser}
+    exit={() => router.push("/")}
+  >
+    <AgendaSidbar />
+    <AgendaTopbar nomeUser={nomeUser} />
+
+    <AgendaRelatorio nomeUser={nomeUser} />
+    
+
+    <AgendaContent
       data={data}
       setData={setData}
       servico={servico}
       setServico={setServico}
       servicos={servicos}
-      horarios={horariosDisponiveis}
+      horariosDisponiveis={horariosDisponiveis}
       horarioSelecionado={horarioSelecionado}
       setHorarioSelecionado={setHorarioSelecionado}
       msgErro={msgErro}
       msgSucesso={msgSucesso}
-      handleAgendar={handleAgendar}
-      exit={() => router.push("/")}
-      // 🆕 PROP PASSADA: Disponibiliza o estado para o componente interno renderizar
+      handleAgendar={handleAgendar} 
       alertaFila={alertaFila}
       nomeUser={nomeUser}
-      isOpen={menuAberto}
-      onClose={alternarMenu}
+      menuAberto={menuAberto}
+      alternarMenu={alternarMenu}
     />
-  );
+  </AgendaLayout>
+);
 }
