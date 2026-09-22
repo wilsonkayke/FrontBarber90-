@@ -312,68 +312,63 @@ export default function Relatorio({
         </table>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mt-3">
-  <div className="mb-5">
-    <h3 className="text-lg font-semibold text-slate-800">
-      Atendimentos por serviço
-    </h3>
+      <div className="bg-slate-800 rounded-2xl shadow-sm border border-slate-200 p-5 mt-3">
+        <div className="mb-5">
+          <h3 className="text-lg font-semibold text-slate-800">
+            Atendimentos por serviço
+          </h3>
 
-    <p className="text-sm text-slate-500 mt-1">
-      Quantidade de serviços realizados no período selecionado.
-    </p>
-  </div>
+          <p className="text-sm text-slate-500 mt-1">
+            Quantidade de serviços realizados no período selecionado.
+          </p>
+        </div>
 
-  <div className="w-full h-[350px]">
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={dadosGrafico || []}
-        margin={{
-          top: 20,
-          right: 20,
-          left: 0,
-          bottom: 10,
-        }}
-      >
-        <CartesianGrid
-          strokeDasharray="3 3"
-          vertical={false}
-        />
+        <div className="w-full h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={dadosGrafico || []}
+              margin={{
+                top: 20,
+                right: 20,
+                left: 0,
+                bottom: 10,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-        <XAxis
-          dataKey="servico"
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
+              <XAxis
+                dataKey="servico"
+                tick={{ fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
 
-        <YAxis
-          allowDecimals={false}
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
 
-        <Tooltip
-          cursor={{ opacity: 0.08 }}
-          formatter={(value) => [
-            `${value} atendimentos`,
-            "Quantidade",
-          ]}
-          labelStyle={{
-            fontWeight: "600",
-          }}
-        />
+              <Tooltip
+                cursor={{ opacity: 0.08 }}
+                formatter={(value) => [`${value} atendimentos`, "Quantidade"]}
+                labelStyle={{
+                  fontWeight: "600",
+                }}
+              />
 
-        <Bar
-          dataKey="quantidade"
-          name="Atendimentos"
-          radius={[8, 8, 0, 0]}
-          barSize={45}
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  </div>
-</div>
+              <Bar
+                dataKey="quantidade"
+                name="Atendimentos"
+                radius={[8, 8, 0, 0]}
+                barSize={45}
+                fill="#22d3ee"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
