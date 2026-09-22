@@ -32,8 +32,7 @@ export default function FilaPage() {
         return;
       }
 
-      const data = await response.json();
-      console.log(data);
+      const data = await response.json(); 
 
       router.push("/agenda");
     } catch (error) { 
@@ -53,10 +52,7 @@ export default function FilaPage() {
     let ativo = true;
 
     async function carregarFila() {
-      try { 
-        console.log("TOKEN:", localStorage.getItem("token"));
-        console.log("API_URL:", API_URL);
-
+      try {   
         const response = await fetch(`${API_URL}/fila`, {
           headers: getAuthHeaders(),
         });
@@ -91,9 +87,7 @@ export default function FilaPage() {
           Authorization: `Bearer ${token}`,
         },
       }
-    );
-
-    console.log("STATUS AGENDAMENTO:", response.status);
+    );  
 
     if (!response.ok) {
       const erro = await response.text();
