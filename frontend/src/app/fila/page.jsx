@@ -71,7 +71,7 @@ export default function FilaPage() {
         }
 
         const data = await response.json();
-        
+
         if (ativo) {
           setFila(data);
         } 
@@ -82,10 +82,7 @@ export default function FilaPage() {
 
     async function carregarAgendamento() {
   try {
-    const token = localStorage.getItem("token");
-
-    console.log("TOKEN AGENDAMENTO:", token);
-    console.log("URL AGENDAMENTO:", `${API_URL}/agendamentos/meu-agendamento`);
+    const token = localStorage.getItem("token");  
 
     const response = await fetch(
       `${API_URL}/agendamentos/meu-agendamento`,
