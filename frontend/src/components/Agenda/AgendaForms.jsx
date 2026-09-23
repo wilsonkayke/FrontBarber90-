@@ -138,9 +138,9 @@ export default function AgendaForm({
             Agendamento
           </h1>
 
-          <p className="text-gray-500 mt-2">
-            Seja Bem vindo <span className="text-orange-500 font-bold">{nomeUser}</span>!
-          </p>
+          <h1 className="text-gray-500 mt-2">
+            Seja Bem vindo <p className="text-orange-500 font-bold">{nomeUser}!</p>
+          </h1>
 
           <p className="text-gray-500 mt-2 mb-8">
             Escolha uma data, horário e um serviço disponível

@@ -140,70 +140,196 @@ export default function BarberTable({
       </div>
 
       {/* Tabela */}
-      <table className="w-full bg-white rounded-2xl shadow-md overflow-hidden">
-        <thead>
-          <tr className="bg-slate-300 text-left text-gray-700">
-            <th className="py-4 px-4">#</th>
-            <th>Nome</th>
-            <th>Serviço</th>
-            <th>Horário</th>
-            <th className="px-14">Ações</th>
-          </tr>
-        </thead>
+     {/* DESKTOP */}
+<div className="hidden md:block overflow-hidden rounded-2xl shadow-md border border-slate-200">
+  <table className="w-full bg-white table-fixed">
+    <thead>
+      <tr className="bg-slate-200 text-left text-gray-700">
+        <th className="py-4 px-4 w-[8%]">#</th>
+        <th className="py-4 px-4 w-[22%]">Nome</th>
+        <th className="py-4 px-4 w-[28%] text-center">Serviço</th>
+        <th className="py-4 px-4 w-[17%] text-center">Horário</th>
+        <th className="py-4 px-4 w-[25%] text-center">Ações</th>
+      </tr>
+    </thead>
 
-        <tbody>
-          {data.length > 0 ? (
-            data.map((cliente, index) => (
-              <tr
-                key={cliente._id}
-                className=" border-b hover:bg-slate-50 transition"
-              >
-                <td className="py-4 px-4 font-medium">{index + 1}</td>
-                <td className="font-medium text-gray-700">{cliente.nome}</td>
+    <tbody>
+      {data.length > 0 ? (
+        data.map((cliente, index) => {
+          const servico = servicos.find(
+            (s) => Number(s.id) === Number(cliente.servico_id)
+          );
 
-                {/* Nome do Serviço */}
-                <td className="text-gray-600">
-                  {servicos.find(
-                    (s) => Number(s.id) === Number(cliente.servico_id),
-                  )?.nome || "Serviço não encontrado"}
-                </td>
+          return (
+            <tr
+              key={cliente._id}
+              className="border-b border-slate-100 hover:bg-slate-50 transition"
+            >
+              <td className="py-4 px-4 font-semibold text-gray-500">
+                {index + 1}
+              </td>
 
-                {/* Horário */}
-                <td className="text-gray-600">
-                  {new Date(cliente.horario + "Z").toLocaleTimeString("pt-BR", {
-                    timeZone: "America/Sao_Paulo",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
+              <td className="py-4 px-4 font-semibold text-gray-700 break-words">
+                {cliente.nome}
+              </td>
 
-                {/* Ações */}
-                <td className="flex gap-2 py-3 px-14">
+              <td className="py-4 px-4 text-gray-600 text-center break-words">
+                {servico ? (
+                  <div className="flex flex-col items-center">
+                    <span className="font-medium text-gray-700">
+                      {servico.nome}
+                    </span>
+
+                    <span className="text-sm text-gray-500">
+                      {Number(servico.preco).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-red-500">
+                    Serviço não encontrado
+                  </span>
+                )}
+              </td>
+
+              <td className="py-4 px-4 text-gray-600 text-center font-medium">
+                {new Date(cliente.horario + "Z").toLocaleTimeString("pt-BR", {
+                  timeZone: "America/Sao_Paulo",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </td>
+
+              <td className="py-4 px-4">
+                <div className="flex justify-center gap-2">
                   <button
                     onClick={() => onChamar(cliente)}
-                    className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
+                    className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition shadow-sm"
                   >
                     Chamar
                   </button>
 
                   <button
                     onClick={() => onFinalizar(cliente)}
-                    className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition"
+                    className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition shadow-sm"
                   >
                     Finalizar
                   </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="text-center py-6 text-gray-500">
-                Nenhum agendamento pendente
+                </div>
               </td>
             </tr>
-          )}
-        </tbody>
-      </table>
+          );
+        })
+      ) : (
+        <tr>
+          <td
+            colSpan="5"
+            className="text-center py-10 text-gray-500"
+          >
+            Nenhum agendamento pendente
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
+{/* MOBILE */}
+<div className="md:hidden space-y-4">
+  {data.length > 0 ? (
+    data.map((cliente, index) => {
+      const servico = servicos.find(
+        (s) => Number(s.id) === Number(cliente.servico_id)
+      );
+
+      return (
+        <div
+          key={cliente._id}
+          className="bg-white rounded-2xl shadow-md border border-slate-200 p-4"
+        >
+          {/* Cabeçalho do card */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-xs font-medium text-gray-400">
+                CLIENTE #{index + 1}
+              </span>
+
+              <h3 className="text-lg font-bold text-gray-800 mt-1 break-words">
+                {cliente.nome}
+              </h3>
+            </div>
+
+            <div className="bg-slate-100 rounded-full px-3 py-1">
+              <span className="text-sm font-semibold text-gray-600">
+                {new Date(cliente.horario + "Z").toLocaleTimeString(
+                  "pt-BR",
+                  {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )}
+              </span>
+            </div>
+          </div>
+
+          {/* Informações */}
+          <div className="space-y-3 border-t border-slate-100 pt-4">
+            <div>
+              <p className="text-xs font-medium text-gray-400 uppercase">
+                Serviço
+              </p>
+
+              {servico ? (
+                <div className="flex items-center justify-between gap-3 mt-1">
+                  <span className="font-medium text-gray-700">
+                    {servico.nome}
+                  </span>
+
+                  <span className="font-semibold text-gray-700 whitespace-nowrap">
+                    {Number(servico.preco).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-sm text-red-500">
+                  Serviço não encontrado
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="grid grid-cols-2 gap-3 mt-5">
+            <button
+              onClick={() => onChamar(cliente)}
+              className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold py-2.5 rounded-xl transition shadow-sm"
+            >
+              Chamar
+            </button>
+
+            <button
+              onClick={() => onFinalizar(cliente)}
+              className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-semibold py-2.5 rounded-xl transition shadow-sm"
+            >
+              Finalizar
+            </button>
+          </div>
+        </div>
+      );
+    })
+  ) : (
+    <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-8 text-center">
+      <p className="text-gray-500">
+        Nenhum agendamento pendente
+      </p>
+    </div>
+  )}
+</div>
       {/* 
       <table className="w-full bg-white flex flex-col md:flex-row justify-between rounded-2xl shadow-md overflow-hidden mt-6">
         <div className="ml-4 mr-4">

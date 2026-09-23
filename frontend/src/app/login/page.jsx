@@ -3,15 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import LoginForms from "../../components/Login/LoginForms"; 
+import LoginForms from "../../components/Login/LoginForms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function LoginPage() { 
+export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState(""); 
+  const [senha, setSenha] = useState("");
   const [msgErro, setMsgErro] = useState("");
   const [msgSucesso, setMsgSucesso] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -20,39 +20,62 @@ export default function LoginPage() {
 
   // 🆕 FUNÇÃO ADICIONADA: Decide para qual tela mandar o cliente após logar
   const gerenciarRedirecionamentoPosLogin = async (user) => {
-  // 1. Se for admin, vai direto para o painel de administração
-  if (user.role?.trim().toLowerCase() === "admin") {
-    router.push("/admin");
-    return;
-  }
-
-  // 2. Se for cliente comum, verifica o localStorage
-  const agendamentoId = localStorage.getItem("id_agendamento");
-
-  if (agendamentoId) {
-    try {
-      const resStatus = await fetch(`${API_URL}/agendamentos/${agendamentoId}/status`);
-      
-      if (resStatus.ok) {
-        const dadosFila = await resStatus.json();
-
-        // Se o status retornado for exatamente "agendado", desvia o cliente para a fila!
-        if (dadosFila.status === "agendado") {
-          router.push("/fila");
-          return; // Mata a execução para não ler o router.push("/agenda") abaixo
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao verificar fila no login:", error);
+    // 1. Se for admin, vai direto para o painel de administração
+    if (user.role?.trim().toLowerCase() === "admin") {
+      router.push("/admin");
+      return;
     }
-  }
 
-  // 3. Se não cair em nenhuma regra acima, segue para a agenda padrão
-  router.push("/agenda");
-};
+    // Cliente
+    const agendamentoId = localStorage.getItem("id_agendamento");
+
+    // Não existe agendamento salvo
+    if (!agendamentoId) {
+      router.push("/agenda");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_URL}/agendamentos/${agendamentoId}/status`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      // ID não existe mais ou não pertence ao usuário
+      if (!response.ok) {
+        localStorage.removeItem("id_agendamento");
+        router.push("/agenda");
+        return;
+      }
+
+      const dados = await response.json();
+
+      // Possui agendamento ativo
+      if (dados.status === "agendado" || dados.status === "em_atendimento") {
+        router.push("/fila");
+        return;
+      }
+
+      // Agendamento finalizado/cancelado
+      localStorage.removeItem("id_agendamento");
+      router.push("/agenda");
+    } catch (error) {
+      console.error("Erro ao verificar agendamento:", error);
+
+      // Em caso de erro na consulta, não deixa o cliente preso na fila
+      router.push("/agenda");
+    }
+  };
 
   const inicializarEBotarGoogle = () => {
-    if (!window.google?.accounts?.id || !document.  getElementById("googleButton")) {
+    if (
+      !window.google?.accounts?.id ||
+      !document.getElementById("googleButton")
+    ) {
       return;
     }
 
@@ -67,7 +90,7 @@ export default function LoginPage() {
 
       window.google.accounts.id.renderButton(
         document.getElementById("googleButton"),
-        { theme: "outline", size: "large", width: "100%" }
+        { theme: "outline", size: "large", width: "100%" },
       );
     } catch (error) {
       console.error("Erro ao renderizar botão do Google:", error);
@@ -78,7 +101,10 @@ export default function LoginPage() {
     inicializarEBotarGoogle();
 
     const intervalo = setInterval(() => {
-      if (window.google?.accounts?.id && document.getElementById("googleButton")) {
+      if (
+        window.google?.accounts?.id &&
+        document.getElementById("googleButton")
+      ) {
         inicializarEBotarGoogle();
         clearInterval(intervalo);
       }
@@ -89,7 +115,7 @@ export default function LoginPage() {
 
   // CALLBACK GOOGLE
   const handleGoogleLogin = async (response) => {
-    try { 
+    try {
       const googleToken = response.credential;
 
       const req = await fetch(`${API_URL}/auth/google`, {
@@ -107,57 +133,49 @@ export default function LoginPage() {
 
       // 🔑 AJUSTE GOOGLE: Preserva o id_agendamento caso ele exista
       const idSalvo = localStorage.getItem("id_agendamento");
-      localStorage.clear(); 
-      if (idSalvo) localStorage.setItem("id_agendamento", idSalvo);
+
+      localStorage.clear();
 
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // Dispara o redirecionamento inteligente
       await gerenciarRedirecionamentoPosLogin(data.user);
-    } catch (error) {   
+    } catch (error) {
       console.error(error);
       setMsgErro("Erro ao conectar");
     }
-  };  
+  };
 
   // LOGIN NORMAL
-  const entrar = async () => {  
+  const entrar = async () => {
     setMsgErro("");
     setMsgSucesso("");
 
-    try { 
-      const response = await fetch(
-        `${API_URL}/auth/login`, 
-        {
-          method: "POST", 
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, senha }),
-        }
-      );
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (Array.isArray(data.detail)) { 
+        if (Array.isArray(data.detail)) {
           const erros = data.detail.map((err) => err.msg).join(", ");
-          setMsgErro(erros);  
+          setMsgErro(erros);
         } else {
           setMsgErro(data.detail || "Email ou senha inválidos");
         }
-        return; 
+        return;
       }
 
       // 🔑 MODIFICAÇÃO CIRÚRGICA AQUI:
       // Em vez de dar um clear total e apagar a nossa fila, nós guardamos o ID antes de limpar
       const idFilaExistente = localStorage.getItem("id_agendamento");
-      
+
       localStorage.clear(); // Limpa tokens velhos
-      
-      // Restaura o ID da fila para o navegador não perder a memória do agendamento
-      if (idFilaExistente) {
-        localStorage.setItem("id_agendamento", idFilaExistente);
-      }
 
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -168,8 +186,7 @@ export default function LoginPage() {
       // Executa a nossa checagem inteligente de rotas após 1 segundo
       setTimeout(async () => {
         await gerenciarRedirecionamentoPosLogin(data.user);
-      }, 1000);
-
+      }, 1000); 
     } catch (error) {
       console.error(error);
       setMsgErro("Erro ao conectar com servidor");
@@ -178,12 +195,12 @@ export default function LoginPage() {
 
   return (
     <>
-      <Script 
-        src="https://google.com" 
+      <Script
+        src="https://google.com"
         strategy="afterInteractive"
         onLoad={inicializarEBotarGoogle}
       />
-  
+
       <LoginForms
         email={email}
         senha={senha}

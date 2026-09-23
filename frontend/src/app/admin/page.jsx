@@ -139,9 +139,8 @@ export default function AdminDashboard() {
         return;
       }
 
-      const data = await response.json();
-      console.log("Cliente chamado:", data);
-
+      const data = await response.json(); 
+      
       setDashboard((prev) => ({
         ...prev,
         fila: prev.fila - 1,
@@ -201,9 +200,7 @@ export default function AdminDashboard() {
 
     async function carregarDashboard() {
       try {
-        const token = localStorage.getItem("token");
-        console.log("TOKEN:", token);
-        console.log("API_URL:", API_URL);
+        const token = localStorage.getItem("token");  
 
         const response = await fetch(
           `${API_URL}/agendamentos/admin/dashboard`,
@@ -221,9 +218,7 @@ export default function AdminDashboard() {
           return;
         }
 
-        const data = await response.json();
-        console.log("DADOS:", data);
-
+        const data = await response.json(); 
         if (ativo) {
           setDashboard(data);
         }
