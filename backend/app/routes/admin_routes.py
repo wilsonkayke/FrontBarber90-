@@ -184,75 +184,152 @@ async def get_relatorio_atendimentos(
     data_inicio: str | None = None,
     data_fim: str | None = None,
     _admin=Depends(get_admin)
-):
-    
+):  
     inicio = None
     fim = None
-    
-    if data_inicio:
-        inicio = datetime.fromisoformat(data_inicio).replace(
-            tzinfo=timezone.ut
-        )
-        
-    if data_fim:
-        fim = datetime.fromisoformat(data_fim).replace(
-            tzinfo=timezone.utc
-        ) + timedelta(days=1)
 
     try:
-        
+
+        # =========================================================
+        # 1. DEFINE O INÍCIO DO PERÍODO
+        # =========================================================
+
+        if data_inicio:
+            inicio = datetime.fromisoformat(data_inicio).replace(
+                tzinfo=timezone.utc
+            )
+
+        # =========================================================
+        # 2. DEFINE O FIM DO PERÍODO
+        # =========================================================
+
+        if data_fim:
+            fim = datetime.fromisoformat(data_fim).replace(
+                tzinfo=timezone.utc
+            ) + timedelta(days=1)
+
+        # =========================================================
+        # 3. QUANDO INFORMOU APENAS A DATA INICIAL
+        #
+        # Exemplo:
+        # data_inicio = 2026-09-09
+        # data_fim    = None
+        #
+        # Resultado:
+        # 09/09 → agora
+        # =========================================================
+
+        if inicio and not fim:
+            fim = datetime.now(timezone.utc)
+
+        # =========================================================
+        # 4. QUANDO INFORMOU APENAS A DATA FINAL
+        #
+        # Exemplo:
+        # data_inicio = None
+        # data_fim    = 2026-09-18
+        #
+        # Resultado:
+        # início do histórico → 18/09
+        #
+        # Como "inicio" continua None, o MongoDB não limita
+        # o começo do período.
+        # =========================================================
+
+        # =========================================================
+        # 5. VALIDAÇÃO
+        # =========================================================
+
+        if inicio and fim and inicio >= fim:
+            raise HTTPException(
+                status_code=400,
+                detail="A data inicial deve ser anterior à data final."
+            )
+
+        # =========================================================
+        # 6. FILTRO DOS ATENDIMENTOS FINALIZADOS
+        # =========================================================
+
         filtro_finalizados = {
             "status": "finalizado"
         }
-        
-        if inicio and fim:
-            filtro_finalizados["finalizado_em"] = {
-                "$gte": inicio,
-                "$lt": fim
-            }
+
+        if inicio or fim:
+
+            filtro_data = {}
+
+            if inicio:
+                filtro_data["$gte"] = inicio
+
+            if fim:
+                filtro_data["$lt"] = fim
+
+            filtro_finalizados["finalizado_em"] = filtro_data
+
+        # =========================================================
+        # 7. PIPELINE PRINCIPAL
+        # =========================================================
 
         pipeline = [
 
-             {
-        "$match": filtro_finalizados
-    },
+            # =====================================================
+            # ATENDIMENTOS FINALIZADOS
+            # =====================================================
 
-    {
-        "$set": {
-            "status_relatorio": "finalizado",
-            "data_base": "$finalizado_em"
-        }
-    },
+            {
+                "$match": filtro_finalizados
+            },
 
-    {
-        "$unionWith": {
-            "coll": "desistencias",
-            "pipeline": [
-                {
-                    "$match": (
+            {
+                "$set": {
+                    "status_relatorio": "finalizado",
+                    "data_base": "$finalizado_em"
+                }
+            },
+
+            # =====================================================
+            # DESISTÊNCIAS / CANCELAMENTOS
+            # =====================================================
+
+            {
+                "$unionWith": {
+                    "coll": "desistencias",
+                    "pipeline": [
                         {
-                            "data_agendamento": {
-                                "$gte": inicio,
-                                "$lt": fim
+                            "$match": (
+                                {
+                                    "data_agendamento": {
+                                        **(
+                                            {"$gte": inicio}
+                                            if inicio
+                                            else {}
+                                        ),
+                                        **(
+                                            {"$lt": fim}
+                                            if fim
+                                            else {}
+                                        )
+                                    }
+                                }
+                                if inicio or fim
+                                else {}
+                            )
+                        },
+
+                        {
+                            "$set": {
+                                "status_relatorio": "cancelado",
+                                "data_base": "$data_agendamento"
                             }
                         }
-                        if inicio and fim
-                        else {}
-                    )
-                },
-                {
-                    "$set": {
-                        "status_relatorio": "cancelado",
-                        "data_base": "$data_agendamento"
-                    }
+                    ]
                 }
-            ]
-        }
-    },
+            },
 
             # =====================================================
-            # 4. FORMATA A DATA E MANTÉM OS CAMPOS NECESSÁRIOS
+            # 4. FORMATA A DATA
             # =====================================================
+
             {
                 "$project": {
                     "status_relatorio": 1,
@@ -271,9 +348,9 @@ async def get_relatorio_atendimentos(
             },
 
             # =====================================================
-            # 5. AGRUPA POR:
-            #    DATA + SERVIÇO + STATUS
+            # 5. AGRUPA POR DATA + SERVIÇO + STATUS
             # =====================================================
+
             {
                 "$group": {
                     "_id": {
@@ -282,13 +359,11 @@ async def get_relatorio_atendimentos(
                         "status": "$status_relatorio"
                     },
 
-                    # Quantidade de atendimentos/desistências
-                    "total": {
+                    "total": {  
                         "$sum": 1
                     },
 
-                    # Soma o preço somente dos atendimentos finalizados
-                    "valor_total": {
+                    "valor_total": {    
                         "$sum": {
                             "$cond": [
                                 {
@@ -313,12 +388,12 @@ async def get_relatorio_atendimentos(
             # =====================================================
             # 6. AGRUPA NOVAMENTE POR DATA
             # =====================================================
+
             {
                 "$group": {
                     "_id": "$_id.data",
 
-                    # Detalhamento por serviço
-                    "servicos": {
+                    "servicos": {   
                         "$push": {
                             "servico_id": "$_id.servico_id",
                             "status": "$_id.status",
@@ -327,8 +402,7 @@ async def get_relatorio_atendimentos(
                         }
                     },
 
-                    # Total de atendimentos finalizados no dia
-                    "total_finalizados": {
+                    "total_finalizados": {  
                         "$sum": {
                             "$cond": [
                                 {
@@ -343,8 +417,7 @@ async def get_relatorio_atendimentos(
                         }
                     },
 
-                    # Total de desistências no dia
-                    "total_cancelados": {
+                    "total_cancelados": {   
                         "$sum": {
                             "$cond": [
                                 {
@@ -359,16 +432,16 @@ async def get_relatorio_atendimentos(
                         }
                     },
 
-                    # Faturamento daquele dia
-                    "faturamento": {
+                    "faturamento": {    
                         "$sum": "$valor_total"
                     }
                 }
             },
 
             # =====================================================
-            # 7. TRANSFORMA A DATA STRING EM DATETIME
+            # 7. TRANSFORMA DATA STRING EM DATETIME
             # =====================================================
+
             {
                 "$set": {
                     "data_datetime": {
@@ -382,34 +455,29 @@ async def get_relatorio_atendimentos(
             },
 
             # =====================================================
-            # 8. CALCULA OS INDICADORES GERAIS
+            # 8. CALCULA OS INDICADORES
             # =====================================================
+
             {
-                "$group": {
-                    
+                "$group": { 
                     "_id": None,
 
-                    # =================================================
-                    # FATURAMENTO TOTAL
-                    #
-                    # Soma todo o histórico de faturamentos.
-                    # Não é:
-                    # hoje + semana + mês
-                    #
-                    # porque esses períodos se sobrepõem.
-                    # =================================================
+                    # -------------------------------------------------
+                    # FATURAMENTO TOTAL DO PERÍODO FILTRADO
+                    # -------------------------------------------------
+
                     "faturamentoTotal": {
                         "$sum": "$faturamento"
                     },
 
-                    # =================================================
+                    # -------------------------------------------------
                     # FATURAMENTO DE HOJE
-                    # =================================================
+                    # -------------------------------------------------
+
                     "faturamentoHoje": {
                         "$sum": {
                             "$cond": [
-
-                                {
+                                {   
                                     "$eq": [
                                         "$data_datetime",
                                         {
@@ -421,27 +489,22 @@ async def get_relatorio_atendimentos(
                                         }
                                     ]
                                 },
-
-                                "$faturamento",
-
+                                "$faturamento", 
                                 0
                             ]
                         }
                     },
 
-                    # =================================================
+                    # -------------------------------------------------
                     # FATURAMENTO DA SEMANA
-                    #
-                    # Semana começa na segunda-feira.
-                    # =================================================
+                    # -------------------------------------------------
+
                     "faturamentoSemana": {
                         "$sum": {
-                            "$cond": [
-
+                            "$cond": [  
                                 {
                                     "$and": [
-
-                                        {
+                                        {   
                                             "$gte": [
                                                 "$data_datetime",
                                                 {
@@ -474,27 +537,23 @@ async def get_relatorio_atendimentos(
                                                 }
                                             ]
                                         }
-
-                                    ]
-                                },
-
-                                "$faturamento",
-
+                                        ]
+                                    },
+                                "$faturamento", 
                                 0
                             ]
                         }
                     },
 
-                    # =================================================
+                    # -------------------------------------------------
                     # FATURAMENTO DO MÊS
-                    # =================================================
+                    # -------------------------------------------------
+
                     "faturamentoMes": {
                         "$sum": {
-                            "$cond": [
-
+                            "$cond": [  
                                 {
-                                    "$and": [
-
+                                    "$and": [   
                                         {
                                             "$gte": [
                                                 "$data_datetime",
@@ -525,21 +584,19 @@ async def get_relatorio_atendimentos(
                                                     }
                                                 }
                                             ]
-                                        }
-
-                                    ]
+                                        }   
+                                    ]   
                                 },
-
-                                "$faturamento",
-
+                                "$faturamento", 
                                 0
                             ]
                         }
                     },
 
-                    # =================================================
+                    # -------------------------------------------------
                     # RELATÓRIO DIÁRIO
-                    # =================================================
+                    # -------------------------------------------------
+
                     "relatorio": {
                         "$push": {
                             "data": "$_id",
@@ -553,8 +610,9 @@ async def get_relatorio_atendimentos(
             },
 
             # =====================================================
-            # 9. ORGANIZA O RETORNO FINAL
+            # 9. ORGANIZA O RETORNO
             # =====================================================
+
             {
                 "$project": {
                     "_id": 0,
@@ -570,6 +628,7 @@ async def get_relatorio_atendimentos(
         # =========================================================
         # 10. EXECUTA O PIPELINE
         # =========================================================
+
         resultado = list(
             atendidos_collection.aggregate(pipeline)
         )
@@ -577,6 +636,7 @@ async def get_relatorio_atendimentos(
         # =========================================================
         # 11. RETORNA O RESULTADO
         # =========================================================
+
         if resultado:
             return resultado[0]
 
@@ -587,6 +647,9 @@ async def get_relatorio_atendimentos(
             "faturamentoTotal": 0,
             "relatorio": []
         }
+
+    except HTTPException:
+        raise
 
     except Exception as e:
 

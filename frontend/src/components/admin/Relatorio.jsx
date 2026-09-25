@@ -22,7 +22,9 @@ export default function Relatorio({
   faturamentoMes = 0,
   faturamentoTotal = 0,
   dataInicio,
+  setDataInicio,
   dataFim,
+  setDataFim,
   dados,
   dadosGrafico,
 }) {
@@ -139,6 +141,16 @@ export default function Relatorio({
               className="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setDataInicio("");
+              setDataFim("");
+            }}
+            className="py-4 px-4 bg-gray-600 hover:bg-gray-300 text-white rounded-lg font-medium transition"
+          >
+            Limpar datas
+          </button>
         </div>
       </div>
 
@@ -323,50 +335,48 @@ export default function Relatorio({
           </p>
         </div>
 
-        <div className="w-full h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={dadosGrafico || []}
+        <div className="bg-slate-100 rounded-2xl shadow-md p-5">
+          {dadosGrafico && dadosGrafico.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dadosGrafico}
               margin={{
-                top: 20,
+                top:20,
                 right: 20,
                 left: 0,
                 bottom: 10,
               }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
-              <XAxis
-                dataKey="servico"
-                tick={{ fontSize: 12 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="servico"
+                tick={{fontSize: 12}}
                 tickLine={false}
-                axisLine={false}
-              />
+                axisLine={false}  
 
-              <YAxis
-                allowDecimals={false}
-                tick={{ fontSize: 12 }}
+                />
+                <YAxis allowDecimals={false} 
+                tick={{fontSize: 12}}
                 tickLine={false}
-                axisLine={false}
-              />
+                axisLine={false}  
+                />
 
-              <Tooltip
-                cursor={{ opacity: 0.08 }}
-                formatter={(value) => [`${value} atendimentos`, "Quantidade"]}
-                labelStyle={{
-                  fontWeight: "600",
-                }}
-              />
+                <Tooltip
+                  cursor={{opacity: 0.38}}
+                  formatter={(value) => [`${value} atendimentos`, "Quantidade"]}
+                  labelStyle={{fontWeight: "600",}}
+                />
 
-              <Bar
-                dataKey="quantidade"
-                name="Atendimentos"
+                <Bar dataKey="quantidade" name="Atendimentos" 
                 radius={[8, 8, 0, 0]}
                 barSize={45}
                 fill="#22d3ee"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-gray-500">
+              Nenhum dado disponível para o período selecionado.
+            </div>
+          )}
         </div>
       </div>
     </div>

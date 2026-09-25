@@ -23,6 +23,8 @@ export default function RelatorioPage() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
+  const [erroPeriodo, setErroPeriodo] = useState("");
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,11 +35,15 @@ export default function RelatorioPage() {
     async function carregarRelatorio() {
       try {
         setLoading(true);
+        setErroPeriodo("");
 
         const params = new URLSearchParams();
 
-        if (dataInicio && dataFim) {
-          params.append("data_inicio", dataInicio);
+        if (dataInicio) {
+          params.append("data_inicio", dataInicio); 
+        }
+        
+        if (dataFim) {
           params.append("data_fim", dataFim);
         }
 
@@ -69,6 +75,19 @@ export default function RelatorioPage() {
           setLoading(false);
         }
       }
+    }
+
+    if (dataInicio && dataFim && dataInicio > dataFim) {
+      setErroPeriodo(
+        "A data inicial não pode ser posterior à data final."
+      );
+      
+      setDadosRelatorio(null);
+      setLoading(false);
+
+      return () => {
+        ativo = false;
+      };
     }
 
     carregarRelatorio();  
@@ -129,12 +148,22 @@ const dadosGrafico = dadosGraficosServicos.map((item) => {
           Históricos de Atendimentos
         </h2>
 
+        {erroPeriodo && (
+        <div className="bg-red-500 border-red-200 text-red-700  rounded-xl p-4">
+        <span>
+          {erroPeriodo}
+        </span>
+      </div>
+      )}
+
         {loading ? (
           <p className="text-center py-6">
             Carregando dados do histórico...
           </p>
         ) : (
           <Relatorio
+
+            
 
             dadosGrafico={dadosGrafico}
 
