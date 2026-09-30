@@ -139,6 +139,10 @@ export default function LoginPage() {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      if (idSalvo) {
+          localStorage.setItem("id_agendamento", idSalvo);
+      }
+
       // Dispara o redirecionamento inteligente
       await gerenciarRedirecionamentoPosLogin(data.user);
     } catch (error) {
@@ -180,6 +184,10 @@ export default function LoginPage() {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("role", data.user.role);
+
+      if (idFilaExistente) {
+        localStorage.setItem("id_agendamento", idFilaExistente);
+      }
 
       setMsgSucesso("Login realizado com sucesso!");
 

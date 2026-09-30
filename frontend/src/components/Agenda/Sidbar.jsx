@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { useAgenda } from "./AgendaLayout";
+import React, { useEffect, useState } from "react"; 
 
 export default function AgendaSidbar({ onOptionsClick, nomeUser }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // const isActive = pathname === "/agenda/relatorio"; 
 
   return (
     <div className="relative flex">
@@ -104,7 +104,7 @@ export default function AgendaSidbar({ onOptionsClick, nomeUser }) {
               rel="noopener noreferrer"
             >
               <img
-                src="imagens/whatsapp1.png"
+                src="/imagens/whatsapp1.png"
                 alt="WhatsApp"
                 className="inline-block w-6 h-6"
               />
@@ -118,7 +118,7 @@ export default function AgendaSidbar({ onOptionsClick, nomeUser }) {
               rel="noopener noreferrer"
             >
               <img
-                src="imagens/instagram1.png"
+                src="/imagens/instagram1.png"
                 alt="Instagram"
                 className="inline-block w-6 h-6"
               />
@@ -129,7 +129,7 @@ export default function AgendaSidbar({ onOptionsClick, nomeUser }) {
         {/* Rodapé do Menu Lateral */}
         <div className="border-t border-slate-900 pt-4 flex justify-between items-center text-xs text-slate-950 mt-3">
           <span>v1.0.0</span>
-        </div>  
+        </div>
       </div>
     </div>
   );

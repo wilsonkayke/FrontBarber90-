@@ -89,8 +89,10 @@ export default function RelatorioPage() {
     );
   }
 
-  return <AgendaRelatorio 
-  dados={dadosRelatorio} 
-  nomeUsuario={nomeUsuario}
-  />
+  return (
+    <AgendaRelatorio 
+    dados={dadosRelatorio} 
+    nomeUsuario={nomeUsuario} 
+    />
+  )
 }

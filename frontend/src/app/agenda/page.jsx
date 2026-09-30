@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAgenda } from "../../components/Agenda/AgendaLayout";
 
-import AgendaForm from "../../components/Agenda/AgendaForms";
-import AgendaSidbar from "../../components/Agenda/Sidbar";
-import AgendaLayout from "../../components/Agenda/AgendaLayout";
-import AgendaTopbar from "../../components/Agenda/AgendaTopbar";
+import AgendaForm from "../../components/Agenda/AgendaForms"; 
 import AgendaRelatorio from "../../components/Agenda/AgendaRelatorio";
 
 
@@ -71,20 +68,21 @@ export default function AgendaPage() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [carregando, setCarregando] = useState("");
 
-  const [nomeUser, setNomeUser] = useState(() => {
-    if (typeof window !== "undefined") {
-      const dadosSalvo = localStorage.getItem("user");
-      if (dadosSalvo) {
-        try {
-          const usuarioObjeto = JSON.parse(dadosSalvo);
-          return usuarioObjeto.usuario || "";
-        } catch (e) {
-          console.error("Erro ao analisar o JSON do usuário:", e);
-        }
-      }
+  const [nomeUser, setNomeUser] = useState("");
+    
+  useEffect(() => {
+  const dadosSalvo = localStorage.getItem("user");
+
+  if (dadosSalvo) {
+    try {
+      const usuarioObjeto = JSON.parse(dadosSalvo);
+
+      setNomeUser(usuarioObjeto.usuario || "");
+    } catch (e) {
+      console.error("Erro ao analisar o JSON do usuário:", e);
     }
-    return "";
-  });
+  }
+}, []);
 
   function alternarMenu() {
     setMenuAberto(!menuAberto);
@@ -304,33 +302,22 @@ export default function AgendaPage() {
   };
 
   return (
-    <AgendaLayout
+     <AgendaContent
+    data={data}
+    setData={setData}
+    servico={servico}
+    setServico={setServico}
+    servicos={servicos}
+    horariosDisponiveis={horariosDisponiveis}
+    horarioSelecionado={horarioSelecionado}
+    setHorarioSelecionado={setHorarioSelecionado}
+    msgErro={msgErro}
+    msgSucesso={msgSucesso}
+    handleAgendar={handleAgendar}
+    alertaFila={alertaFila}
     nomeUser={nomeUser}
-    exit={() => router.push("/")}
-  >
-    <AgendaSidbar />
-    <AgendaTopbar nomeUser={nomeUser} />
-
-    <AgendaRelatorio nomeUser={nomeUser} />
-    
-
-    <AgendaContent
-      data={data}
-      setData={setData}
-      servico={servico}
-      setServico={setServico}
-      servicos={servicos}
-      horariosDisponiveis={horariosDisponiveis}
-      horarioSelecionado={horarioSelecionado}
-      setHorarioSelecionado={setHorarioSelecionado}
-      msgErro={msgErro}
-      msgSucesso={msgSucesso}
-      handleAgendar={handleAgendar} 
-      alertaFila={alertaFila}
-      nomeUser={nomeUser}
-      menuAberto={menuAberto}
-      alternarMenu={alternarMenu}
-    />
-  </AgendaLayout>
+    menuAberto={menuAberto}
+    alternarMenu={alternarMenu}
+  />
 );
 }

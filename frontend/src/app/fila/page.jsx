@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import FilaForms from "../../components/Fila/FilaForms";
-import DCliente from "../../components/Fila/DCliente";
+import FilaForms from "../../components/Fila/FilaForms";  
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -41,12 +40,17 @@ export default function FilaPage() {
   };
 
   useEffect(() => {
-    const nome = localStorage.getItem("usuario");
+  const dadosSalvo = localStorage.getItem("user");
 
-    if (nome) {
-      setNomeUser(nome);
+  if (dadosSalvo) {
+    try {
+      const usuarioObjeto = JSON.parse(dadosSalvo);
+      setNomeUser(usuarioObjeto.usuario || "");
+    } catch (erro) {
+      console.error("Erro ao analisar o usuário:", erro);
     }
-  }, []);
+  }
+}, []);
 
   useEffect(() => {
     let ativo = true;

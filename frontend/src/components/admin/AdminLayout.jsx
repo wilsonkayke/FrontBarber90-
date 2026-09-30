@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import Bottom from "./Bottom";
 
 export default function AdminLayout({ children }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function AdminLayout({ children }) {
         <main className="p-4 sm:p-6">
           {children}
         </main>
-
+        
       </div>
     </div>
   );

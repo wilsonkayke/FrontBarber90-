@@ -41,10 +41,9 @@ export default function AgendaForm({
     />
 
     {/* CONTEÚDO DA PÁGINA */}
-    <div className="relative z-10 min-h-screen px-4 py-4">
+    <div className="relative z-10 min-h-screen px-4 py-4 mt-10">
       
-      {/* TOPBAR */}
-      <AgendaTopbar nomeUser={nomeUser} />
+      {/* TOPBAR */}  
 
       {/* CONTAINER */}
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden w-full max-w-4xl grid md:grid-cols-2 mt-4 mx-auto">
@@ -138,9 +137,10 @@ export default function AgendaForm({
             Agendamento
           </h1>
 
-          <h1 className="text-gray-500 mt-2">
-            Seja Bem vindo <p className="text-orange-500 font-bold">{nomeUser}!</p>
-          </h1>
+          <h3 className="text-gray-500 mt-2">
+            Seja Bem vindo {" "}
+            <span className="text-orange-500 font-bold">{nomeUser}!</span>
+          </h3>
 
           <p className="text-gray-500 mt-2 mb-8">
             Escolha uma data, horário e um serviço disponível

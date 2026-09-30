@@ -48,6 +48,20 @@ export default function Sidebar() {
           <span>📋</span> Relatório Histórico
         </Link>
 
+        <Link
+          href="/admin/barbeiro"
+          className={`
+            flex items-center bg-blue-100 gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
+            ${
+              pathname === "/admin/barbeiro"
+                ? "bg-green-700 text-white shadow-md shadow-gray-200"
+                : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+            }
+          `}
+        >
+          <span>👤</span> Barbeiro
+        </Link>
+
       </nav> 
 
       {/* Rodapé do menu ou botão de Sair se tiver */}

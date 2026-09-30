@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatCard from "../../components/admin/StatCard";
-import BarberTable from "../../components/admin/barberTable";
-import Ralatorio from "../../components/admin/Relatorio";
+import BarberTable from "../../components/admin/barberTable"; 
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -15,6 +14,8 @@ export default function AdminDashboard() {
   const [autorizado, setAutorizado] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState("hoje");
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
+
+  const [dadosFaturamento, setDadosFaturamento] = useState(null);
 
   const [dadosRelatorioBrutos, setDadosRelatorioBrutos] = useState([]);
   const [filtroStatus, setFiltroStatus] = useState("todos");
@@ -175,6 +176,9 @@ export default function AdminDashboard() {
         ),
         atendimentosHoje: prev.atendimentosHoje + 1,
       }));
+
+      await buscarRelatorio();
+
     } catch (error) {
       console.error("Erro ao finalizar atendimento:", error);
     }
@@ -199,6 +203,7 @@ export default function AdminDashboard() {
     let ativo = true;
 
     async function carregarDashboard() {
+
       try {
         const token = localStorage.getItem("token");  
 
@@ -237,6 +242,80 @@ export default function AdminDashboard() {
       clearInterval(interval);
     };
   }, [autorizado]);
+
+  const buscarRelatorio = async () => {
+  try {
+    const response = await fetch(
+      `${API_URL}/agendamentos/admin/dashboard/relatorio-atendimentos`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao buscar relatório");
+    }
+
+    const dados = await response.json();
+
+    console.log("FATURAMENTO ATUALIZADO:", dados.faturamentoHoje);
+
+    setDadosFaturamento(dados);
+
+  } catch (error) {
+    console.error("Erro ao buscar faturamento:", error);
+  }
+};
+
+  useEffect(() => {
+  if (!autorizado) return;
+
+  let ativo = true;
+
+  async function carregarDashboard() {
+    try {
+      const response = await fetch(
+        `${API_URL}/agendamentos/admin/dashboard`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      console.log("STATUS:", response.status);
+
+      if (!response.ok) {
+        const erro = await response.text();
+        console.log("ERRO BACKEND:", erro);
+        setDashboard({ erro: true });
+        return;
+      }
+
+      const data = await response.json();
+
+      if (ativo) {
+        setDashboard(data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+      setDashboard({ erro: true });
+    }
+  }
+
+  carregarDashboard();
+
+  const interval = setInterval(carregarDashboard, 3000);
+
+  return () => {
+    ativo = false;
+    clearInterval(interval);
+  };
+}, [autorizado]);
+
+useEffect(() => {
+  if (!autorizado) return;
+  
+  buscarRelatorio();
+}, [autorizado]);
 
   if (!autorizado) return null;
   if (!dashboard) return <p className="text-center">Carregando...</p>;
@@ -291,6 +370,7 @@ export default function AdminDashboard() {
             mostrarCalendario={mostrarCalendario}
             setMostrarCalendario={setMostrarCalendario}
             datasDisponiveis={datasDisponiveis}
+            faturamentoHoje={dadosFaturamento?.faturamentoHoje || 0}
           />
       </div>
     </AdminLayout>

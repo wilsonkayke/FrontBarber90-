@@ -4,114 +4,341 @@ export default function BarberTable({
   data = [],
   onChamar,
   onFinalizar,
+  faturamentoHoje = 0,
   diaSelecionado,
   setDiaSelecionado,
   servicos = [],
   datasDisponiveis = [],
   mostrarCalendario,
   setMostrarCalendario,
+  
 }) {
+
+  const formatarMoeda = (valor) => {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+
   return (
     <div className="relative overflow-x-auto">
+      <div className="mb-5">
+        <div
+  className="
+    group
+    relative
+    h-24
+    w-80
+    overflow-hidden
+    rounded-2xl
+    border border-emerald-400/20
+    bg-slate-900/90
+    backdrop-blur-md
+    p-4
+    shadow-xl
+    transition-all
+    duration-200
+    hover:-translate-y-1
+    hover:border-emerald-400/40
+    hover:shadow-emerald-900/20
+  "
+>
+  {/* Brilho discreto */}
+  <div
+    className="
+      absolute
+      -right-6
+      -top-6
+      h-20
+      w-20
+      rounded-full
+      bg-emerald-400/10
+      blur-2xl
+      transition-all
+      duration-300
+      group-hover:bg-emerald-400/20
+    "
+  />
+
+  <div className="relative flex items-center justify-between h-full">
+
+    <div>
+      <p className="text-xs font-bold tracking-widest text-gray-400">
+        FATURAMENTO HOJE
+      </p>
+
+      <p className="mt-1 text-2xl font-black text-emerald-400">
+        {formatarMoeda(faturamentoHoje)}
+      </p>
+    </div>
+
+    <div
+      className="
+        flex
+        h-11
+        w-11
+        items-center
+        justify-center
+        rounded-xl
+        border border-emerald-400/20
+        bg-emerald-400/10
+        text-xl
+      "
+    >
+      💰
+    </div>
+
+  </div>
+</div>
+      </div>
       {/* Filtros */}
       <div className="flex gap-4 mb-4 flex-1">
         {/* Calendário */}
-        <div className="">
-          <button
-            onClick={() => setMostrarCalendario(!mostrarCalendario)}
-            className={`
-              cursor-pointer
-              p-4
-              rounded-2xl
-              w-35
-              text-center
-              font-bold
-              transition
-              ${
-                mostrarCalendario
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-200 text-gray-700"
-              }
-            `}
-          >
-            📅 Calendário
-          </button>
+        <div className="relative">
+  <button
+    onClick={() => setMostrarCalendario(!mostrarCalendario)}
+    className={`
+      flex
+      items-center
+      justify-center
+      gap-2
+      w-40
+      rounded-2xl
+      border
+      px-4
+      py-3
+      text-sm
+      font-bold
+      transition-all
+      duration-200
+      cursor-pointer
+      ${
+        mostrarCalendario
+          ? `
+            border-sky-400/40
+            bg-sky-500
+            text-white
+            shadow-lg
+            shadow-sky-900/30
+          `
+          : `
+            border-white/10
+            bg-slate-900/90
+            text-slate-300
+            shadow-lg
+            hover:-translate-y-0.5
+            hover:border-sky-400/30
+            hover:bg-slate-800
+            hover:text-white
+          `
+      }
+    `}
+  >
+    <span className="text-base">📅</span>
 
-          {mostrarCalendario && (
-            <div className="absolute top-10 left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border z-50 overflow-hidden">
-              {datasDisponiveis.length > 0 ? (
-                datasDisponiveis.map((item) => (
-                  <button
-                    key={item.data}
-                    onClick={() => {
-                      setDiaSelecionado(item.data);
-                      setMostrarCalendario(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition border-b last:border-none"
+    <span>Calendário</span>
+  </button>
+
+  {mostrarCalendario && (
+    <div
+      className="
+        absolute
+        left-0
+        top-full
+        z-50
+        mt-3
+        w-72
+        overflow-hidden
+        rounded-2xl
+        border
+        border-white/10
+        bg-slate-900
+        shadow-2xl
+        shadow-black/40
+      "
+    >
+      {/* Cabeçalho */}
+      <div className="border-b border-white/10 bg-slate-800/70 px-4 py-3">
+        <p className="text-xs font-bold tracking-widest text-slate-400">
+          DATAS DISPONÍVEIS
+        </p>
+
+        <p className="mt-1 text-sm font-semibold text-white">
+          Selecione um dia
+        </p>
+      </div>
+
+      {/* Datas */}
+      <div className="max-h-80 overflow-y-auto">
+        {datasDisponiveis.length > 0 ? (
+          datasDisponiveis.map((item) => (
+            <button
+              key={item.data}
+              onClick={() => {
+                setDiaSelecionado(item.data);
+                setMostrarCalendario(false);
+              }}
+              className="
+                group
+                w-full
+                border-b
+                border-white/5
+                px-4
+                py-3
+                text-left
+                transition-all
+                last:border-none
+                hover:bg-white/[0.04]
+              "
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      items-center
+                      justify-center
+                      rounded-xl
+                      border
+                      border-sky-400/20
+                      bg-sky-400/10
+                      text-sm
+                    "
                   >
-                    <div className="font-medium">📅 {item.data}</div>
+                    📅
+                  </span>
 
-                    <div className="text-sm text-gray-500">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-200 transition-colors group-hover:text-white">
+                      {item.data}
+                    </p>
+
+                    <p className="mt-0.5 text-xs text-slate-500">
                       {item.quantidade} agendamento(s)
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="px-4 py-4 text-gray-500">
-                  Nenhuma data encontrada
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+
+                <span className="text-slate-600 transition-colors group-hover:text-sky-400">
+                  →
+                </span>
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="px-4 py-8 text-center">
+            <div className="mb-2 text-2xl">📅</div>
+
+            <p className="text-sm font-semibold text-slate-400">
+              Nenhuma data encontrada
+            </p>
+
+            <p className="mt-1 text-xs text-slate-600">
+              Não existem agendamentos disponíveis.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
         {/* Hoje */}
-        <div
-          onClick={() => {
-            setDiaSelecionado("hoje");
-            setMostrarCalendario(false);
-          }}
-          className={`
-            cursor-pointer
-            p-4
-            rounded-2xl
-            w-32
-            text-center
-            font-bold
-            transition
-            ${
-              diaSelecionado === "hoje"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-gray-700"
-            }
-          `}
-        >
-          Hoje
-        </div>
+        {/* Hoje */}
+<div
+  onClick={() => {
+    setDiaSelecionado("hoje");
+    setMostrarCalendario(false);
+  }}
+  className={`
+    flex
+    items-center
+    justify-center
+    w-32
+    rounded-2xl
+    border
+    px-4
+    py-3
+    text-sm
+    font-bold
+    cursor-pointer
+    transition-all
+    duration-200
 
-        {/* Amanhã */}
-        <div
-          onClick={() => {
-            setDiaSelecionado("amanha");
-            setMostrarCalendario(false);
-          }}
-          className={`
-            cursor-pointer
-            p-4
-            rounded-2xl
-            w-32
-            text-center
-            font-bold
-            transition
-            ${
-              diaSelecionado === "amanha"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-200 text-gray-700"
-            }
-          `}
-        >
-          Amanhã
-        </div>
+    ${
+      diaSelecionado === "hoje"
+        ? `
+          border-sky-400/40
+          bg-sky-500
+          text-white
+          shadow-lg
+          shadow-sky-900/30
+        `
+        : `
+          border-white/10
+          bg-slate-900/90
+          text-slate-300
+          shadow-lg
+          hover:-translate-y-0.5
+          hover:border-sky-400/30
+          hover:bg-slate-800
+          hover:text-white
+        `
+    }
+  `}
+>
+  Hoje
+</div>
+
+{/* Amanhã */}
+<div
+  onClick={() => {
+    setDiaSelecionado("amanha");
+    setMostrarCalendario(false);
+  }}
+  className={`
+    flex
+    items-center
+    justify-center
+    w-32
+    rounded-2xl
+    border
+    px-4
+    py-3
+    text-sm
+    font-bold
+    cursor-pointer
+    transition-all
+    duration-200
+
+    ${
+      diaSelecionado === "amanha"
+        ? `
+          border-sky-400/40
+          bg-sky-500
+          text-white
+          shadow-lg
+          shadow-sky-900/30
+        `
+        : `
+          border-white/10
+          bg-slate-900/90
+          text-slate-300
+          shadow-lg
+          hover:-translate-y-0.5
+          hover:border-sky-400/30
+          hover:bg-slate-800
+          hover:text-white
+        `
+    }
+  `}
+>
+  Amanhã
+</div>
 
         {/* Todos 
         <div
@@ -141,18 +368,35 @@ export default function BarberTable({
 
       {/* Tabela */}
      {/* DESKTOP */}
-<div className="hidden md:block overflow-hidden rounded-2xl shadow-md border border-slate-200">
-  <table className="w-full bg-white table-fixed">
+<div className="hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 shadow-xl">
+  <table className="w-full table-fixed">
+
+    {/* CABEÇALHO */}
     <thead>
-      <tr className="bg-slate-200 text-left text-gray-700">
-        <th className="py-4 px-4 w-[8%]">#</th>
-        <th className="py-4 px-4 w-[22%]">Nome</th>
-        <th className="py-4 px-4 w-[28%] text-center">Serviço</th>
-        <th className="py-4 px-4 w-[17%] text-center">Horário</th>
-        <th className="py-4 px-4 w-[25%] text-center">Ações</th>
+      <tr className="border-b border-white/10 bg-slate-800/80 text-left">
+        <th className="w-[8%] px-5 py-4 text-xs font-bold tracking-wider text-slate-400">
+          #
+        </th>
+
+        <th className="w-[22%] px-5 py-4 text-xs font-bold tracking-wider text-slate-400">
+          CLIENTE
+        </th>
+
+        <th className="w-[28%] px-5 py-4 text-center text-xs font-bold tracking-wider text-slate-400">
+          SERVIÇO
+        </th>
+
+        <th className="w-[17%] px-5 py-4 text-center text-xs font-bold tracking-wider text-slate-400">
+          HORÁRIO
+        </th>
+
+        <th className="w-[25%] px-5 py-4 text-center text-xs font-bold tracking-wider text-slate-400">
+          AÇÕES
+        </th>
       </tr>
     </thead>
 
+    {/* CORPO */}
     <tbody>
       {data.length > 0 ? (
         data.map((cliente, index) => {
@@ -163,24 +407,69 @@ export default function BarberTable({
           return (
             <tr
               key={cliente._id}
-              className="border-b border-slate-100 hover:bg-slate-50 transition"
+              className="
+                border-b
+                border-white/5
+                transition-all
+                hover:bg-white/[0.03]
+              "
             >
-              <td className="py-4 px-4 font-semibold text-gray-500">
-                {index + 1}
+              {/* POSIÇÃO */}
+              <td className="px-5 py-5">
+                <span
+                  className="
+                    flex
+                    h-8
+                    w-8
+                    items-center
+                    justify-center
+                    rounded-lg
+                    bg-slate-800
+                    text-sm
+                    font-bold
+                    text-slate-400
+                  "
+                >
+                  {index + 1}
+                </span>
               </td>
 
-              <td className="py-4 px-4 font-semibold text-gray-700 break-words">
-                {cliente.nome}
+              {/* CLIENTE */}
+              <td className="px-5 py-5">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">
+                    {cliente.nome}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Cliente aguardando atendimento
+                  </p>
+                </div>
               </td>
 
-              <td className="py-4 px-4 text-gray-600 text-center break-words">
+              {/* SERVIÇO */}
+              <td className="px-5 py-5 text-center">
                 {servico ? (
                   <div className="flex flex-col items-center">
-                    <span className="font-medium text-gray-700">
-                      {servico.nome}
+                    <span
+                      className="
+                        inline-flex
+                        items-center
+                        rounded-lg
+                        border
+                        border-sky-400/20
+                        bg-sky-400/10
+                        px-3
+                        py-1.5
+                        text-sm
+                        font-semibold
+                        text-sky-300
+                      "
+                    >
+                      ✂ {servico.nome}
                     </span>
 
-                    <span className="text-sm text-gray-500">
+                    <span className="mt-1.5 text-xs text-slate-500">
                       {Number(servico.preco).toLocaleString("pt-BR", {
                         style: "currency",
                         currency: "BRL",
@@ -188,35 +477,87 @@ export default function BarberTable({
                     </span>
                   </div>
                 ) : (
-                  <span className="text-red-500">
+                  <span className="rounded-lg bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-400">
                     Serviço não encontrado
                   </span>
                 )}
               </td>
 
-              <td className="py-4 px-4 text-gray-600 text-center font-medium">
-                {new Date(cliente.horario + "Z").toLocaleTimeString("pt-BR", {
-                  timeZone: "America/Sao_Paulo",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              {/* HORÁRIO */}
+              <td className="px-5 py-5 text-center">
+                <span
+                  className="
+                    inline-flex
+                    rounded-lg
+                    bg-slate-800
+                    px-3
+                    py-2
+                    text-sm
+                    font-bold
+                    text-slate-200
+                  "
+                >
+                  {new Date(cliente.horario + "Z").toLocaleTimeString(
+                    "pt-BR",
+                    {
+                      timeZone: "America/Sao_Paulo",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
+                </span>
               </td>
 
-              <td className="py-4 px-4">
+              {/* AÇÕES */}
+              <td className="px-5 py-5">
                 <div className="flex justify-center gap-2">
+
                   <button
                     onClick={() => onChamar(cliente)}
-                    className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition shadow-sm"
+                    className="
+                      rounded-xl
+                      border
+                      border-sky-400/20
+                      bg-sky-500/10
+                      px-4
+                      py-2.5
+                      text-sm
+                      font-bold
+                      text-sky-300
+                      shadow-sm
+                      transition-all
+                      hover:border-sky-400/40
+                      hover:bg-sky-500
+                      hover:text-white
+                      active:scale-95
+                    "
                   >
                     Chamar
                   </button>
 
                   <button
                     onClick={() => onFinalizar(cliente)}
-                    className="bg-green-600 hover:bg-green-700 active:scale-95 text-white font-medium px-4 py-2 rounded-lg transition shadow-sm"
+                    className="
+                      rounded-xl
+                      border
+                      border-emerald-400/20
+                      bg-emerald-500/10
+                      px-4
+                      py-2.5
+                      text-sm
+                      font-bold
+                      text-emerald-300
+                      shadow-sm
+                      transition-all
+                      hover:border-emerald-400/40
+                      hover:bg-emerald-500
+                      hover:text-white
+                      active:scale-95
+                    "
                   >
                     Finalizar
                   </button>
+
                 </div>
               </td>
             </tr>
@@ -226,9 +567,37 @@ export default function BarberTable({
         <tr>
           <td
             colSpan="5"
-            className="text-center py-10 text-gray-500"
+            className="px-5 py-14 text-center"
           >
-            Nenhum agendamento pendente
+            <div className="flex flex-col items-center">
+
+              <div
+                className="
+                  mb-3
+                  flex
+                  h-12
+                  w-12
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-slate-800
+                  text-xl
+                "
+              >
+                ✓
+              </div>
+
+              <p className="text-sm font-semibold text-slate-400">
+                Nenhum agendamento pendente
+              </p>
+
+              <p className="mt-1 text-xs text-slate-600">
+                A fila está vazia no momento.
+              </p>
+
+            </div>
           </td>
         </tr>
       )}

@@ -69,6 +69,11 @@ export default function Topbar() {
               className="w-10 h-10 rounded-full object-cover"
             />
           </div>
+
+          <p className="font-bold">
+            BarberFlow
+          </p>
+
         </div>
 
         {/* Direita */}

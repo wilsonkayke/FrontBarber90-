@@ -18,15 +18,7 @@ export default function Navbar() {
           {/* Logo */}
           <h1 className="text-xl font-bold">
             💈 BarberShop
-          </h1>
-
-          {/* Botão Mobile */}
-          <button
-            className="md:hidden text-3xl hover:scale-110 transition"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? "✖" : "☰"}
-          </button>
+          </h1> 
 
           {/* Menu Desktop */}
           <ul className="hidden md:flex gap-6 font-medium">

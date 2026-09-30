@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import AgendaTopbar from "../Agenda/AgendaTopbar";
+import { useState } from "react"; 
 import Footer from "../Agenda/Footer";
 import DCliente from "./DCliente";
 
@@ -29,8 +28,7 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
         backgroundImage: "url('/imagens/principal.jpg')",
       }}
       className="bg-cover bg-center bg-no-repeat min-h-screen flex flex-col justify-between"
-    >
-      <AgendaTopbar nomeUser={nomeUser} />
+    > 
       <main className="relative z-10 flex-grow flex items-center justify-center px-4 py-8 mt-5">
         <div className="bg-gray-400/95 flex flex-col shadow-2xl rounded-2xl p-5 w-full max-w-5xl backdrop-blur-sm gap-4">
           <h1 className="text-white text-2xl font-bold text-center mb-6">
