@@ -19,7 +19,7 @@ export default function AgendaTopbar({nomeUser, onExit}) {
     }
   };
   return (
-       <header className="fixed top-2 left-2 right-2 z-50 flex items-center gap-4">
+       <header className="fixed top-2 left-2 right-2 md:left-25 md:right-25 z-50 flex items-center gap-4">
       {/* 
         O contêiner agora é 'relative'. O flex layout, padding e rounded continuam aqui,
         mas o fundo e o desfoque foram movidos para a div absoluta abaixo.

@@ -284,8 +284,8 @@ export default function AgendaForm({
                   </h3>
 
                   <ul className="text-sm text-amber-700 space-y-1">
-                    <li>• Escolha uma data disponível</li>
-                    <li>• Selecione um horário livre</li>
+                    <li>• Escolha uma data e horário disponível</li>
+                    <li>• Selecione um serviço e um barbeiro</li>
                     <li>• Confirme seu agendamento</li>
                     <li>• Aguarde seu atendimento</li>
                   </ul>
