@@ -84,6 +84,7 @@ def sair_fila(usuario=Depends(get_current_user)):
         documento_desistencia = {
             "id_agendamento": agendamento["_id"],
             "id_cliente": cliente_id,
+            "barber_id": agendamento.get("barber_id"),
 
             # serviço_id que o usuário escolheu para o agendamento
              "servico_id": agendamento.get("servico_id"),
@@ -103,10 +104,7 @@ def sair_fila(usuario=Depends(get_current_user)):
             # Controle
             "status_anterior": "agendado",
             "motivo": "cliente_desistiu_via_site"
-        }
-
-        print("=== Documento de desistências ===")
-        print(documento_desistencia)
+        }   
 
         try:
             resultado = desistencias_collection.insert_one(
@@ -126,10 +124,7 @@ def sair_fila(usuario=Depends(get_current_user)):
 #           Rota fila
 # =========================================================
 @router.get("/")
-async def minha_fila( usuario=Depends(get_current_user)):
-    
-    print("USUARIO LOGADO:", usuario["id"])
-
+async def minha_fila( usuario=Depends(get_current_user)):   
 
     agora = datetime.utcnow()
 

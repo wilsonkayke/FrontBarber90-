@@ -2,11 +2,12 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError 
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from app.db.mongo_connection import db
-from app.dependencies.auth import get_current_user, get_admin
+from app.dependencies.auth import get_current_user, get_admin, get_barbeiro
 from app.schemas.agendamento_schema import AgendamentoCreate
 
 router = APIRouter(
@@ -19,6 +20,7 @@ atendidos_collection = db["atendidos"]
 desistencias_collection = db["desistencias"]
 servicos_collection = db["servicos"]
 clientes_collection = db["clientes"]
+barbeiros_collection = db["barbeiros"]
 
 # =========================================================
 # 📌 Criar agendamento (cliente autenticado)
@@ -33,6 +35,26 @@ def criar_agendamento(
 
     # 🔒 Cliente é sempre o do token
     cliente_oid = ObjectId(usuario["id"])
+    
+    try:
+        barber_oid = ObjectId(dados.barber_id)
+    except Exception:
+        raise HTTPException(
+        status_code=400,
+        detail="ID do barbeiro inválido"
+    )
+        
+    barbeiro = barbeiros_collection.find_one({
+        "_id": barber_oid, 
+        "ativo": True
+    })
+    
+    if not barbeiro:
+        raise HTTPException(
+            status_code=400,
+            detail="Barbeiro não encontrado ou inativo"
+        )
+    
 
     agora = datetime.now(timezone.utc)
 
@@ -45,13 +67,14 @@ def criar_agendamento(
 
     # 🔎 Verificar se horário já está ocupado
     existente = agendamentos_collection.find_one({
+        "barber_id": barber_oid,
         "horario": dados.horario,
         "status": "agendado"
     })
 
     if existente:
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="Horário já reservado"
         )
 
@@ -68,6 +91,7 @@ def criar_agendamento(
 
     agendamento = {
         "cliente_id": cliente_oid,
+        "barber_id": barber_oid,
         "horario": dados.horario,
         "servico_id": dados.servico_id,
         "preco": servico["preco"],
@@ -79,7 +103,14 @@ def criar_agendamento(
 
     #Aquiiiiiiiiiiiiiii
 
-    result = agendamentos_collection.insert_one(agendamento) 
+    try: 
+        result = agendamentos_collection.insert_one(agendamento) 
+        
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=409,
+            detail="Horário já reservado"
+        )
 
     return {
         "message": "Agendamento criado com sucesso",
@@ -92,34 +123,66 @@ def criar_agendamento(
 # =========================================================
 
 @router.get("/horarios")
-def horarios_ocupados(data: str):
-    # 1. Define o fuso horário de Brasília
-    tz_brasilia = ZoneInfo("America/Sao_Paulo")
-
-    # 2. Converte a string. Usamos o combine para garantir que o datetime nasça com o fuso correto
-    data_com_fuso = datetime.strptime(data, "%Y-%m-%d").date()
-    inicio_local = datetime.combine(data_com_fuso, datetime.min.time(), tzinfo=tz_brasilia)
+def horarios_ocupados(
+    data: str,
+    barber_id: str
+    ):
     
-    fim_local = inicio_local + timedelta(days=1)
-
-    # 3. Converte o intervalo local para UTC para consultar o MongoDB
-    inicio_utc = inicio_local.astimezone(timezone.utc)
-    fim_utc = fim_local.astimezone(timezone.utc)
-
-    # 4. Busca no banco (Garante que você tem um índice no campo "horario" no MongoDB!)
-    agendamentos = agendamentos_collection.find({
-        "horario": {
-            "$gte": inicio_utc,
-            "$lt": fim_utc
-        },
-        "status": "agendado"
+    try:
+        barber_oid = ObjectId(barber_id)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="ID do barbeiro inválido"
+        )
+        
+    barbeiros = barbeiros_collection.find_one({
+        "_id": barber_oid,
+        "ativo": True  
     })
 
-    # 5. Converte de UTC para Brasília e formata (em apenas uma linha)
+    if not barbeiros:
+        raise HTTPException(
+            status_code=404,
+            detail="Barbeiro não encontrado ou inativo"
+        )
+
+    try:
+        data_inicio = datetime.strptime(
+            data,
+            "%Y-%m-%d"
+        ).replace(
+            tzinfo=ZoneInfo("America/Sao_Paulo")
+        )
+
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Data inválida. Use o formato YYYY-MM-DD"
+        )
+
+    data_fim = data_inicio + timedelta(days=1)
+
+    # Converter para UTC para consultar o MongoDB
+    data_inicio_utc = data_inicio.astimezone(timezone.utc)
+    data_fim_utc = data_fim.astimezone(timezone.utc)
+
+    # Buscar somente os horários ocupados daquele barbeiro
+    agendamentos = agendamentos_collection.find({
+        "barber_id": barber_oid,
+        "horario": {
+            "$gte": data_inicio_utc,
+            "$lt": data_fim_utc
+        },
+        "status": "agendado"
+    })  
+    
     horarios = [
-    ag["horario"].replace(tzinfo=timezone.utc).astimezone(tz_brasilia).strftime("%H:%M")
-    for ag in agendamentos
-]
+        agendamento["horario"].astimezone(
+            ZoneInfo("America/Sao_Paulo")
+        ).strftime("%H:%M")
+        for agendamento in agendamentos
+    ]
 
     return horarios
 
@@ -176,15 +239,38 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
 def listar_agendamentos(usuario=Depends(get_current_user)):
 
     filtro = {
-            "horario": {"$exists": True},
-            "status": "agendado"
-        }
+        "horario": {"$exists": True},
+        "status": "agendado"
+    }
 
-    if usuario["role"] == "admin":
-        agendamentos = agendamentos_collection.find(filtro).sort("horario", 1)
+    role = usuario.get("role", "").strip().lower()
+
+    # Administrador visualiza todos os agendamentos
+    if role == "admin":
+        pass
+
+    # Barbeiro visualiza somente seus agendamentos
+    elif role == "barbeiro":
+        perfil_barbeiro = barbeiros_collection.find_one({
+            "usuario_id": ObjectId(usuario["id"]),
+            "ativo": True
+        })
+
+        if not perfil_barbeiro:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de barbeiro não encontrado ou inativo"
+            )
+
+        filtro["barber_id"] = perfil_barbeiro["_id"]
+
+    # Cliente visualiza somente seus próprios agendamentos
     else:
         filtro["cliente_id"] = ObjectId(usuario["id"])
-        agendamentos = agendamentos_collection.find(filtro).sort("horario", 1)
+
+    agendamentos = agendamentos_collection.find(
+        filtro
+    ).sort("horario", 1)
 
     lista = []
 
@@ -192,13 +278,13 @@ def listar_agendamentos(usuario=Depends(get_current_user)):
         lista.append({
             "_id": str(ag["_id"]),
             "cliente_id": str(ag["cliente_id"]),
+            "barber_id": str(ag["barber_id"]),
             "horario": ag["horario"],
             "status": ag["status"],
             "created_at": ag["created_at"]
         })
 
-    return lista
-
+    return lista    
     
 # =========================================================
 # 📌 Aqui eu estou checamos se o usuário se atrasou ou não

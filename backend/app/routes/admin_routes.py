@@ -20,6 +20,7 @@ router = APIRouter(
 agendamentos_collection = db["agendamentos"]
 atendidos_collection = db["atendidos"]
 desistencias_collection = db["desistencias"]
+barbeiros_collection = db["barbeiros"]
 
 
 
@@ -27,15 +28,46 @@ desistencias_collection = db["desistencias"]
 # Finalizar atendimento 
 # =========================================================
 
+
 @router.post("/admin/finalizar")
-def finalizar_atendimento(admin=Depends(get_admin)):
+def finalizar_atendimento(usuario=Depends(get_current_user)):
+    role = usuario.get("role", "").strip().lower()
+
+    if role == "barbeiro":
+        perfil_barbeiro = barbeiros_collection.find_one({
+            "usuario_id": ObjectId(usuario["id"]),
+            "ativo": True
+        })
+
+        if not perfil_barbeiro:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de barbeiro não encontrado ou inativo"
+            )
+
+        filtro = {
+            "status": "em_atendimento",
+            "barber_id": perfil_barbeiro["_id"]
+        }
+
+    elif role == "admin":
+        raise HTTPException(
+            status_code=400,
+            detail="O administrador precisa selecionar um barbeiro."
+        )
+
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso permitido apenas para barbeiros ou administradores"
+        )
 
     atendimento = agendamentos_collection.find_one_and_update(
-        {"status": "em_atendimento"},
+        filtro,
         {
             "$set": {
                 "status": "finalizado",
-                "finalizado_em": datetime.utcnow()
+                "finalizado_em": datetime.now(timezone.utc)
             }
         },
         return_document=ReturnDocument.AFTER
@@ -44,11 +76,12 @@ def finalizar_atendimento(admin=Depends(get_admin)):
     if not atendimento:
         raise HTTPException(
             status_code=404,
-            detail="Nenhum atendimento em andamento"
+            detail="Nenhum atendimento em andamento para este barbeiro"
         )
 
     historico = {
         "cliente_id": atendimento["cliente_id"],
+        "barber_id": atendimento["barber_id"],
         "servico_id": atendimento["servico_id"],
         "preco": atendimento["preco"],
         "horario": atendimento["horario"],
@@ -59,29 +92,65 @@ def finalizar_atendimento(admin=Depends(get_admin)):
     }
 
     atendidos_collection.insert_one(historico)
-
-    # Remover da fila de agendamentos
-    agendamentos_collection.delete_one({
-        "_id": atendimento["_id"]
-    })
+    agendamentos_collection.delete_one({"_id": atendimento["_id"]})
 
     return {
         "message": "Atendimento finalizado",
-        "agendamento_id": str(atendimento["_id"])
-    }  
+        "agendamento_id": str(atendimento["_id"]),
+        "barber_id": str(atendimento["barber_id"]),
+        "status": "finalizado"
+    }
 
 # =========================================================
 # 📌 Chamar próximo (somente admin)
 # =========================================================
 @router.post("/admin/chamar")
-def chamar_proximo(admin=Depends(get_admin)):
+def chamar_proximo(usuario=Depends(get_current_user)):
+
+    role = usuario.get("role", "").strip().lower()
+
+    filtro = {
+        "status": "agendado"
+    }
+
+    # O barbeiro só pode chamar clientes da própria fila
+    if role == "barbeiro":
+        perfil_barbeiro = barbeiros_collection.find_one({
+            "usuario_id": ObjectId(usuario["id"]),
+            "ativo": True
+        })
+
+        if not perfil_barbeiro:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de barbeiro não encontrado ou inativo"
+            )
+
+        filtro["barber_id"] = perfil_barbeiro["_id"]
+
+    # Administrador pode chamar de qualquer barbeiro,
+    # mas precisa informar qual barbeiro deseja atender
+    elif role == "admin":
+        barber_id = None
+        # Será tratado no próximo ajuste do endpoint.
+        # Por enquanto, o admin não deve chamar globalmente.
+        raise HTTPException(
+            status_code=400,
+            detail="O administrador precisa selecionar um barbeiro."
+        )
+
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso permitido apenas para barbeiros ou administradores"
+        )
 
     proximo = agendamentos_collection.find_one_and_update(
-        {"status": "agendado"},
+        filtro,
         {
             "$set": {
                 "status": "em_atendimento",
-                "atendido_em": datetime.utcnow()
+                "atendido_em": datetime.now(timezone.utc)
             }
         },
         sort=[("horario", 1)],
@@ -91,13 +160,14 @@ def chamar_proximo(admin=Depends(get_admin)):
     if not proximo:
         raise HTTPException(
             status_code=404,
-            detail="Nenhum agendamento pendente"
+            detail="Nenhum agendamento pendente para este barbeiro"
         )
 
     return {
         "message": "Cliente chamado",
         "agendamento_id": str(proximo["_id"]),
         "cliente_id": str(proximo["cliente_id"]),
+        "barber_id": str(proximo["barber_id"]),
         "status": proximo["status"]
     }
  
@@ -167,9 +237,7 @@ def dashboard_admin(admin=Depends(get_admin)):
             "$lte": hoje_fim
         }
     })
-
-    print("DESISTÊNCIAS HOJE:", desistencias_hoje)
-
+ 
     return {
         "fila": fila,
         "atendimentosHoje": atendimentos_hoje,

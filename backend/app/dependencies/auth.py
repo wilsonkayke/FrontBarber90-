@@ -60,3 +60,13 @@ def get_admin(user: dict = Depends(get_current_user)):
         )
 
     return user 
+
+def get_barbeiro(user: dict = Depends(get_current_user)):
+    role = str(user.get("role", "")).strip().lower()
+    
+    if role != "barbeiro":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso permitido apenas para barbeiros"
+        )
+    return user

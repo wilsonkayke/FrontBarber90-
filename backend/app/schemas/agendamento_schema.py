@@ -11,6 +11,7 @@ class StatusAgendamento(str, Enum):
 class AgendamentoCreate(BaseModel):
     horario: datetime
     servico_id: int  # ID do serviço selecionado
+    barber_id: str  # ID do barbeiro selecionado
 
 class AgendamentoResponse(AgendamentoCreate):
     id: str
