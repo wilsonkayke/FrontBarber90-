@@ -251,12 +251,35 @@ def dashboard_admin(admin=Depends(get_admin)):
 async def get_relatorio_atendimentos(
     data_inicio: str | None = None,
     data_fim: str | None = None,
-    _admin=Depends(get_admin)
+    usuario=Depends(get_current_user)
 ):  
     inicio = None
     fim = None
 
     try:
+        
+        role = usuario.get("role", "").strip().lower()
+        filtro_barber_id = None
+            
+        if role == "barbeiro":
+            perfil_barbeiro = barbeiros_collection.find_one({
+            "usuario_id": ObjectId(usuario["id"]),
+            "ativo": True
+            })
+                
+            if not perfil_barbeiro:
+                raise HTTPException(
+                status_code=404,
+                detail="Barbeiro não encontrado ou inativo."
+                )
+                    
+            filtro_barber_id = perfil_barbeiro["_id"]
+                
+        elif role != "admin":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido por administradores e barbeiros."
+            )
 
         # =========================================================
         # 1. DEFINE O INÍCIO DO PERÍODO
@@ -333,6 +356,9 @@ async def get_relatorio_atendimentos(
                 filtro_data["$lt"] = fim
 
             filtro_finalizados["finalizado_em"] = filtro_data
+            
+        if filtro_barber_id is not None:
+            filtro_finalizados["barber_id"] = filtro_barber_id
 
         # =========================================================
         # 7. PIPELINE PRINCIPAL
@@ -364,24 +390,23 @@ async def get_relatorio_atendimentos(
                     "coll": "desistencias",
                     "pipeline": [
                         {
-                            "$match": (
-                                {
-                                    "data_agendamento": {
-                                        **(
-                                            {"$gte": inicio}
-                                            if inicio
-                                            else {}
-                                        ),
-                                        **(
-                                            {"$lt": fim}
-                                            if fim
-                                            else {}
-                                        )
+                            "$match": {
+                                **(
+                                    {
+                                        "data_agendamento": {
+                                            **({"$gte": inicio} if inicio else {}),
+                                            **({"$lt": fim} if fim else {})
+                                        }
                                     }
-                                }
-                                if inicio or fim
-                                else {}
-                            )
+                                    if inicio or fim
+                                    else {}
+                                ),
+                                **(
+                                    {"barber_id": filtro_barber_id}
+                                    if filtro_barber_id is not None
+                                    else {}
+                                )
+                            }
                         },
 
                         {

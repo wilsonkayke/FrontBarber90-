@@ -6,6 +6,7 @@ import { useAgenda } from "../../components/Agenda/AgendaLayout";
 
 import AgendaForm from "../../components/Agenda/AgendaForms"; 
 import AgendaRelatorio from "../../components/Agenda/AgendaRelatorio";
+import Barbeiros from "../../components/admin/Barbeiros";
 
 
 
@@ -17,6 +18,10 @@ function AgendaContent({
   servico,
   setServico,
   servicos,
+  barbeiro,
+  setBarbeiro,
+  barbeiros,
+  carregandoBarbeiros,
   horariosDisponiveis,
   horarioSelecionado,
   setHorarioSelecionado,
@@ -41,6 +46,10 @@ function AgendaContent({
       servico={servico}
       setServico={setServico}
       servicos={servicos}
+      barbeiro={barbeiro}
+      setBarbeiro={setBarbeiro}
+      barbeiros={barbeiros}
+      carregandoBarbeiros={carregandoBarbeiros}
       horarios={horariosDisponiveis}
       horarioSelecionado={horarioSelecionado}
       setHorarioSelecionado={setHorarioSelecionado}
@@ -63,6 +72,9 @@ export default function AgendaPage() {
   const [data, setData] = useState("");
   const [horarioSelecionado, setHorarioSelecionado] = useState("");
   const [servico, setServico] = useState("");
+  const [barbeiro, setBarbeiro] = useState("");
+  const [barbeiros, setBarbeiros] = useState([]);
+  const [carregandoBarbeiros, setCarregandoBarbeiros] = useState(true);
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
   const [menuAberto, setMenuAberto] = useState(false);
@@ -231,6 +243,49 @@ export default function AgendaPage() {
   };
 }, [data]);
 
+
+  useEffect(() => {
+  let ativo = true;
+
+  async function buscarBarbeiros() {
+    try {
+      const token = localStorage.getItem("token");
+
+      const resposta = await fetch(`${API_URL}/barbeiros/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!resposta.ok) {
+        throw new Error("Não foi possível carregar os barbeiros.");
+      }
+
+      const dados = await resposta.json();
+
+      if (ativo) {
+        setBarbeiros(Array.isArray(dados) ? dados : []);
+      }
+    } catch (erro) {
+      console.error("Erro ao buscar barbeiros:", erro);
+
+      if (ativo) {
+        setMsgErro("Não foi possível carregar os barbeiros.");
+      }
+    } finally {
+      if (ativo) {
+        setCarregandoBarbeiros(false);
+      }
+    }
+  }
+
+  buscarBarbeiros();
+
+  return () => {
+    ativo = false;
+  };
+}, []);
+
   // AGENDAR
   const handleAgendar = async (e) => {
     e.preventDefault();
@@ -238,8 +293,8 @@ export default function AgendaPage() {
     setMsgErro("");
     setMsgSucesso("");
 
-    if (!data || !horarioSelecionado || !servico) {
-      setMsgErro("Escolha uma data, um horário e um serviço!");
+    if (!data || !horarioSelecionado || !servico || !barbeiro ) {
+      setMsgErro("Escolha uma data, horário, serviço e barbeiro!");
       return;
     }
 
@@ -265,6 +320,7 @@ export default function AgendaPage() {
         body: JSON.stringify({
           horario: dataLocal.toISOString(),
           servico_id: Number(servico),
+          barber_id: barbeiro,
         }),
       });
 
@@ -290,6 +346,7 @@ export default function AgendaPage() {
       setData("");
       setHorarioSelecionado("");
       setServico("");
+      setBarbeiro("");
 
       // REDIRECIONAR
       setTimeout(() => {
@@ -308,6 +365,10 @@ export default function AgendaPage() {
     servico={servico}
     setServico={setServico}
     servicos={servicos}
+    barbeiro={barbeiro}
+    setBarbeiro={setBarbeiro}
+    barbeiros={barbeiros}
+    carregandoBarbeiros={carregandoBarbeiros}
     horariosDisponiveis={horariosDisponiveis}
     horarioSelecionado={horarioSelecionado}
     setHorarioSelecionado={setHorarioSelecionado}
