@@ -128,6 +128,7 @@ export default function AdminDashboard() {
 
   // 🚀 Chamar próximo cliente
   async function chamarProximo() {
+    console.log("CLIENTE CLICADO:", cliente);
     try {
       const response = await fetch(`${API_URL}/agendamentos/admin/chamar`, {
         method: "POST",

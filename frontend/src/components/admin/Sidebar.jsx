@@ -45,11 +45,11 @@ export default function Sidebar() {
             }
           `}
         >
-          <span>📋</span> Relatório Histórico
+          <span>📋</span> Relatório 
         </Link>
 
         <Link
-          href="/admin/barbeiro"
+          href="/admin/funbarber"
           className={`
             flex items-center bg-blue-100 gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
             ${
@@ -60,6 +60,20 @@ export default function Sidebar() {
           `}
         >
           <span>👤</span> Barbeiro
+        </Link>
+
+        <Link
+          href="/admin/funbarber"
+          className={`
+            flex items-center bg-blue-100 gap-3 px-4 py-3.5 rounded-2xl font-bold transition text-sm
+            ${
+              pathname === "/admin/barbeiro"
+                ? "bg-green-700 text-white shadow-md shadow-gray-200"
+                : "text-gray-600 hover:bg-slate-50 hover:text-gray-900"
+            }
+          `}
+        >
+          <span>🛠️</span> Serviços
         </Link>
 
       </nav> 

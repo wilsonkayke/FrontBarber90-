@@ -20,56 +20,66 @@ export default function LoginPage() {
 
   // 🆕 FUNÇÃO ADICIONADA: Decide para qual tela mandar o cliente após logar
   const gerenciarRedirecionamentoPosLogin = async (user) => {
-    // 1. Se for admin, vai direto para o painel de administração
-    if (user.role?.trim().toLowerCase() === "admin") {
-      router.push("/admin");
-      return;
-    }
+  // 1. Admin
+  if (user.role?.trim().toLowerCase() === "admin") {
+    router.push("/admin");
+    return;
+  }
 
-    // Cliente
-    const agendamentoId = localStorage.getItem("id_agendamento");
+  // 2. Barbeiro
+  if (user.role?.trim().toLowerCase() === "barbeiro") {
+    router.push("/barbeiro");
+    return;
+  }
 
-    // Não existe agendamento salvo
-    if (!agendamentoId) {
-      router.push("/agenda");
-      return;
-    }
+  // 3. Cliente
+  const agendamentoId = localStorage.getItem("id_agendamento");
 
-    try {
-      const response = await fetch(
-        `${API_URL}/agendamentos/${agendamentoId}/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+  // Não existe agendamento salvo
+  if (!agendamentoId) {
+    router.push("/agenda");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_URL}/agendamentos/${agendamentoId}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      );
+      },
+    );
 
-      // ID não existe mais ou não pertence ao usuário
-      if (!response.ok) {
-        localStorage.removeItem("id_agendamento");
-        router.push("/agenda");
-        return;
-      }
-
-      const dados = await response.json();
-
-      // Possui agendamento ativo
-      if (dados.status === "agendado" || dados.status === "em_atendimento") {
-        router.push("/fila");
-        return;
-      }
-
-      // Agendamento finalizado/cancelado
+    // ID não existe mais ou não pertence ao usuário
+    if (!response.ok) {
       localStorage.removeItem("id_agendamento");
       router.push("/agenda");
-    } catch (error) {
-      console.error("Erro ao verificar agendamento:", error);
-
-      // Em caso de erro na consulta, não deixa o cliente preso na fila
-      router.push("/agenda");
+      return;
     }
-  };
+
+    const dados = await response.json();
+
+    // Possui agendamento ativo
+    if (
+      dados.status === "agendado" ||
+      dados.status === "em_atendimento"
+    ) {
+      router.push("/fila");
+      return;
+    }
+
+    // Agendamento finalizado/cancelado
+    localStorage.removeItem("id_agendamento");
+    router.push("/agenda");
+
+  } catch (error) {
+    console.error("Erro ao verificar agendamento:", error);
+
+    // Em caso de erro, manda para agenda
+    router.push("/agenda");
+  }
+};
 
   const inicializarEBotarGoogle = () => {
     if (

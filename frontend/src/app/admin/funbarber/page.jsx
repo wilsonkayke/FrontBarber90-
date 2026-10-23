@@ -3,11 +3,7 @@
 import AdminLayout from "../../../components/admin/AdminLayout";
 import Barbeiros from "../../../components/admin/Barbeiros";
 
-export default function Barbeiro() {
-
-
-
-
+export default function FunBarber() {
 
   return (
     <AdminLayout>

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_admin, get_barbeiro, get_current_user
+from pymongo import ReturnDocument
 from app.schemas.barbeiro_schema import BarbeiroCreate
 from app.utils.security import hash_password
 from bson import ObjectId
@@ -14,6 +15,7 @@ router = APIRouter(
 
 clientes_collection = db["clientes"]
 barbeiros_collection = db["barbeiros"]
+agendamentos_collection = db["agendamentos"]
 
 
 
@@ -122,4 +124,102 @@ def meu_perfil_barbeiro(
         "nome": perfil_barbeiro["nome"],
         "ativo": perfil_barbeiro["ativo"],
         "created_at": perfil_barbeiro["created_at"]
+    }
+
+@router.get("/dashboard")
+def dashboard_barbeiro(barbeiro=Depends(get_barbeiro)):
+
+    barber_id = ObjectId(barbeiro["id"])
+
+    pipeline = [
+        {
+            "$match": {
+                "barber_id": barber_id,
+                "status": {
+                    "$in": ["agendado", "em_atendimento"]
+                }
+            }
+        },
+        {
+            "$lookup": {
+                "from": "clientes",
+                "localField": "cliente_id",
+                "foreignField": "_id",
+                "as": "cliente_info"
+            }
+        },
+        {
+            "$unwind": "$cliente_info"
+        },
+        {
+            "$sort": {
+                "horario": 1
+            }
+        }
+    ]
+
+    resultados = list(
+        agendamentos_collection.aggregate(pipeline)
+    )
+
+    lista = []
+
+    for ag in resultados:
+        lista.append({
+            "_id": str(ag["_id"]),
+            "cliente_id": str(ag["cliente_id"]),
+            "nome": ag["cliente_info"]["usuario"],
+            "horario": ag["horario"],
+            "servico_id": ag["servico_id"],
+            "preco": ag["preco"],
+            "status": ag["status"]
+        })
+
+    return {
+        "agendamentos": lista
+    }
+    
+@router.post("/barbeiro/chamar")
+def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
+
+    perfil_barbeiro = barbeiros_collection.find_one({
+        "usuario_id": ObjectId(barbeiro["id"]),
+        "ativo": True
+    })
+
+    if not perfil_barbeiro:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil de barbeiro não encontrado ou inativo"
+        )
+
+    filtro = {
+        "status": "agendado",
+        "barber_id": perfil_barbeiro["_id"]
+    }
+
+    proximo = agendamentos_collection.find_one_and_update(
+        filtro,
+        {
+            "$set": {
+                "status": "em_atendimento",
+                "atendido_em": datetime.now(timezone.utc)
+            }
+        },
+        sort=[("horario", 1)],
+        return_document=ReturnDocument.AFTER
+    )
+
+    if not proximo:
+        raise HTTPException(
+            status_code=404,
+            detail="Nenhum agendamento pendente para este barbeiro"
+        )
+
+    return {
+        "message": "Cliente chamado",
+        "agendamento_id": str(proximo["_id"]),
+        "cliente_id": str(proximo["cliente_id"]),
+        "barber_id": str(proximo["barber_id"]),
+        "status": proximo["status"]
     }

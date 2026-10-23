@@ -79,7 +79,7 @@ export default function Topbar() {
         {/* Direita */}
         <div className="flex items-center space-x-4">
           <div className="hidden sm:block text-sm text-black font-medium">
-            Olá, {montado && usuario?.usuario ? usuario.usuario : "Ramon"}
+            Olá, {montado && usuario?.usuario ? usuario.usuario : "Felipe"}
           </div>
 
           <button

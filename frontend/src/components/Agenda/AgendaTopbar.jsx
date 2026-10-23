@@ -6,9 +6,7 @@ import AgendaSidbar from "./Sidbar";
 import { useAgenda } from "./AgendaLayout";
 
 export default function AgendaTopbar({nomeUser, onExit}) {
-
   
-
   const { exit } = useAgenda();
 
   const sair = async () => {
