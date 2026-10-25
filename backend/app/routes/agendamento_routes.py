@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_current_user, get_admin, get_barbeiro
 from app.schemas.agendamento_schema import AgendamentoCreate
+from app.websocket.manager import manager
 
 router = APIRouter(
     prefix="/agendamentos",
@@ -26,7 +27,7 @@ barbeiros_collection = db["barbeiros"]
 # 📌 Criar agendamento (cliente autenticado)
 # =========================================================
 @router.post("/")
-def criar_agendamento(
+async def criar_agendamento(
     dados: AgendamentoCreate,
     usuario=Depends(get_current_user)
 ):
@@ -97,20 +98,35 @@ def criar_agendamento(
         "preco": servico["preco"],
         "status": "agendado",
         "created_at": datetime.now(timezone.utc)
-    }
-
-    print("AGENDAMENTO A SER INSERIDO:", agendamento)
+    }   
 
     #Aquiiiiiiiiiiiiiii
 
-    try: 
-        result = agendamentos_collection.insert_one(agendamento) 
-        
+    try:
+        result = agendamentos_collection.insert_one(agendamento)
+
     except DuplicateKeyError:
         raise HTTPException(
             status_code=409,
             detail="Horário já reservado"
         )
+
+    # Notificar o barbeiro responsável
+    await manager.enviar_para_barbeiro(
+        str(barber_oid),
+        {
+            "tipo": "novo_agendamento",
+            "agendamento_id": str(result.inserted_id)
+        }
+    )
+
+    # Notificar os administradores conectados
+    await manager.enviar_para_admins(
+        {
+            "tipo": "novo_agendamento",
+            "agendamento_id": str(result.inserted_id)
+        }
+    )
 
     return {
         "message": "Agendamento criado com sucesso",

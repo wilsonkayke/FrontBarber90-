@@ -9,6 +9,7 @@ from app.routes.fila_routes import router as fila_router
 from app.routes.admin_routes import router as admin_router
 from app.routes.servico_routes import router as servico_router
 from app.routes.barbeiro_routes import router as barbeiro_router
+from app.routes.websocket import router as websocket_router
 
 app = FastAPI(title="Barbearia API com MongoDB") 
 
@@ -33,6 +34,7 @@ app.include_router(fila_router)
 app.include_router(admin_router)
 app.include_router(servico_router)
 app.include_router(barbeiro_router)
+app.include_router(websocket_router)
 
 @app.get("/")
 def home():
