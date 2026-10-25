@@ -16,6 +16,7 @@ router = APIRouter(
 clientes_collection = db["clientes"]
 barbeiros_collection = db["barbeiros"]
 agendamentos_collection = db["agendamentos"]
+atendidos_collection = db["atendidos"]
 
 
 
@@ -126,10 +127,21 @@ def meu_perfil_barbeiro(
         "created_at": perfil_barbeiro["created_at"]
     }
 
-@router.get("/dashboard")
+@router.get("/barbeiro/dashboard")
 def dashboard_barbeiro(barbeiro=Depends(get_barbeiro)):
 
-    barber_id = ObjectId(barbeiro["id"])
+    perfil_barbeiro = barbeiros_collection.find_one({
+        "usuario_id": ObjectId(barbeiro["id"]),
+        "ativo": True
+    })
+
+    if not perfil_barbeiro:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil de barbeiro não encontrado ou inativo"
+        )
+
+    barber_id = perfil_barbeiro["_id"]
 
     pipeline = [
         {
@@ -222,4 +234,86 @@ def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
         "cliente_id": str(proximo["cliente_id"]),
         "barber_id": str(proximo["barber_id"]),
         "status": proximo["status"]
+    }
+    
+@router.post("/barbeiro/finalizar")
+def finalizar_atendimento_barbeiro(
+    dados: dict,
+    barbeiro=Depends(get_barbeiro)
+):
+    perfil_barbeiro = barbeiros_collection.find_one({
+        "usuario_id": ObjectId(barbeiro["id"]),
+        "ativo": True
+    })
+
+    if not perfil_barbeiro:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil de barbeiro não encontrado ou inativo."
+        )
+
+    agendamento_id = dados.get("agendamento_id")
+
+    if not agendamento_id:
+        raise HTTPException(
+            status_code=400,
+            detail="ID do agendamento não informado."
+        )
+
+    try:
+        agendamento_id = ObjectId(agendamento_id)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="ID do agendamento inválido."
+        )
+
+    agendamento = agendamentos_collection.find_one({
+        "_id": agendamento_id,
+        "barber_id": perfil_barbeiro["_id"],
+        "status": "em_atendimento"
+    })
+
+    if not agendamento:
+        raise HTTPException(
+            status_code=404,
+            detail="Agendamento não encontrado ou não está em atendimento."
+        )
+
+    agora = datetime.now(timezone.utc)
+
+    atendimento = {
+        **agendamento,
+        "status": "finalizado",
+        "finalizado_em": agora
+    }
+
+    atendimento.pop("_id", None)
+
+    resultado_atendido = atendidos_collection.insert_one(
+        atendimento
+    )
+
+    resultado_remocao = agendamentos_collection.delete_one({
+        "_id": agendamento_id,
+        "barber_id": perfil_barbeiro["_id"],
+        "status": "em_atendimento"
+    })
+
+    if resultado_remocao.deleted_count == 0:
+        atendidos_collection.delete_one({
+            "_id": resultado_atendido.inserted_id
+        })
+
+        raise HTTPException(
+            status_code=400,
+            detail="Não foi possível remover o agendamento."
+        )
+
+    return {
+        "message": "Atendimento finalizado com sucesso.",
+        "agendamento_id": str(agendamento_id),
+        "atendido_id": str(resultado_atendido.inserted_id),
+        "status": "finalizado",
+        "finalizado_em": agora
     }

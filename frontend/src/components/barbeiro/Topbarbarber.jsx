@@ -1,9 +1,23 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function Topbarbarber() {
   const [userName, setUserName] = useState(null);
+  const router = useRouter();
+
+  const sair = () => {
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+    // 2. Opcional: Se ainda usar o localStorage para outras coisas, limpe-o também
+    localStorage.removeItem('token');
+
+    // 3. Força um redirecionamento limpo
+    router.refresh(); // Limpa caches locais do Next.js
+    router.push("/login");
+     
+  };
 
   useEffect(() => {
     const storedName = localStorage.getItem("usuario");
@@ -38,18 +52,17 @@ export function Topbarbarber() {
 
         {/* Nome do barbeiro */}
         <div className="z-10">
-          <span className="text-sm font-bold text-gray-800">
-            {userName || "Barbeiro"}
-          </span>
+          
         </div>
 
         {/* Lado direito */}
         <div className="z-10 flex items-center gap-4">
-          {/* Futuramente:
-              - botão sair
-              - menu
-              - perfil
-          */}
+          <button
+          onClick={sair}
+          className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl transition-colors"
+          >
+            Sair
+          </button>
         </div>
 
       </div>

@@ -1,9 +1,4 @@
-export function BarberStatCard({
-  title,
-  value,
-  icon,
-  variant = "sky",
-}) {
+export function BarberStatCard({ title, value, icon: Icon, variant = "sky" }) {
   const variants = {
     sky: {
       border: "border-sky-400/20",
@@ -35,6 +30,13 @@ export function BarberStatCard({
 
   const estilo = variants[variant] || variants.sky;
 
+  const formatarMoeda = (valor) => {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   return (
     <div
       className={`
@@ -54,7 +56,6 @@ export function BarberStatCard({
         ${estilo.shadow}
       `}
     >
-      {/* Brilho decorativo */}
       <div
         className={`
           absolute
@@ -77,22 +78,18 @@ export function BarberStatCard({
             {title}
           </p>
 
-          {icon && (
-            <span className="text-lg opacity-80">
-              {icon}
-            </span>
-          )}
+          {Icon && <Icon size={20} strokeWidth={2} className="opacity-80" />}
         </div>
 
         <h3
           className={`
-            mt-2
-            text-3xl
-            font-black
-            ${estilo.value}
-          `}
+    mt-2
+    text-3xl
+    font-black
+    ${estilo.value}
+  `}
         >
-          {value}
+          {variant === "emerald" ? formatarMoeda(value) : value}
         </h3>
       </div>
     </div>

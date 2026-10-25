@@ -1,18 +1,20 @@
-
-
 "use client";
 
 export function BarberForms({
   data = [],
-  onChamar,
-  onFinalizar,
   faturamentoHoje = 0,
+  servicos = [],
+  dadosAtendimentos = [],
+  dadosServicos = [],
   diaSelecionado,
   setDiaSelecionado,
-  servicos = [],
-  datasDisponiveis = [],
+  datasDisponiveis,
   mostrarCalendario,
   setMostrarCalendario,
+  onChamar,
+  onFinalizar,
+  carregando,
+  erro,
 }) {
   const formatarMoeda = (valor) => {
     return Number(valor || 0).toLocaleString("pt-BR", {
@@ -21,10 +23,16 @@ export function BarberForms({
     });
   };
 
+  const formatarData = (data) => {
+    if (!data) return "";
+
+    const [ano, mes, dia] = data.split("-");
+
+    return `${dia}/${mes}/${ano}`;
+  };
+
   const obterServico = (servicoId) => {
-    return servicos.find(
-      (servico) => Number(servico.id) === Number(servicoId)
-    );
+    return servicos.find((servico) => Number(servico.id) === Number(servicoId));
   };
 
   const formatarHorario = (horario) => {
@@ -37,9 +45,41 @@ export function BarberForms({
     });
   };
 
+  const obterDataHoje = () => {
+    return new Date().toLocaleDateString("sv-SE", {
+      timeZone: "America/Sao_Paulo",
+    });
+  };
+
+  const obterDataAmanha = () => {
+    const hoje = new Date();
+
+    hoje.setDate(hoje.getDate() + 1);
+
+    return hoje.toLocaleDateString("sv-SE", {
+      timeZone: "America/Sao_Paulo",
+    });
+  };
+
+  const dataFiltrada = data.filter((cliente) => {
+    if (!cliente.horario) return false;
+
+    const dataCliente = new Date(cliente.horario).toLocaleDateString("sv-SE", {
+      timeZone: "America/Sao_Paulo",
+    });
+
+    if (diaSelecionado === "hoje") {
+      return dataCliente === obterDataHoje();
+    }
+
+    if (diaSelecionado === "amanha") {
+      return dataCliente === obterDataAmanha();
+    }
+
+    return dataCliente === diaSelecionado;
+  });
   return (
     <section className="w-full space-y-5">
-
       {/* CABEÇALHO */}
       <div>
         <p className="text-xs font-bold tracking-[0.2em] text-slate-500">
@@ -57,7 +97,6 @@ export function BarberForms({
 
       {/* FILTRO DE DATA */}
       <div className="relative flex flex-wrap items-center gap-3">
-
         {/* HOJE */}
         <button
           type="button"
@@ -228,7 +267,7 @@ export function BarberForms({
                     >
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          📅 {item.data}
+                          📅 {formatarData(item.data)}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
@@ -236,9 +275,7 @@ export function BarberForms({
                         </p>
                       </div>
 
-                      <span className="text-slate-500">
-                        →
-                      </span>
+                      <span className="text-slate-500">→</span>
                     </button>
                   ))}
                 </div>
@@ -283,7 +320,7 @@ export function BarberForms({
           </p>
 
           <p className="mt-1 text-sm text-slate-300">
-            {data.length} cliente(s) na lista
+            {dataFiltrada.length} cliente(s) na lista
           </p>
         </div>
 
@@ -299,7 +336,7 @@ export function BarberForms({
       </div>
 
       {/* PRÓXIMO CLIENTE */}
-      {data.length > 0 && (
+      {dataFiltrada.length > 0 && (
         <div
           className="
             overflow-hidden
@@ -317,13 +354,12 @@ export function BarberForms({
           </div>
 
           {(() => {
-            const cliente = data[0];
+            const cliente = dataFiltrada[0];
             const servico = obterServico(cliente.servico_id);
 
             return (
               <div className="p-5">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
                   <div className="flex items-center gap-4">
                     <div
                       className="
@@ -358,29 +394,46 @@ export function BarberForms({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => onChamar(cliente)}
-                    className="
-                      rounded-xl
+                  {cliente.status === "em_atendimento" ? (
+                    <button
+                      onClick={() => onFinalizar(cliente)}
+                      className="rounded-xl
                       border
-                      border-sky-400/30
-                      bg-sky-500
-                      px-6
-                      py-3
+                      border-emerald-400/20
+                      bg-emerald-500/10
+                      px-4
+                      py-2.5
                       text-sm
-                      font-black
-                      text-white
-                      shadow-lg
-                      shadow-sky-900/20
+                      font-bold
+                      text-emerald-300
+                      shadow-sm
                       transition-all
-                      hover:-translate-y-0.5
-                      hover:bg-sky-400
-                      active:scale-95
-                    "
-                  >
-                    CHAMAR CLIENTE
-                  </button>
+                      hover:border-emerald-400/40
+                      hover:bg-emerald-500
+                      hover:text-white
+                      active:scale-95"
+                    >
+                      Finalizar
+                    </button>
+                  ) : (
+                    <button onClick={() => onChamar(cliente)} className="rounded-xl
+                      border
+                      border-sky-400/20
+                      bg-sky-500/10
+                      px-4
+                      py-2.5
+                      text-sm
+                      font-bold
+                      text-sky-300
+                      shadow-sm
+                      transition-all
+                      hover:border-sky-400/40
+                      hover:bg-sky-500
+                      hover:text-white
+                      active:scale-95">
+                      Chamar cliente
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -437,13 +490,13 @@ export function BarberForms({
               text-sky-300
             "
           >
-            {data.length} cliente(s)
+            {dataFiltrada.length} cliente(s)
           </span>
         </div>
 
         <div className="divide-y divide-white/5">
-          {data.length > 0 ? (
-            data.map((cliente, index) => {
+          {dataFiltrada.length > 0 ? (
+            dataFiltrada.map((cliente, index) => {
               const servico = obterServico(cliente.servico_id);
 
               return (
@@ -482,9 +535,7 @@ export function BarberForms({
                     </div>
 
                     <div>
-                      <p className="font-bold text-white">
-                        {cliente.nome}
-                      </p>
+                      <p className="font-bold text-white">{cliente.nome}</p>
 
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <span className="text-xs text-slate-400">
@@ -516,55 +567,7 @@ export function BarberForms({
                       "
                     >
                       ⏰ {formatarHorario(cliente.horario)}
-                    </span>
-
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onChamar(cliente)}
-                        className="
-                          rounded-xl
-                          border
-                          border-sky-400/20
-                          bg-sky-500/10
-                          px-4
-                          py-2.5
-                          text-sm
-                          font-bold
-                          text-sky-300
-                          transition-all
-                          hover:border-sky-400/40
-                          hover:bg-sky-500
-                          hover:text-white
-                          active:scale-95
-                        "
-                      >
-                        Chamar
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onFinalizar(cliente)}
-                        className="
-                          rounded-xl
-                          border
-                          border-emerald-400/20
-                          bg-emerald-500/10
-                          px-4
-                          py-2.5
-                          text-sm
-                          font-bold
-                          text-emerald-300
-                          transition-all
-                          hover:border-emerald-400/40
-                          hover:bg-emerald-500
-                          hover:text-white
-                          active:scale-95
-                        "
-                      >
-                        Finalizar
-                      </button>
-                    </div>
+                    </span> 
                   </div>
                 </div>
               );
