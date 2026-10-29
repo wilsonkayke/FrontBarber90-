@@ -391,7 +391,7 @@ export default function BarberTable({
         </th>
 
         <th className="w-[25%] px-5 py-4 text-center text-xs font-bold tracking-wider text-slate-400">
-          AÇÕES
+          BARBEIRO
         </th>
       </tr>
     </thead>
@@ -512,51 +512,19 @@ export default function BarberTable({
               <td className="px-5 py-5">
                 <div className="flex justify-center gap-2">
 
-                  <button
-                    onClick={() => onChamar(cliente)}
-                    className="
-                      rounded-xl
-                      border
-                      border-sky-400/20
-                      bg-sky-500/10
-                      px-4
-                      py-2.5
-                      text-sm
-                      font-bold
-                      text-sky-300
-                      shadow-sm
-                      transition-all
-                      hover:border-sky-400/40
-                      hover:bg-sky-500
-                      hover:text-white
-                      active:scale-95
-                    "
-                  >
-                    Chamar
-                  </button>
-
-                  <button
-                    onClick={() => onFinalizar(cliente)}
-                    className="
-                      rounded-xl
-                      border
-                      border-emerald-400/20
-                      bg-emerald-500/10
-                      px-4
-                      py-2.5
-                      text-sm
-                      font-bold
-                      text-emerald-300
-                      shadow-sm
-                      transition-all
-                      hover:border-emerald-400/40
-                      hover:bg-emerald-500
-                      hover:text-white
-                      active:scale-95
-                    "
-                  >
-                    Finalizar
-                  </button>
+                  <div className="inline-flex
+                    rounded-lg
+                    bg-slate-800
+                    px-3
+                    py-2
+                    text-sm
+                    font-bold
+                    text-slate-200">
+                    <h1 className="text-white">
+                      Felipe
+                    </h1>
+                  </div>
+                 
 
                 </div>
               </td>

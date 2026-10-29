@@ -103,12 +103,23 @@ async def websocket_barbeiro(websocket: WebSocket):
     finally:
         if autenticado and barber_id:
             manager.desconectar_barbeiro(barber_id, websocket)
+            
+            
+            
+@router.post("/ws/teste-admin")
+async def testar_websocket_admin():
+    await manager.enviar_para_admins({
+        "tipo": "teste",
+        "mensagem": "WebSocket do administrador funcionando!"
+    })
+
+    return {"message": "Evento de teste enviado"}           
+
 
 
 # =========================================================
 # WEBSOCKET — ADMIN
-# =========================================================
-
+# ========================================================= 
 @router.websocket("/ws/admin")
 async def websocket_admin(websocket: WebSocket):
     autenticado = False
@@ -120,7 +131,10 @@ async def websocket_admin(websocket: WebSocket):
             return
 
         if usuario["role"] != "admin":
-            await websocket.close(code=1008, reason="Acesso permitido apenas para administradores")
+            await websocket.close(
+                code=1008,
+                reason="Acesso permitido apenas para administradores"
+            )
             return
 
         await manager.conectar_admin(websocket)
@@ -131,17 +145,10 @@ async def websocket_admin(websocket: WebSocket):
 
     except WebSocketDisconnect:
         pass
+
     finally:
         if autenticado:
-            manager.desconectar_admin(websocket)
-            
-    await manager.enviar_para_admins({
-        "tipo": "teste",
-        "mensagem": "WebSocket do administrador funcionando!"
-    })
-
-    return {"message": "Evento de teste enviado"}
-
+            manager.desconectar_admin(websocket)    
 
 # =========================================================
 # WEBSOCKET — CLIENTE / FILA

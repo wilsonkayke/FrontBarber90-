@@ -197,6 +197,50 @@ export default function AdminDashboard() {
     setAutorizado(true);
   }, []);
 
+  // 🔌 WebSocket do administrador
+useEffect(() => {
+  if (!autorizado) return;
+
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("Token não encontrado.");
+    return;
+  }
+
+  const socket = new WebSocket("ws://127.0.0.1:8000/ws/admin");
+
+  socket.onopen = () => {
+    console.log("🔌 WebSocket ADMIN conectado");
+
+    socket.send(
+      JSON.stringify({
+        token: token,
+      })
+    );
+  };
+
+  socket.onmessage = (event) => {
+    console.log("📩 Evento recebido pelo WebSocket:", event.data);
+  };
+
+  socket.onerror = (error) => {
+    console.error("❌ Erro no WebSocket ADMIN:", error);
+  };
+
+  socket.onclose = (event) => {
+    console.log(
+      "🔌 WebSocket ADMIN fechado:",
+      event.code,
+      event.reason
+    );
+  };
+
+  return () => {
+    socket.close();
+  };
+}, [autorizado]);
+
   // 📊 Carregar dashboard (auto refresh)
   useEffect(() => {
     if (!autorizado) return;
@@ -267,51 +311,7 @@ export default function AdminDashboard() {
     console.error("Erro ao buscar faturamento:", error);
   }
 };
-
-  useEffect(() => {
-  if (!autorizado) return;
-
-  let ativo = true;
-
-  async function carregarDashboard() {
-    try {
-      const response = await fetch(
-        `${API_URL}/agendamentos/admin/dashboard`,
-        {
-          headers: getAuthHeaders(),
-        }
-      );
-
-      console.log("STATUS:", response.status);
-
-      if (!response.ok) {
-        const erro = await response.text();
-        console.log("ERRO BACKEND:", erro);
-        setDashboard({ erro: true });
-        return;
-      }
-
-      const data = await response.json();
-
-      if (ativo) {
-        setDashboard(data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dashboard:", error);
-      setDashboard({ erro: true });
-    }
-  }
-
-  carregarDashboard();
-
-  const interval = setInterval(carregarDashboard, 3000);
-
-  return () => {
-    ativo = false;
-    clearInterval(interval);
-  };
-}, [autorizado]);
-
+  
 useEffect(() => {
   if (!autorizado) return;
   

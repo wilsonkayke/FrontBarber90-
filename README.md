@@ -60,19 +60,24 @@ O back-end da aplicação foi estruturado seguindo boas práticas de organizaç�
 - **utils**: funções auxiliares reutilizáveis  
 
 ### 🔐 Tela de Login
-![Tela de Login](./assets/telaLogin2.png) 
+![Tela de Login](./assets/BarberFlowLogin.png) 
 
 ### 📝 Cadastro
-![Cadastro](./assets/telaCadastro2.png)
+![Cadastro](./assets/BarberFlowCad.png)
 
 ### 📅 Agendamento
-![Agendamento](./assets/telaAgenda2.png)
+![Agendamento](./assets/BarberFlowAgenda.png)
+
+### 📊 Relatório Cliente
+![Agendamento](./assets/BarberFlowRelatorio.png)
 
 ### 📊 Fila
-![Fila](./assets/telaFila2.png)
+![Fila](./assets/BarberFlowFila.png)
+
+### ⚙️ Painel Barbeiro
+![Painel Barbeiro](./assets/BarberFlowBarbeiro.png)
 
 ### ⚙️ Painel Admin
-![Painel Admin](./assets/TelaAdmin.png)
-
-### 📣 Cliente Chamado
-![Cliente Chamado](./assets/telaFilaChamdo.png)
+![Painel Admin](./assets/BarberFlowAdmin.png)
+![Painel Admin](./assets/BarberFlowAdmin2.png)
+![Painel Admin](./assets/BarberFlowAdminRelatório.png)

@@ -49,6 +49,7 @@ export function BarberStatCard({ title, value, icon: Icon, variant = "sky" }) {
         bg-slate-900/90
         p-5
         shadow-xl
+        mb-4
         transition-all
         duration-200
         hover:-translate-y-1

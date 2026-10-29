@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export function Topbarbarber() {
   const [userName, setUserName] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
   const sair = () => {
@@ -52,7 +53,12 @@ export function Topbarbarber() {
 
         {/* Nome do barbeiro */}
         <div className="z-10">
-          
+            <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="left-0"
+            >
+                ☰
+            </button>
         </div>
 
         {/* Lado direito */}
