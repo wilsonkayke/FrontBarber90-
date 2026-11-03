@@ -65,6 +65,12 @@ export default function LoginForms({
             Acesse sua conta para continuar
           </p>
 
+          <p className="bg-slate-400 text-black mt-2 mb-8 text-sm rounded-2xl p-2 text-center">
+            <span>
+              ⚠️ Estamos em fase de desenvolvimento!
+            </span>  Cadastro/login pode demorar 90 segundos para ser processado. Obrigado pela paciência!
+          </p>
+
           {/* Mensagem erro */}
           {msgErro && (
             <div className="bg-red-50 text-amber-600 p-3 mb-4 rounded-xl text-sm text-center border border-red-200">
