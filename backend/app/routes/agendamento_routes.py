@@ -233,6 +233,10 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
     servico = servicos_collection.find_one({
         "_id": agendamento.get("servico_id")
     })
+    
+    barbeiro = barbeiros_collection.find_one({
+        "_id": agendamento["barber_id"]
+    })
 
     return {
         "agendamento": {
@@ -241,7 +245,9 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
             "servico": servico["nome"] if servico else "Serviço não encontrado",
             "horario": agendamento.get("horario"),
             "preco": agendamento.get("preco", 0),
-            "status": agendamento.get("status")
+            "status": agendamento.get("status"),
+            "barber_id": str(agendamento["barber_id"]),
+            "nome_barbeiro": barbeiro["nome"] if barbeiro else "Barbeiro não encontrado"
         }
     }
 

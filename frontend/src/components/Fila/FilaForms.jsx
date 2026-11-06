@@ -72,4 +72,4 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
       </div>
     </div> // Fecha o contêiner principal corretamente
   ); // Fecha o return
-} // Fecha a função FilaForms
+} // Fecha a função FilaForms 

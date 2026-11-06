@@ -1,5 +1,7 @@
 "use client";
 
+import { servicos } from "../../app/agenda/page.jsx";
+
 export function BarberForms({
   data = [],
   faturamentoHoje = 0,
@@ -32,8 +34,8 @@ export function BarberForms({
   };
 
   const obterServico = (servicoId) => {
-    return servicos.find((servico) => Number(servico.id) === Number(servicoId));
-  };
+  return DICIONARIO_SERVICOS[servicoId] || { nome: "Serviço não encontrado" };
+};
 
   const formatarHorario = (horario) => {
     if (!horario) return "--:--";

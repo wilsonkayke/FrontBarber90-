@@ -259,7 +259,7 @@ useEffect(() => {
           },
         );
 
-        console.log("STATUS:", response.status);
+       // console.log("STATUS:", response.status);
 
         if (!response.ok) {
           const erro = await response.text();
