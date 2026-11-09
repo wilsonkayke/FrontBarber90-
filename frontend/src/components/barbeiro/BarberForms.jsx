@@ -17,6 +17,7 @@ export function BarberForms({
   onFinalizar,
   carregando,
   erro,
+  dicionarioServicos = [],
 }) {
   const formatarMoeda = (valor) => {
     return Number(valor || 0).toLocaleString("pt-BR", {
@@ -34,7 +35,7 @@ export function BarberForms({
   };
 
   const obterServico = (servicoId) => {
-  return DICIONARIO_SERVICOS[servicoId] || { nome: "Serviço não encontrado" };
+  return dicionarioServicos[servicoId] || { nome: "Serviço não encontrado" };
 };
 
   const formatarHorario = (horario) => {

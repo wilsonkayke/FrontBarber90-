@@ -67,52 +67,46 @@ def sair_fila(usuario=Depends(get_current_user)):
         )
     else:
         tempo_espera = 0
+    
 
-    # Atualiza o status para cancelado
-    result_update = agendamentos_collection.update_one(
-        {"_id": agendamento["_id"]},
-        {
-            "$set": {
-                "status": "cancelado",
-                "cancelado_em": horario_atual_utc
-            }
-        }
-    )
+    documento_desistencia = {
+        "id_agendamento": agendamento["_id"],
+        "id_cliente": cliente_id,
+        "barber_id": agendamento.get("barber_id"),
 
-    if result_update.modified_count > 0:
+        # serviço_id que o usuário escolheu para o agendamento
+        "servico_id": agendamento.get("servico_id"),
 
-        documento_desistencia = {
-            "id_agendamento": agendamento["_id"],
-            "id_cliente": cliente_id,
-            "barber_id": agendamento.get("barber_id"),
+        # Dados úteis para relatórios
+        "email": usuario.get("email"),
+        "role": usuario.get("role"),
 
-            # serviço_id que o usuário escolheu para o agendamento
-             "servico_id": agendamento.get("servico_id"),
+        # Datas
+        "data_agendamento": agendamento.get("horario"),
+        "data_entrada_fila": entrada_em,
+        "data_desistencia": horario_atual_utc,
 
-            # Dados úteis para relatórios
-            "email": usuario.get("email"),
-            "role": usuario.get("role"),
+        # Métricas
+        "tempo_espera_minutos": max(0, tempo_espera),
 
-            # Datas
-            "data_agendamento": agendamento.get("horario"),
-            "data_entrada_fila": entrada_em,
-            "data_desistencia": horario_atual_utc,
+        # Controle
+        "status_anterior": "agendado",
+        "motivo": "cliente_desistiu_via_site"
+    }   
 
-            # Métricas
-            "tempo_espera_minutos": max(0, tempo_espera),
-
-            # Controle
-            "status_anterior": "agendado",
-            "motivo": "cliente_desistiu_via_site"
-        }   
-
-        try:
-            resultado = desistencias_collection.insert_one(
-                documento_desistencia
-            )
-            print("Salvo com ID:", resultado.inserted_id)
-        except Exception as e:
-            print("Erro ao salvar desistência:", e)
+    try:
+        resultado = desistencias_collection.insert_one(
+            documento_desistencia
+        )
+        
+        if resultado.inserted_id:
+            agendamentos_collection.delete_one({"_id": agendamento["_id"]})
+    except Exception as e:
+        print("Erro ao salvar desistência:", e)
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar a desistência."
+        )
 
     return {
         "msg": "Você saiu da fila de espera com sucesso."

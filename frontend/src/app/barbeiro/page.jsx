@@ -43,6 +43,15 @@ export default function Barbeiro() {
     };
   };
 
+
+  const DICIONARIO_SERVICOS = [
+    { id: 1, nome: "Corte de cabelo", duracao: "15 minutos", preco: 30 },
+    { id: 2, nome: "Barba", duracao: "10 minutos", preco: 15 },
+    { id: 3, nome: "Corte e barba", duracao: "20 minutos", preco: 45 },
+    { id: 4, nome: "Corte infantil", duracao: "20 minutos", preco: 25 },
+    { id: 5, nome: "Sobrancelha", duracao: "5 minutos", preco: 5 },
+  ];
+
   // ==============================
   // Gerar datas disponíveis
   // ==============================
@@ -237,6 +246,7 @@ export default function Barbeiro() {
       data={data}
       faturamentoHoje={faturamentoHoje}
       servicos={servicos}
+      dicionarioServicos={DICIONARIO_SERVICOS}
       dadosAtendimentos={dadosAtendimentos}
       dadosServicos={dadosServicos}
       diaSelecionado={diaSelecionado}
