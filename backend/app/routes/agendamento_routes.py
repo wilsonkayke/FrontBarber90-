@@ -194,9 +194,10 @@ def horarios_ocupados(
     })  
     
     horarios = [
-        agendamento["horario"].astimezone(
-            ZoneInfo("America/Sao_Paulo")
-        ).strftime("%H:%M")
+        agendamento["horario"]
+        .replace(tzinfo=timezone.utc)
+        .astimezone(ZoneInfo("America/Sao_Paulo"))
+        .strftime("%H:%M")
         for agendamento in agendamentos
     ]
 

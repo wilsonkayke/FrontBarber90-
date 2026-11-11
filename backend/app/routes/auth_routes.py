@@ -109,7 +109,7 @@ async def google_login(dados: GoogleLoginRequest):
 
 #@router.post("/forgot-password")
 #async def forgot_password(dados: ForgotPasswordRequest):
-    # Padroniza o e-mail para evitar problemas de caixa alta/baixa
+    
     email_cliente = dados.email.strip().lower()
     
     user = users_collection.find_one({"email": email_cliente})

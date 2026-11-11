@@ -1,16 +1,15 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAgenda } from "../../components/Agenda/AgendaLayout";
 
-import AgendaForm from "../../components/Agenda/AgendaForms"; 
-import AgendaRelatorio from "../../components/Agenda/AgendaRelatorio";
-import Barbeiros from "../../components/admin/Barbeiros";
+import AgendaForm from "../../components/Agenda/AgendaForms";
+import AgendaRelatorio from "../../components/Agenda/AgendaRelatorio";  
 
-
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function AgendaContent({
   data,
@@ -65,44 +64,54 @@ function AgendaContent({
   );
 }
 
-
-
 export default function AgendaPage() {
   const router = useRouter();
+
+  // ESTADOS DO AGENDAMENTO
   const [data, setData] = useState("");
-  const [horarioSelecionado, setHorarioSelecionado] = useState("");
+  const [horarioSelecionado, setHorarioSelecionado] =
+    useState("");
+
   const [servico, setServico] = useState("");
   const [barbeiro, setBarbeiro] = useState("");
+
   const [barbeiros, setBarbeiros] = useState([]);
-  const [carregandoBarbeiros, setCarregandoBarbeiros] = useState(true);
+  const [carregandoBarbeiros, setCarregandoBarbeiros] =
+    useState(true);
+
   const [msgSucesso, setMsgSucesso] = useState("");
   const [msgErro, setMsgErro] = useState("");
+
   const [menuAberto, setMenuAberto] = useState(false);
-  const [carregando, setCarregando] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
   const [nomeUser, setNomeUser] = useState("");
-    
-  useEffect(() => {
-  const dadosSalvo = localStorage.getItem("user");
 
-  if (dadosSalvo) {
-    try {
-      const usuarioObjeto = JSON.parse(dadosSalvo);
-
-      setNomeUser(usuarioObjeto.usuario || "");
-    } catch (e) {
-      console.error("Erro ao analisar o JSON do usuário:", e);
-    }
-  }
-}, []);
-
-  function alternarMenu() {
-    setMenuAberto(!menuAberto);
-  }
-
-  // 🆕 STATE ADICIONADO: Controla os alertas de fila
   const [alertaFila, setAlertaFila] = useState(null);
 
+  // CARREGAR NOME DO USUÁRIO
+  useEffect(() => {
+    const dadosSalvo = localStorage.getItem("user");
+
+    if (dadosSalvo) {
+      try {
+        const usuarioObjeto = JSON.parse(dadosSalvo);
+
+        setNomeUser(usuarioObjeto.usuario || "");
+      } catch (erro) {
+        console.error(
+          "Erro ao analisar os dados do usuário:",
+          erro
+        );
+      }
+    }
+  }, []);
+
+  function alternarMenu() {
+    setMenuAberto((anterior) => !anterior);
+  }
+
+  // HORÁRIOS FIXOS DA BARBEARIA
   const horariosFixos = [
     "08:00",
     "08:30",
@@ -126,32 +135,61 @@ export default function AgendaPage() {
     "17:30",
   ];
 
+  // SERVIÇOS DA BARBEARIA
   const servicos = [
-    { id: 1, nome: "Corte de cabelo", duracao: "15 minutos", preco: 30 },
-    { id: 2, nome: "Barba", duracao: "10 minutos", preco: 15 },
-    { id: 3, nome: "Corte e barba", duracao: "20 minutos", preco: 45 },
-    { id: 4, nome: "Corte infantil", duracao: "20 minutos", preco: 25 },
-    { id: 5, nome: "Sobrancelha", duracao: "5 minutos", preco: 5 },
+    {
+      id: 1,
+      nome: "Corte de cabelo",
+      duracao: "15 minutos",
+      preco: 30,
+    },
+    {
+      id: 2,
+      nome: "Barba",
+      duracao: "10 minutos",
+      preco: 15,
+    },
+    {
+      id: 3,
+      nome: "Corte e barba",
+      duracao: "20 minutos",
+      preco: 45,
+    },
+    {
+      id: 4,
+      nome: "Corte infantil",
+      duracao: "20 minutos",
+      preco: 25,
+    },
+    {
+      id: 5,
+      nome: "Sobrancelha",
+      duracao: "5 minutos",
+      preco: 5,
+    },
   ];
 
   // HORÁRIOS DISPONÍVEIS
-  const [horariosDisponiveis, setHorariosDisponiveis] = useState(
-    horariosFixos.map((hora) => ({
-      hora,
-      ocupado: false,
-    })),
-  );
+  // Começa vazio até a consulta ser realizada
+  const [
+    horariosDisponiveis,
+    setHorariosDisponiveis,
+  ] = useState([]);
 
-  // 🆕 EFFECT ADICIONADO: Intercepta o usuário que reabriu a aba
+  // VERIFICAR STATUS DA FILA
   useEffect(() => {
-    const agendamentoId = localStorage.getItem("id_agendamento");
+    const agendamentoId = localStorage.getItem(
+      "id_agendamento"
+    );
+
     if (!agendamentoId) return;
 
     const checarStatusFila = async () => {
       try {
         const resposta = await fetch(
-          `${API_URL}/agendamentos/${agendamentoId}/status`,
+          `${API_URL}/agendamentos/${agendamentoId}/status`
         );
+
         if (!resposta.ok) {
           localStorage.removeItem("id_agendamento");
           return;
@@ -159,19 +197,19 @@ export default function AgendaPage() {
 
         const dados = await resposta.json();
 
-        // TESTE 1: Ainda não foi chamado. Volta para a fila.
         if (dados.status === "agendado") {
           router.push("/fila");
           return;
         }
 
-        // TESTE 2 e 3: O barbeiro chamou!
         if (
           dados.status === "em_atendimento" &&
           dados.minutos_passados !== null
         ) {
-          // Garante que o valor nunca seja negativo por delay de rede
-          const minutos = Math.max(0, dados.minutos_passados);
+          const minutos = Math.max(
+            0,
+            dados.minutos_passados
+          );
 
           if (minutos <= 15) {
             setAlertaFila({
@@ -185,200 +223,308 @@ export default function AgendaPage() {
             });
           }
 
-          // Limpa o ID para permitir novos agendamentos futuros
           localStorage.removeItem("id_agendamento");
         }
       } catch (erro) {
-        console.error("Erro na checagem da fila:", erro);
+        console.error(
+          "Erro na checagem da fila:",
+          erro
+        );
+
         localStorage.removeItem("id_agendamento");
       }
     };
 
     checarStatusFila();
   }, [router]);
-  // BUSCAR HORÁRIOS OCUPADOS (Mantido original)
+
+  // ============================================
+  // CONSULTAR HORÁRIOS OCUPADOS POR BARBEIRO
+  // ============================================
   useEffect(() => {
-  if (!data) {
-    // Transforma os horários fixos no mesmo formato de objeto
-    setHorariosDisponiveis(horariosFixos.map(h => ({ hora: h, ocupado: false })));
-    return;
-  }
+    let active = true;
 
-  // 1. Variável de controle para evitar condições de corrida (race conditions)
-  let active = true;
+    // Limpa seleção anterior
+    setHorarioSelecionado("");
+    setHorariosDisponiveis([]);
+    setMsgErro("");
 
-  const buscarHorarios = async () => {
-    try {
-      const resposta = await fetch(`${API_URL}/agendamentos/horarios?data=${data}`);
-      const dados = await resposta.json();
-      
-      // 2. Só atualiza o estado se esta ainda for a última requisição feita pelo usuário
-      if (active) {
-        const horariosOcupados = Array.isArray(dados) ? dados : [];
+    // Só consulta quando data e barbeiro existem
+    if (!data || !barbeiro) {
+      setCarregando(false);
+      return;
+    }
 
-        setHorariosDisponiveis(
-          horariosFixos.map((horario) => ({
-            hora: horario,
-            ocupado: horariosOcupados.includes(horario),
-          })),
+    const buscarHorarios = async () => {
+      try {
+        setCarregando(true);
+
+        const params = new URLSearchParams({
+          data,
+          barber_id: barbeiro,
+        });
+
+        const resposta = await fetch(
+          `${API_URL}/agendamentos/horarios?${params.toString()}`,
+          {
+            cache: "no-store",
+          }
         );
+
+        if (!resposta.ok) {
+          throw new Error(
+            "Não foi possível consultar os horários."
+          );
+        }
+
+        const dados = await resposta.json();
+
+        console.log("HORÁRIOS DA API:", dados);
+
+        if (!Array.isArray(dados)) {
+          throw new Error(
+            "Formato inválido dos horários retornados."
+          );
+        }
+
+        if (active) {
+          const horariosAtualizados = horariosFixos.map(
+            (hora) => ({
+              hora,
+              ocupado: dados.includes(hora),
+            })
+          );
+
+          setHorariosDisponiveis(horariosAtualizados);
+        }
+      } catch (erro) {
+        console.error(
+          "Erro ao buscar horários:",
+          erro
+        );
+
+        if (active) {
+          // Não libera horários se a API falhar
+          setHorariosDisponiveis([]);
+
+          setMsgErro(
+            erro.message ||
+              "Erro ao consultar os horários."
+          );
+        }
+      } finally {
+        if (active) {
+          setCarregando(false);
+        }
       }
-    } catch (erro) {
-      console.error(erro);
-      if (active) {
-        setHorariosDisponiveis(horariosFixos.map(h => ({ hora: h, ocupado: false })));
-      }
-    } finally {
-      if (active) {
-        setCarregando(false);
-      }
-    }
-  };
+    };
 
-  buscarHorarios();
+    buscarHorarios();
 
-  // 3. Função de limpeza (cleanup): roda se a 'data' mudar antes da requisição atual terminar
-  return () => {
-    active = false;
-  };
-}, [data]);
+    // Impede que uma requisição antiga sobrescreva
+    // os horários após mudar data ou barbeiro
+    return () => {
+      active = false;
+    };
+  }, [data, barbeiro]);
 
-
+  // ============================================
+  // BUSCAR BARBEIROS ATIVOS
+  // ============================================
   useEffect(() => {
-  let ativo = true;
+    let ativo = true;
 
-  async function buscarBarbeiros() {
-    try {
-      const token = localStorage.getItem("token");
+    async function buscarBarbeiros() {
+      try {
+        const token = localStorage.getItem("token");
 
-      const resposta = await fetch(`${API_URL}/barbeiros/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const resposta = await fetch(
+          `${API_URL}/barbeiros/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      if (!resposta.ok) {
-        throw new Error("Não foi possível carregar os barbeiros.");
-      }
+        if (!resposta.ok) {
+          throw new Error(
+            "Não foi possível carregar os barbeiros."
+          );
+        }
 
-      const dados = await resposta.json();
+        const dados = await resposta.json();
 
-      if (ativo) {
-        setBarbeiros(Array.isArray(dados) ? dados : []);
-      }
-    } catch (erro) {
-      console.error("Erro ao buscar barbeiros:", erro);
+        if (ativo) {
+          setBarbeiros(
+            Array.isArray(dados) ? dados : []
+          );
+        }
+      } catch (erro) {
+        console.error(
+          "Erro ao buscar barbeiros:",
+          erro
+        );
 
-      if (ativo) {
-        setMsgErro("Não foi possível carregar os barbeiros.");
-      }
-    } finally {
-      if (ativo) {
-        setCarregandoBarbeiros(false);
+        if (ativo) {
+          setMsgErro(
+            "Não foi possível carregar os barbeiros."
+          );
+        }
+      } finally {
+        if (ativo) {
+          setCarregandoBarbeiros(false);
+        }
       }
     }
-  }
 
-  buscarBarbeiros();
+    buscarBarbeiros();
 
-  return () => {
-    ativo = false;
-  };
-}, []);
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
-  // AGENDAR
+  // ============================================
+  // REALIZAR AGENDAMENTO
+  // ============================================
   const handleAgendar = async (e) => {
     e.preventDefault();
 
     setMsgErro("");
     setMsgSucesso("");
 
-    if (!data || !horarioSelecionado || !servico || !barbeiro ) {
-      setMsgErro("Escolha uma data, horário, serviço e barbeiro!");
+    // Valida campos obrigatórios
+    if (
+      !data ||
+      !horarioSelecionado ||
+      !servico ||
+      !barbeiro
+    ) {
+      setMsgErro(
+        "Escolha uma data, horário, serviço e barbeiro!"
+      );
+      return;
+    }
+
+    // Impede agendamento sem disponibilidade validada
+    const horarioLivre = horariosDisponiveis.some(
+      (item) =>
+        item.hora === horarioSelecionado &&
+        !item.ocupado
+    );
+
+    if (carregando || !horarioLivre) {
+      setMsgErro(
+        "Aguarde a consulta e escolha um horário disponível."
+      );
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
+
       const [ano, mes, dia] = data.split("-");
-      const [horaSel, minutoSel] = horarioSelecionado.split(":");
+      const [horaSel, minutoSel] =
+        horarioSelecionado.split(":");
 
       const dataLocal = new Date(
         Number(ano),
         Number(mes) - 1,
         Number(dia),
         Number(horaSel),
-        Number(minutoSel),
+        Number(minutoSel)
       );
 
-      const resposta = await fetch(`${API_URL}/agendamentos/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          horario: dataLocal.toISOString(),
-          servico_id: Number(servico),
-          barber_id: barbeiro,
-        }),
-      });
+      const resposta = await fetch(
+        `${API_URL}/agendamentos/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            horario: dataLocal.toISOString(),
+            servico_id: Number(servico),
+            barber_id: barbeiro,
+          }),
+        }
+      );
 
       if (!resposta.ok) {
         const erroBackend = await resposta.json();
+
         console.log("ERRO BACKEND:", erroBackend);
 
         setMsgErro(
           Array.isArray(erroBackend.detail)
             ? erroBackend.detail[0].msg
-            : erroBackend.detail || "Erro ao realizar agendamento",
+            : erroBackend.detail ||
+                "Erro ao realizar agendamento"
         );
+
         return;
       }
 
-      // 🔑 MODIFICAÇÃO DE SUCESSO AQUI:
-      const dadosSucesso = await resposta.json(); // Captura o JSON de retorno
-      setMsgSucesso("Agendamento realizado com sucesso!");
+      const dadosSucesso = await resposta.json();
 
-      // Salva o `agendamento_id` string gerado pelo MongoDB Atlas
-      localStorage.setItem("id_agendamento", dadosSucesso.agendamento_id);
+      setMsgSucesso(
+        "Agendamento realizado com sucesso!"
+      );
 
+      // Armazena ID do agendamento
+      localStorage.setItem(
+        "id_agendamento",
+        dadosSucesso.agendamento_id
+      );
+
+      // Limpa formulário
       setData("");
       setHorarioSelecionado("");
       setServico("");
       setBarbeiro("");
 
-      // REDIRECIONAR
+      // Redireciona para a fila
       setTimeout(() => {
         router.push("/fila");
       }, 2000);
     } catch (erro) {
-      console.error(erro);
-      setMsgErro("Erro ao conectar com o servidor");
+      console.error(
+        "Erro ao realizar agendamento:",
+        erro
+      );
+
+      setMsgErro(
+        "Erro ao conectar com o servidor"
+      );
     }
   };
 
+  // ============================================
+  // RENDERIZAÇÃO
+  // ============================================
   return (
-     <AgendaContent
-    data={data}
-    setData={setData}
-    servico={servico}
-    setServico={setServico}
-    servicos={servicos}
-    barbeiro={barbeiro}
-    setBarbeiro={setBarbeiro}
-    barbeiros={barbeiros}
-    carregandoBarbeiros={carregandoBarbeiros}
-    horariosDisponiveis={horariosDisponiveis}
-    horarioSelecionado={horarioSelecionado}
-    setHorarioSelecionado={setHorarioSelecionado}
-    msgErro={msgErro}
-    msgSucesso={msgSucesso}
-    handleAgendar={handleAgendar}
-    alertaFila={alertaFila}
-    nomeUser={nomeUser}
-    menuAberto={menuAberto}
-    alternarMenu={alternarMenu}
-  />
-);
-} 
+    <AgendaContent
+      data={data}
+      setData={setData}
+      servico={servico}
+      setServico={setServico}
+      servicos={servicos}
+      barbeiro={barbeiro}
+      setBarbeiro={setBarbeiro}
+      barbeiros={barbeiros}
+      carregandoBarbeiros={carregandoBarbeiros}
+      horariosDisponiveis={horariosDisponiveis}
+      horarioSelecionado={horarioSelecionado}
+      setHorarioSelecionado={setHorarioSelecionado}
+      msgErro={msgErro}
+      msgSucesso={msgSucesso}
+      handleAgendar={handleAgendar}
+      alertaFila={alertaFila}
+      nomeUser={nomeUser}
+      menuAberto={menuAberto}
+      alternarMenu={alternarMenu}
+    />
+  );
+}
