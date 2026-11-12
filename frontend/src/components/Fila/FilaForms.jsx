@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"; 
+import { useState } from "react";
 import Footer from "../Agenda/Footer";
 import DCliente from "./DCliente";
 
@@ -21,6 +21,8 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
     setIndex((prev) => (prev === 0 ? imagens.length - 1 : prev - 1));
   };
 
+  const foiChamado = agendamento?.status === "em_atendimento";
+
   return (
     // CONTÊINER PRINCIPAL: Ocupa no mínimo a tela inteira e define o fluxo flex vertical
     <div
@@ -28,7 +30,7 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
         backgroundImage: "url('/imagens/principal.jpg')",
       }}
       className="bg-cover bg-center bg-no-repeat min-h-screen flex flex-col justify-between"
-    > 
+    >
       <main className="relative z-10 flex-grow flex items-center justify-center px-4 py-8 mt-5">
         <div className="bg-gray-400/95 flex flex-col shadow-2xl rounded-2xl p-5 w-full max-w-5xl backdrop-blur-sm gap-4">
           <h1 className="text-white text-2xl font-bold text-center mb-6">
@@ -39,8 +41,22 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
 
           {!fila ? (
             <p className="text-center text-gray-600">Carregando...</p>
+          ) : foiChamado ? (
+            <div className="bg-green-700/90 rounded-2xl p-6 text-center space-y-3">
+              <h2 className="text-white text-2xl font-bold">
+                🔔 Você foi chamado!
+              </h2>
+
+              <p className="text-white">O barbeiro está aguardando você.</p>
+
+              <p className="text-green-100 text-sm">
+                Dirija-se ao atendimento.
+              </p>
+            </div>
           ) : fila.posicao === null ? (
-            <p className="text-center font-bold text-white">Você foi chamado</p>
+            <p className="text-center font-bold text-white">
+              Você não está na fila no momento.
+            </p>
           ) : (
             <div className="bg-gray-600/70 backdrop-blur-sm rounded-2xl space-y-3 text-center">
               <p className="text-white font-semibold mt-4">
@@ -72,4 +88,4 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
       </div>
     </div> // Fecha o contêiner principal corretamente
   ); // Fecha o return
-} // Fecha a função FilaForms 
+} // Fecha a função FilaForms

@@ -216,7 +216,7 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
         {
             "cliente_id": cliente_id,
             "status": {
-                "$in": ["agendado", "na_fila", "aguardando"]
+                "$in": ["agendado", "na_fila", "aguardando", "em_atendimento"]
             }
         },
         sort=[("horario", -1)]

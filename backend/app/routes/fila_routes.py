@@ -5,6 +5,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies.auth import get_current_user, get_admin
 from datetime import datetime, timezone
 
+import logging
+from app.websocket.manager import manager
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/fila",
     tags=["Fila"]
@@ -38,7 +43,7 @@ def obter_posicao_fila(cliente_id: str):
     raise HTTPException(status_code=404, detail="Cliente não está na fila")
 
 @router.delete("/agendamentos/sair")
-def sair_fila(usuario=Depends(get_current_user)):
+async def sair_fila(usuario=Depends(get_current_user)):
 
     cliente_id = ObjectId(usuario["id"])
     horario_atual_utc = datetime.now(timezone.utc)
@@ -106,6 +111,31 @@ def sair_fila(usuario=Depends(get_current_user)):
         raise HTTPException(
             status_code=500,
             detail="Erro ao processar a desistência."
+        )
+    
+    evento = {
+        "tipo": "cliente_desistiu",
+        "agendamento_id": str(agendamento["_id"]),
+        "cliente_id": str(cliente_id),
+        "barber_id": str(agendamento["barber_id"]),
+        "status": "cancelado"
+    }   
+
+    try:
+        await manager.enviar_para_barbeiro(
+            str(agendamento["barber_id"]),
+            evento
+        )
+    except Exception:
+        logger.exception(
+            "Erro ao notificar barbeiro sobre desistência"
+        )
+
+    try:
+        await manager.enviar_para_admins(evento)
+    except Exception:
+        logger.exception(
+            "Erro ao notificar administradores sobre desistência"
         )
 
     return {

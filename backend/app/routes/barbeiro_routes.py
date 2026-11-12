@@ -8,6 +8,11 @@ from app.schemas.barbeiro_schema import BarbeiroCreate
 from app.utils.security import hash_password
 from bson import ObjectId
 
+import logging
+from app.websocket.manager import manager
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/barbeiros",
     tags=["Barbeiros"]
@@ -192,7 +197,7 @@ def dashboard_barbeiro(barbeiro=Depends(get_barbeiro)):
     }
     
 @router.post("/barbeiro/chamar")
-def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
+async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
 
     perfil_barbeiro = barbeiros_collection.find_one({
         "usuario_id": ObjectId(barbeiro["id"]),
@@ -228,6 +233,47 @@ def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
             detail="Nenhum agendamento pendente para este barbeiro"
         )
 
+    # Notifica o cliente via WebSocket
+    evento = {
+    "tipo": "cliente_chamado",
+    "agendamento_id": str(proximo["_id"]),
+    "cliente_id": str(proximo["cliente_id"]),
+    "barber_id": str(proximo["barber_id"]),
+    "status": "em_atendimento"
+    }
+
+    # Notificar cada destinatário
+    notificacoes = [
+        (
+            "cliente",
+            manager.enviar_para_cliente(
+                str(proximo["cliente_id"]),
+                evento
+            )
+        ),
+        (
+            "barbeiro",
+            manager.enviar_para_barbeiro(
+                str(proximo["barber_id"]),
+                evento
+            )
+        ),  
+        (
+            "administradores",
+            manager.enviar_para_admins(evento)
+        )
+    ]
+
+    for destinatario, notificacao in notificacoes:
+        try:
+         await notificacao
+        except Exception:
+            logger.exception(
+                "Falha ao notificar %s sobre cliente_chamado",
+                destinatario
+        )
+
+
     return {
         "message": "Cliente chamado",
         "agendamento_id": str(proximo["_id"]),
@@ -237,7 +283,7 @@ def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
     }
     
 @router.post("/barbeiro/finalizar")
-def finalizar_atendimento_barbeiro(
+async def finalizar_atendimento_barbeiro(
     dados: dict,
     barbeiro=Depends(get_barbeiro)
 ):
@@ -308,6 +354,46 @@ def finalizar_atendimento_barbeiro(
         raise HTTPException(
             status_code=400,
             detail="Não foi possível remover o agendamento."
+        )
+        
+    evento = {
+        "tipo": "atendimento_finalizado",
+        "agendamento_id": str(agendamento_id),
+        "cliente_id": str(agendamento["cliente_id"]),
+        "barber_id": str(perfil_barbeiro["_id"]),
+        "status": "finalizado"
+    }
+
+    # Enviar evento ao cliente
+    try:
+        await manager.enviar_para_cliente(
+            str(agendamento["cliente_id"]),
+            evento
+        )
+    
+    except Exception:
+        logger.exception(
+            "Erro ao notificar cliente sobre finalização"
+        )
+
+    # Enviar evento ao barbeiro responsável
+    try:
+        await manager.enviar_para_barbeiro(
+            str(perfil_barbeiro["_id"]),
+            evento
+        )
+    except Exception:
+        logger.exception(
+            "Erro ao notificar barbeiro sobre finalização"
+        )
+    
+
+    # Enviar evento aos administradores
+    try:
+        await manager.enviar_para_admins(evento)
+    except Exception:
+        logger.exception(
+            "Erro ao notificar administradores sobre finalização"
         )
 
     return {
