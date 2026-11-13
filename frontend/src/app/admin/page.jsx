@@ -167,8 +167,7 @@ export default function AdminDashboard() {
         return;
       }
 
-      const data = await response.json();
-      console.log("Atendimento finalizado:", data);
+      const data = await response.json(); 
 
       setDashboard((prev) => ({
         ...prev,
@@ -220,16 +219,16 @@ useEffect(() => {
   };
 
   socket.onmessage = (event) => {
-    console.log("📩 Evento recebido pelo WebSocket:", event.data);
+    console.log("Evento recebido pelo WebSocket:", event.data);
   };
 
   socket.onerror = (error) => {
-    console.error("❌ Erro no WebSocket ADMIN:", error);
+    console.error(" Erro no WebSocket ADMIN:", error);
   };
 
   socket.onclose = (event) => {
     console.log(
-      "🔌 WebSocket ADMIN fechado:",
+      "WebSocket ADMIN fechado:",
       event.code,
       event.reason
     );
