@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from app.db.mongo_connection import db
 from app.dependencies.auth import get_admin, get_barbeiro, get_current_user
@@ -271,8 +271,7 @@ async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
             logger.exception(
                 "Falha ao notificar %s sobre cliente_chamado",
                 destinatario
-        )
-
+        )   
 
     return {
         "message": "Cliente chamado",

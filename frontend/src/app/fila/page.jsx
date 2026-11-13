@@ -138,7 +138,7 @@ export default function FilaPage() {
 
     function conectarWebSocket() {
 
-      if (!ativo || pausaTeste) return;
+      if (!ativo) return;
 
       // Evita abrir duas conexões simultâneas
       if (

@@ -3,7 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from app.db.mongo_connection import db
@@ -238,6 +238,33 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
     barbeiro = barbeiros_collection.find_one({
         "_id": agendamento["barber_id"]
     })
+    
+    TOLERANCIA_MINUTOS = 15
+    
+    atendido_em = agendamento.get("atendido_em")
+    
+    prazo_chamada = None
+    tempo_restante_segundos = None
+    
+    if agendamento.get("status") == "em_atendimento" and atendido_em:
+    
+        # Normaliza datas sem timezone como UTC
+        if atendido_em.tzinfo is None:
+            atendido_em = atendido_em.replace(tzinfo=timezone.utc)
+
+        # Calcula o prazo independentemente do timezone
+        prazo_chamada = atendido_em + timedelta(
+            minutes=TOLERANCIA_MINUTOS
+        )
+
+        tempo_restante_segundos = max(
+            0,
+            int(
+                (
+                    prazo_chamada - datetime.now(timezone.utc)
+                ).total_seconds()
+            )
+        )
 
     return {
         "agendamento": {
@@ -248,7 +275,10 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
             "preco": agendamento.get("preco", 0),
             "status": agendamento.get("status"),
             "barber_id": str(agendamento["barber_id"]),
-            "nome_barbeiro": barbeiro["nome"] if barbeiro else "Barbeiro não encontrado"
+            "nome_barbeiro": barbeiro["nome"] if barbeiro else "Barbeiro não encontrado",
+            "atendido_em": atendido_em.isoformat() if atendido_em else None,
+            "prazo_chamada": prazo_chamada.isoformat() if prazo_chamada else None,
+            "tempo_restante_segundos": tempo_restante_segundos
         }
     }
 

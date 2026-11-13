@@ -19,67 +19,79 @@ export default function LoginPage() {
   const googleInicializado = useRef(false);
 
   // 🆕 FUNÇÃO ADICIONADA: Decide para qual tela mandar o cliente após logar
-  const gerenciarRedirecionamentoPosLogin = async (user) => {
-  // 1. Admin
-  if (user.role?.trim().toLowerCase() === "admin") {
-    router.push("/admin");
+  
+const gerenciarRedirecionamentoPosLogin = async (user) => {
+  const role = user.role?.trim().toLowerCase();
+
+  // 1. Administrador
+  if (role === "admin") {
+    router.replace("/admin");
     return;
   }
 
   // 2. Barbeiro
-  if (user.role?.trim().toLowerCase() === "barbeiro") {
-    router.push("/barbeiro");
+  if (role === "barbeiro") {
+    router.replace("/barbeiro");
     return;
   }
 
   // 3. Cliente
-  const agendamentoId = localStorage.getItem("id_agendamento");
-
-  // Não existe agendamento salvo
-  if (!agendamentoId) {
-    router.push("/agenda");
-    return;
-  }
-
   try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+    
     const response = await fetch(
-      `${API_URL}/agendamentos/${agendamentoId}/status`,
+      `${API_URL}/agendamentos/meu-agendamento`,
       {
+        method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
-      },
+        cache: "no-store",
+      }
     );
 
-    // ID não existe mais ou não pertence ao usuário
-    if (!response.ok) {
-      localStorage.removeItem("id_agendamento");
-      router.push("/agenda");
+    if (response.status === 401 || response.status === 403) {
+      router.replace("/login");
       return;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Erro ao consultar agendamento: ${response.status}`
+      );
     }
 
     const dados = await response.json();
+    const agendamento = dados.agendamento;
 
-    // Possui agendamento ativo
     if (
-      dados.status === "agendado" ||
-      dados.status === "em_atendimento"
+      agendamento &&
+      ["agendado", "na_fila", "aguardando", "em_atendimento"]
+        .includes(agendamento.status)
     ) {
-      router.push("/fila");
+      router.replace("/fila");
       return;
     }
 
-    // Agendamento finalizado/cancelado
-    localStorage.removeItem("id_agendamento");
-    router.push("/agenda");
+    // Cliente não possui agendamento ativo
+    router.replace("/agenda");
 
   } catch (error) {
     console.error("Erro ao verificar agendamento:", error);
 
-    // Em caso de erro, manda para agenda
-    router.push("/agenda");
+    // Não presumir que o cliente está sem agendamento
+    // quando o backend está indisponível.
+    alert(
+      "Não foi possível verificar seu agendamento. Tente novamente."
+    );
   }
 };
+
 
   const inicializarEBotarGoogle = () => {
     if (
