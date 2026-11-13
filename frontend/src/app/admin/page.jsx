@@ -210,8 +210,7 @@ useEffect(() => {
 
   const socket = new WebSocket("ws://127.0.0.1:8000/ws/admin");
 
-  socket.onopen = () => {
-    console.log("🔌 WebSocket ADMIN conectado");
+  socket.onopen = () => { 
 
     socket.send(
       JSON.stringify({
@@ -280,11 +279,11 @@ useEffect(() => {
 
     carregarDashboard();
 
-    const interval = setInterval(carregarDashboard, 3000);
+    //const interval = setInterval(carregarDashboard, 3000);
 
     return () => {
       ativo = false;
-      clearInterval(interval);
+      //clearInterval(interval);
     };
   }, [autorizado]);
 
@@ -301,9 +300,7 @@ useEffect(() => {
       throw new Error("Erro ao buscar relatório");
     }
 
-    const dados = await response.json();
-
-    console.log("FATURAMENTO ATUALIZADO:", dados.faturamentoHoje);
+    const dados = await response.json(); 
 
     setDadosFaturamento(dados);
 
