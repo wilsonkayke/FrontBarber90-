@@ -216,7 +216,7 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
         {
             "cliente_id": cliente_id,
             "status": {
-                "$in": ["agendado", "na_fila", "aguardando", "em_atendimento"]
+                "$in": ["agendado", "na_fila", "aguardando", "chamado", "em_atendimento"]
             }
         },
         sort=[("horario", -1)]
@@ -242,18 +242,19 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
     TOLERANCIA_MINUTOS = 15
     
     atendido_em = agendamento.get("atendido_em")
+    chamado_em = agendamento.get("chamado_em")
     
     prazo_chamada = None
     tempo_restante_segundos = None
     
-    if agendamento.get("status") == "em_atendimento" and atendido_em:
+    if agendamento.get("status") == "chamado" and chamado_em:
     
         # Normaliza datas sem timezone como UTC
-        if atendido_em.tzinfo is None:
-            atendido_em = atendido_em.replace(tzinfo=timezone.utc)
+        if chamado_em.tzinfo is None:
+            chamado_em = chamado_em.replace(tzinfo=timezone.utc)
 
         # Calcula o prazo independentemente do timezone
-        prazo_chamada = atendido_em + timedelta(
+        prazo_chamada = chamado_em + timedelta(
             minutes=TOLERANCIA_MINUTOS
         )
 
@@ -276,6 +277,7 @@ def meu_agendamento(usuario_logado=Depends(get_current_user)):
             "status": agendamento.get("status"),
             "barber_id": str(agendamento["barber_id"]),
             "nome_barbeiro": barbeiro["nome"] if barbeiro else "Barbeiro não encontrado",
+            "chamado_em": chamado_em.isoformat() if chamado_em else None,
             "atendido_em": atendido_em.isoformat() if atendido_em else None,
             "prazo_chamada": prazo_chamada.isoformat() if prazo_chamada else None,
             "tempo_restante_segundos": tempo_restante_segundos

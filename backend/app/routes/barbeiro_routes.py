@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone, timedelta
 
-from app.db.mongo_connection import db
+from app.db.mongo_connection import db, client
 from app.dependencies.auth import get_admin, get_barbeiro, get_current_user
 from pymongo import ReturnDocument
+from pymongo.errors import PyMongoError, OperationFailure
 from app.schemas.barbeiro_schema import BarbeiroCreate
 from app.utils.security import hash_password
 from bson import ObjectId
@@ -21,8 +22,7 @@ router = APIRouter(
 clientes_collection = db["clientes"]
 barbeiros_collection = db["barbeiros"]
 agendamentos_collection = db["agendamentos"]
-atendidos_collection = db["atendidos"]
-
+atendidos_collection = db["atendidos"]  
 
 
 #Criando barbeiro
@@ -73,8 +73,10 @@ def criar_barbeiro(
         "usuario_id": resultado_usuario.inserted_id,
         "nome": barbeiro.nome,
         "ativo": True,
-        "created_at": datetime.utcnow()
+        "agendamento_ativo_id": None,
+        "created_at": datetime.now(timezone.utc)
     }
+    
 
     resultado_barbeiro = barbeiros_collection.insert_one(
         novo_barbeiro
@@ -153,7 +155,7 @@ def dashboard_barbeiro(barbeiro=Depends(get_barbeiro)):
             "$match": {
                 "barber_id": barber_id,
                 "status": {
-                    "$in": ["agendado", "em_atendimento"]
+                    "$in": ["agendado", "chamado", "em_atendimento"]
                 }
             }
         },
@@ -196,9 +198,11 @@ def dashboard_barbeiro(barbeiro=Depends(get_barbeiro)):
         "agendamentos": lista
     }
     
-@router.post("/barbeiro/chamar")
-async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
 
+@router.post("/barbeiro/chamar")
+async def chamar_proximo_barbeiro(
+    barbeiro=Depends(get_barbeiro)
+):
     perfil_barbeiro = barbeiros_collection.find_one({
         "usuario_id": ObjectId(barbeiro["id"]),
         "ativo": True
@@ -207,42 +211,115 @@ async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
     if not perfil_barbeiro:
         raise HTTPException(
             status_code=404,
-            detail="Perfil de barbeiro não encontrado ou inativo"
+            detail="Perfil de barbeiro não encontrado ou inativo."
         )
 
-    filtro = {
-        "status": "agendado",
-        "barber_id": perfil_barbeiro["_id"]
-    }
+    barber_id = perfil_barbeiro["_id"]
+    agora = datetime.now(timezone.utc)
+    proximo = None
 
-    proximo = agendamentos_collection.find_one_and_update(
-        filtro,
-        {
-            "$set": {
-                "status": "em_atendimento",
-                "atendido_em": datetime.now(timezone.utc)
-            }
-        },
-        sort=[("horario", 1)],
-        return_document=ReturnDocument.AFTER
-    )
+    try:
+        with client.start_session() as session:
+            with session.start_transaction():
 
-    if not proximo:
+                # Seleciona o próximo cliente
+                proximo = agendamentos_collection.find_one(
+                    {
+                        "barber_id": barber_id,
+                        "status": "agendado"
+                    },
+                    sort=[("horario", 1)],
+                    session=session
+                )
+
+                if not proximo:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Nenhum agendamento pendente."
+                    )
+
+                # Reserva o barbeiro atomicamente
+                reserva = barbeiros_collection.update_one(
+                    {
+                        "_id": barber_id,
+                        "ativo": True,
+                        "agendamento_ativo_id": None
+                    },
+                    {
+                        "$set": {
+                            "agendamento_ativo_id": proximo["_id"]
+                        }
+                    },
+                    session=session
+                )
+
+                if reserva.modified_count != 1:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Barbeiro já possui um cliente ativo."
+                    )
+
+                # Atualiza o agendamento
+                resultado = agendamentos_collection.update_one(
+                    {
+                        "_id": proximo["_id"],
+                        "barber_id": barber_id,
+                        "status": "agendado"
+                    },
+                    {
+                        "$set": {
+                            "status": "chamado",
+                            "chamado_em": agora
+                        },
+                        "$unset": {
+                            "atendido_em": ""
+                        }
+                    },
+                    session=session
+                )
+
+                if resultado.modified_count != 1:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Agendamento não está mais disponível."
+                    )
+
+    except HTTPException:
+        raise
+
+    except OperationFailure as error:
+        logger.exception(
+            "Conflito ou falha na transação de chamada"
+        )
+
+        if error.has_error_label("TransientTransactionError"):
+            raise HTTPException(
+                status_code=409,
+                detail="Chamada concorrente detectada. Tente novamente."
+            )
+
         raise HTTPException(
-            status_code=404,
-            detail="Nenhum agendamento pendente para este barbeiro"
+            status_code=500,
+            detail="Erro ao processar chamada."
         )
 
-    # Notifica o cliente via WebSocket
-    evento = {
-    "tipo": "cliente_chamado",
-    "agendamento_id": str(proximo["_id"]),
-    "cliente_id": str(proximo["cliente_id"]),
-    "barber_id": str(proximo["barber_id"]),
-    "status": "em_atendimento"
-    }
+    except PyMongoError:
+        logger.exception("Erro no MongoDB ao chamar cliente")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar chamada."
+        )
 
-    # Notificar cada destinatário
+    # A transação já foi confirmada neste ponto.
+    evento = {
+        "tipo": "cliente_chamado",
+        "agendamento_id": str(proximo["_id"]),
+        "cliente_id": str(proximo["cliente_id"]),
+        "barber_id": str(barber_id),
+        "status": "chamado",
+        "chamado_em": agora.isoformat()
+    }
+    
     notificacoes = [
         (
             "cliente",
@@ -254,10 +331,10 @@ async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
         (
             "barbeiro",
             manager.enviar_para_barbeiro(
-                str(proximo["barber_id"]),
+                str(barber_id),
                 evento
             )
-        ),  
+        ),
         (
             "administradores",
             manager.enviar_para_admins(evento)
@@ -266,21 +343,175 @@ async def chamar_proximo_barbeiro(barbeiro=Depends(get_barbeiro)):
 
     for destinatario, notificacao in notificacoes:
         try:
-         await notificacao
+            await notificacao
         except Exception:
             logger.exception(
                 "Falha ao notificar %s sobre cliente_chamado",
                 destinatario
-        )   
+            )
 
     return {
-        "message": "Cliente chamado",
+        "message": "Cliente chamado com sucesso.",
         "agendamento_id": str(proximo["_id"]),
         "cliente_id": str(proximo["cliente_id"]),
-        "barber_id": str(proximo["barber_id"]),
-        "status": proximo["status"]
+        "barber_id": str(barber_id),
+        "status": "chamado",
+        "chamado_em": agora.isoformat()
     }
     
+
+@router.post("/barbeiro/confirmar-presenca")
+async def confirmar_presenca_barbeiro(
+    dados: dict,
+    barbeiro=Depends(get_barbeiro)
+):
+    perfil_barbeiro = barbeiros_collection.find_one({
+        "usuario_id": ObjectId(barbeiro["id"]),
+        "ativo": True
+    })
+
+    if not perfil_barbeiro:
+        raise HTTPException(
+            status_code=404,
+            detail="Perfil de barbeiro não encontrado ou inativo."
+        )
+
+    agendamento_id = dados.get("agendamento_id")
+
+    if not agendamento_id or not ObjectId.is_valid(agendamento_id):
+        raise HTTPException(
+            status_code=400,
+            detail="ID do agendamento inválido."
+        )
+
+    agendamento_id = ObjectId(agendamento_id)
+    barber_id = perfil_barbeiro["_id"]
+    agora = datetime.now(timezone.utc)
+    prazo_limite = agora - timedelta(minutes=15)
+
+    try:
+        with client.start_session() as session:
+            with session.start_transaction():
+
+                # Confirma somente se o barbeiro estiver
+                # reservado para este agendamento.
+                reserva = barbeiros_collection.find_one(
+                    {
+                        "_id": barber_id,
+                        "ativo": True,
+                        "agendamento_ativo_id": agendamento_id
+                    },
+                    session=session
+                )
+
+                if not reserva:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Este agendamento não está reservado para o barbeiro."
+                    )
+
+                # Atualização condicional: impede confirmar
+                # um cliente cujo prazo já expirou.
+                resultado = agendamentos_collection.update_one(
+                    {
+                        "_id": agendamento_id,
+                        "barber_id": barber_id,
+                        "status": "chamado",
+                        "chamado_em": {
+                            "$gt": prazo_limite,
+                            "$lte": agora
+                        }
+                    },
+                    {
+                        "$set": {
+                            "status": "em_atendimento",
+                            "atendido_em": agora
+                        }
+                    },
+                    session=session
+                )
+
+                if resultado.modified_count != 1:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=(
+                            "Não foi possível confirmar a presença. "
+                            "O prazo pode ter expirado ou o "
+                            "agendamento não está mais disponível."
+                        )
+                    )
+
+    except HTTPException:
+        raise
+
+    except OperationFailure as error:
+        logger.exception("Erro na transação de confirmação")
+
+        if error.has_error_label("TransientTransactionError"):
+            raise HTTPException(
+                status_code=409,
+                detail="Conflito na confirmação. Tente novamente."
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao confirmar presença."
+        )
+
+    except PyMongoError:
+        logger.exception("Erro no MongoDB ao confirmar presença")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao confirmar presença."
+        )
+
+    evento = {
+        "tipo": "presenca_confirmada",
+        "agendamento_id": str(agendamento_id),
+        "barber_id": str(barber_id),
+        "status": "em_atendimento",
+        "atendido_em": agora.isoformat()
+    }
+
+    # Busca o cliente após a transação confirmada.
+    agendamento = agendamentos_collection.find_one({
+        "_id": agendamento_id,
+        "barber_id": barber_id,
+        "status": "em_atendimento"
+    })
+
+    if agendamento:
+        evento["cliente_id"] = str(agendamento["cliente_id"])
+
+        notificacoes = [
+            manager.enviar_para_cliente(
+                str(agendamento["cliente_id"]), evento
+            ),
+            manager.enviar_para_barbeiro(
+                str(barber_id), evento
+            ),
+            manager.enviar_para_admins(evento)
+        ]
+
+        for notificacao in notificacoes:
+            try:
+                await notificacao
+            except Exception:
+                logger.exception(
+                    "Falha ao enviar evento presenca_confirmada"
+                )
+
+    return {
+        "message": "Presença confirmada com sucesso.",
+        "agendamento_id": str(agendamento_id),
+        "barber_id": str(barber_id),
+        "status": "em_atendimento",
+        "atendido_em": agora.isoformat()
+    }
+
+
+    
+
 @router.post("/barbeiro/finalizar")
 async def finalizar_atendimento_barbeiro(
     dados: dict,
@@ -299,106 +530,159 @@ async def finalizar_atendimento_barbeiro(
 
     agendamento_id = dados.get("agendamento_id")
 
-    if not agendamento_id:
-        raise HTTPException(
-            status_code=400,
-            detail="ID do agendamento não informado."
-        )
-
-    try:
-        agendamento_id = ObjectId(agendamento_id)
-    except Exception:
+    if not agendamento_id or not ObjectId.is_valid(agendamento_id):
         raise HTTPException(
             status_code=400,
             detail="ID do agendamento inválido."
         )
 
-    agendamento = agendamentos_collection.find_one({
-        "_id": agendamento_id,
-        "barber_id": perfil_barbeiro["_id"],
-        "status": "em_atendimento"
-    })
-
-    if not agendamento:
-        raise HTTPException(
-            status_code=404,
-            detail="Agendamento não encontrado ou não está em atendimento."
-        )
-
+    agendamento_id = ObjectId(agendamento_id)
+    barber_id = perfil_barbeiro["_id"]
     agora = datetime.now(timezone.utc)
 
-    atendimento = {
-        **agendamento,
-        "status": "finalizado",
-        "finalizado_em": agora
-    }
+    agendamento = None
+    atendido_id = None
 
-    atendimento.pop("_id", None)
+    try:
+        with client.start_session() as session:
+            with session.start_transaction():
 
-    resultado_atendido = atendidos_collection.insert_one(
-        atendimento
-    )
+                # Verifica se o agendamento está em atendimento.
+                agendamento = agendamentos_collection.find_one(
+                    {
+                        "_id": agendamento_id,
+                        "barber_id": barber_id,
+                        "status": "em_atendimento"
+                    },
+                    session=session
+                )
 
-    resultado_remocao = agendamentos_collection.delete_one({
-        "_id": agendamento_id,
-        "barber_id": perfil_barbeiro["_id"],
-        "status": "em_atendimento"
-    })
+                if not agendamento:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Agendamento não está em atendimento."
+                    )
 
-    if resultado_remocao.deleted_count == 0:
-        atendidos_collection.delete_one({
-            "_id": resultado_atendido.inserted_id
-        })
+                # Libera somente o barbeiro reservado
+                # para este agendamento.
+                liberacao = barbeiros_collection.update_one(
+                    {
+                        "_id": barber_id,
+                        "agendamento_ativo_id": agendamento_id
+                    },
+                    {
+                        "$set": {
+                            "agendamento_ativo_id": None
+                        }
+                    },
+                    session=session
+                )
+
+                if liberacao.modified_count != 1:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Reserva do barbeiro inconsistente."
+                    )
+
+                # Prepara o histórico do atendimento.
+                atendimento = {
+                    **agendamento,
+                    "agendamento_id": agendamento_id,
+                    "status": "finalizado",
+                    "finalizado_em": agora
+                }
+
+                atendimento.pop("_id", None)
+
+                # Registra o atendimento no histórico.
+                resultado_atendido = atendidos_collection.insert_one(
+                    atendimento,
+                    session=session
+                )
+
+                atendido_id = resultado_atendido.inserted_id
+
+                # Remove o agendamento ativo.
+                resultado_remocao = agendamentos_collection.delete_one(
+                    {
+                        "_id": agendamento_id,
+                        "barber_id": barber_id,
+                        "status": "em_atendimento"
+                    },
+                    session=session
+                )
+
+                if resultado_remocao.deleted_count != 1:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Não foi possível remover o agendamento."
+                    )
+
+    except HTTPException:
+        raise
+
+    except OperationFailure as error:
+        logger.exception("Erro na transação de finalização")
+
+        if error.has_error_label("TransientTransactionError"):
+            raise HTTPException(
+                status_code=409,
+                detail="Conflito na finalização. Tente novamente."
+            )
 
         raise HTTPException(
-            status_code=400,
-            detail="Não foi possível remover o agendamento."
+            status_code=500,
+            detail="Erro ao finalizar atendimento."
         )
-        
+
+    except PyMongoError:
+        logger.exception("Erro no MongoDB ao finalizar atendimento")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao finalizar atendimento."
+        )
+
+    # Notifica somente após a transação ser confirmada.
     evento = {
         "tipo": "atendimento_finalizado",
         "agendamento_id": str(agendamento_id),
         "cliente_id": str(agendamento["cliente_id"]),
-        "barber_id": str(perfil_barbeiro["_id"]),
+        "barber_id": str(barber_id),
         "status": "finalizado"
     }
 
-    # Enviar evento ao cliente
-    try:
-        await manager.enviar_para_cliente(
-            str(agendamento["cliente_id"]),
-            evento
+    notificacoes = [
+        (
+            "cliente",
+            manager.enviar_para_cliente(
+                str(agendamento["cliente_id"]), evento
+            )
+        ),
+        (
+            "barbeiro",
+            manager.enviar_para_barbeiro(
+                str(barber_id), evento
+            )
+        ),
+        (
+            "administradores",
+            manager.enviar_para_admins(evento)
         )
-    
-    except Exception:
-        logger.exception(
-            "Erro ao notificar cliente sobre finalização"
-        )
+    ]
 
-    # Enviar evento ao barbeiro responsável
-    try:
-        await manager.enviar_para_barbeiro(
-            str(perfil_barbeiro["_id"]),
-            evento
-        )
-    except Exception:
-        logger.exception(
-            "Erro ao notificar barbeiro sobre finalização"
-        )
-    
-
-    # Enviar evento aos administradores
-    try:
-        await manager.enviar_para_admins(evento)
-    except Exception:
-        logger.exception(
-            "Erro ao notificar administradores sobre finalização"
-        )
+    for destinatario, notificacao in notificacoes:
+        try:
+            await notificacao
+        except Exception:
+            logger.exception(
+                "Falha ao notificar %s sobre finalização",
+                destinatario
+            )
 
     return {
         "message": "Atendimento finalizado com sucesso.",
         "agendamento_id": str(agendamento_id),
-        "atendido_id": str(resultado_atendido.inserted_id),
+        "atendido_id": str(atendido_id),
         "status": "finalizado",
-        "finalizado_em": agora
+        "finalizado_em": agora.isoformat()
     }

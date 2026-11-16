@@ -137,7 +137,6 @@ export default function FilaPage() {
     let tentativas = 0;
 
     function conectarWebSocket() {
-
       if (!ativo) return;
 
       // Evita abrir duas conexões simultâneas
@@ -148,15 +147,7 @@ export default function FilaPage() {
       ) {
         return;
       }
-
-      if (process.env.NODE_ENV === "development") {
-        window.testarQuedaWebSocket = () => {
-          if (socket) {
-            console.log("🧪 Simulando queda do WebSocket");
-            socket.close(4000, "Teste de reconexão");
-          }
-        };
-      }
+      
       const novaConexao = new WebSocket(`${wsUrl.replace(/\/$/, "")}/ws/fila`);
 
       socket = novaConexao;
@@ -164,7 +155,7 @@ export default function FilaPage() {
       novaConexao.onopen = () => {
         if (!ativo || socket !== novaConexao) return;
 
-      //  console.log("✅ WebSocket aberto");
+        //  console.log("✅ WebSocket aberto");
 
         novaConexao.send(JSON.stringify({ token }));
 
@@ -180,13 +171,16 @@ export default function FilaPage() {
         try {
           const mensagem = JSON.parse(event.data);
 
-        //  console.log("📩 Evento WebSocket:", mensagem);
+          //  console.log("📩 Evento WebSocket:", mensagem);
 
-          if (
-            !["cliente_chamado", "atendimento_finalizado"].includes(
-              mensagem.tipo,
-            )
-          ) {
+          const eventosAgendamento = [
+            "cliente_chamado",
+            "presenca_confirmada",
+            "prazo_expirado",
+            "atendimento_finalizado",
+          ];
+
+          if (!eventosAgendamento.includes(mensagem.tipo)) {
             return;
           }
 
@@ -209,7 +203,7 @@ export default function FilaPage() {
       novaConexao.onclose = (event) => {
         if (!ativo || socket !== novaConexao) return;
 
-      //  console.warn(`WebSocket fechado. Código: ${event.code}`);
+        //  console.warn(`WebSocket fechado. Código: ${event.code}`);
 
         socket = null;
 
@@ -223,7 +217,7 @@ export default function FilaPage() {
 
         tentativas += 1;
 
-        const atraso = Math.min(1000 * 2 ** (tentativas - 1), 30000); 
+        const atraso = Math.min(1000 * 2 ** (tentativas - 1), 30000);
 
         reconnectTimer = setTimeout(() => {
           reconnectTimer = null;
@@ -248,7 +242,6 @@ export default function FilaPage() {
         socket.close(1000, "Página encerrada");
         socket = null;
       }
-
     };
   }, [router]);
 

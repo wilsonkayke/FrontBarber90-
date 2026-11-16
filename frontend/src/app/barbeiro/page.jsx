@@ -174,44 +174,48 @@ export default function Barbeiro() {
     buscarRelatorio();
 
     // 2. Configura o cronômetro do Polling (ajustado para 3 segundos como meio-termo)
-    const meuIntervalo = setInterval(() => {
-      if (ativo) {
-        executarBuscaSegura(false);
-      }
-    }, 3000);
+   // const meuIntervalo = setInterval(() => {
+   //   if (ativo) {
+   //     executarBuscaSegura(false);
+   //   }
+   // }, 3000);
 
     // 3. Limpeza ao desmontar
     return () => {
       ativo = false;
-      clearInterval(meuIntervalo);
+    //  clearInterval(meuIntervalo);
     };
   }, []);
 
   // ==============================
   // CHAMAR CLIENTE
   // ==============================
-  const handleChamar = async (cliente) => {
-    try {
-      const response = await fetch(`${API_URL}/barbeiros/barbeiro/chamar`, {
+  const handleChamar = async () => {
+  try {
+    const response = await fetch(
+      `${API_URL}/barbeiros/barbeiro/chamar`,
+      {
         method: "POST",
         headers: getHeaders(),
-        body: JSON.stringify({
-          agendamento_id: cliente._id,
-        }),
-      });
-
-      if (!response.ok) {
-        const erro = await response.text();
-        console.log("ERRO AO CHAMAR CLIENTE:", erro);
-        return;
       }
+    );
 
-      // Agora funciona perfeitamente!
-      await buscarAtendimentos();
-    } catch (error) {
-      console.error("Erro ao chamar cliente:", error);
+    const resultado = await response.json();
+
+    if (!response.ok) {
+      console.error("Status HTTP:", response.status);
+      console.error("Detalhes do erro:", resultado.detail);
+      return;
     }
-  };
+
+    console.log("Cliente chamado:", resultado);
+
+    await buscarAtendimentos();
+
+  } catch (error) {
+    console.error("Falha de comunicação com o backend:", error);
+  }
+};
 
   // ==============================
   // FINALIZAR ATENDIMENTO

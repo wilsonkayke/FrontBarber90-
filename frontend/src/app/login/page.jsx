@@ -71,7 +71,7 @@ const gerenciarRedirecionamentoPosLogin = async (user) => {
 
     if (
       agendamento &&
-      ["agendado", "na_fila", "aguardando", "em_atendimento"]
+      ["agendado", "na_fila", "aguardando", "chamado", "em_atendimento"]
         .includes(agendamento.status)
     ) {
       router.replace("/fila");

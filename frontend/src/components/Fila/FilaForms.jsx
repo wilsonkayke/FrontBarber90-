@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "../Agenda/Footer";
 import DCliente from "./DCliente";
 
@@ -21,7 +21,48 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
     setIndex((prev) => (prev === 0 ? imagens.length - 1 : prev - 1));
   };
 
-  const foiChamado = agendamento?.status === "em_atendimento";
+  const foiChamado = agendamento?.status === "chamado";
+
+  const emAtendimento = agendamento?.status === "em_atendimento";
+
+  const [tempoRestante, setTempoRestante] = useState(null);
+
+  useEffect(() => {
+    if (!foiChamado || !agendamento?.prazo_chamada) {
+      setTempoRestante(null);
+      return;
+    }
+
+    const prazo = new Date(agendamento.prazo_chamada).getTime();
+
+    if (Number.isNaN(prazo)) {
+      setTempoRestante(null);
+      return;
+    }
+
+    const atualizarTempo = () => {
+      const segundos = Math.max(0, Math.ceil((prazo - Date.now()) / 1000));
+
+      setTempoRestante(segundos);
+    };
+
+    atualizarTempo();
+
+    const intervalo = setInterval(atualizarTempo, 1000);
+
+    return () => clearInterval(intervalo);
+  }, [foiChamado, agendamento?.prazo_chamada]);
+
+  const formatarTempo = (segundos) => {
+    if (segundos === null) return "--:--";
+
+    const minutos = Math.floor(segundos / 60);
+    const segundosRestantes = segundos % 60;
+
+    return `${String(minutos).padStart(2, "0")}:${String(
+      segundosRestantes,
+    ).padStart(2, "0")}`;
+  };
 
   return (
     // CONTÊINER PRINCIPAL: Ocupa no mínimo a tela inteira e define o fluxo flex vertical
@@ -52,6 +93,32 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
               <p className="text-green-100 text-sm">
                 Dirija-se ao atendimento.
               </p>
+
+              <div className="bg-black/20 rounded-xl p-4">
+                <p className="text-green-100 text-sm">
+                  Tempo restante para comparecer
+                </p>
+
+                <p className="text-white text-4xl font-bold mt-2">
+                  {formatarTempo(tempoRestante)}
+                </p>
+              </div>
+
+              {tempoRestante === 0 && (
+                <p className="text-yellow-200 text-sm">
+                  O prazo terminou. Aguardando atualização do atendimento.
+                </p>
+              )}
+            </div>
+          ) : emAtendimento ? (
+            <div className="bg-blue-800/90 rounded-2xl p-6 text-center space-y-3">
+              <h2 className="text-white text-2xl font-bold">
+                ✅ Presença confirmada!
+              </h2>
+
+              <p className="text-blue-100">Seu atendimento foi iniciado.</p>
+
+              <p className="text-white text-sm">Bom atendimento!</p>
             </div>
           ) : fila.posicao === null ? (
             <p className="text-center font-bold text-white">
@@ -71,7 +138,7 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
                 Total na fila: {fila.total_na_fila}
               </p>
 
-              <div className="border-t border-gray-100 pt-4 mt-4"></div>
+              <div className="border-t border-gray-100 pt-4 mt-4" />
 
               <button
                 onClick={exit}
