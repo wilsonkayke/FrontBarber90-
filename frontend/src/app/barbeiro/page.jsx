@@ -43,6 +43,43 @@ export default function Barbeiro() {
     };
   };
 
+  const dadosGraficoAtendimentos = dadosAtendimentos.map((item) => ({
+  data: item.data
+    ? item.data.split("-").reverse().slice(0, 2).join("/")
+    : "N/A",
+
+  atendimentos: item.total_finalizados || 0,
+}));
+
+  const dadosGraficoServicos = dadosAtendimentos.reduce(
+  (acumulado, dia) => {
+    dia.servicos?.forEach((servico) => {
+      // Consideramos somente serviços finalizados
+      if (servico.status !== "finalizado") return;
+
+      const existente = acumulado.find(
+        (item) => item.servico_id === servico.servico_id
+      );
+
+      if (existente) {
+        existente.quantidade += servico.total;
+      } else {
+        acumulado.push({
+          servico_id: servico.servico_id,
+          quantidade: servico.total,
+          nome:
+            servicos.find(
+              (item) => Number(item.id) === Number(servico.servico_id)
+            )?.nome || "Serviço desconhecido",
+        });
+      }
+    });
+
+    return acumulado;
+  },
+  []
+);
+
 
   const DICIONARIO_SERVICOS = [
     { id: 1, nome: "Corte de cabelo", duracao: "15 minutos", preco: 30 },
@@ -251,8 +288,8 @@ export default function Barbeiro() {
       faturamentoHoje={faturamentoHoje}
       servicos={servicos}
       dicionarioServicos={DICIONARIO_SERVICOS}
-      dadosAtendimentos={dadosAtendimentos}
-      dadosServicos={dadosServicos}
+      dadosAtendimentos={dadosGraficoAtendimentos}
+      dadosServicos={dadosGraficoServicos}
       diaSelecionado={diaSelecionado}
       setDiaSelecionado={setDiaSelecionado}
       datasDisponiveis={datasDisponiveis}
