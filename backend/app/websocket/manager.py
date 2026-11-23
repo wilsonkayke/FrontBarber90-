@@ -1,5 +1,7 @@
 from fastapi import WebSocket
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ConnectionManager:
 
@@ -19,30 +21,7 @@ class ConnectionManager:
     # BARBEIROS
     # =========================================================
 
-    async def conectar_barbeiro(
-        self,
-        barber_id: str,
-        websocket: WebSocket
-    ):
-        if barber_id not in self.barbeiros:
-            self.barbeiros[barber_id] = []
-
-        self.barbeiros[barber_id].append(websocket)
-
-    def desconectar_barbeiro(
-        self,
-        barber_id: str,
-        websocket: WebSocket
-    ):
-        if barber_id not in self.barbeiros:
-            return
-
-        if websocket in self.barbeiros[barber_id]:
-            self.barbeiros[barber_id].remove(websocket)
-
-        if not self.barbeiros[barber_id]:
-            del self.barbeiros[barber_id]
-
+    
     async def enviar_para_barbeiro(
         self,
         barber_id: str,
@@ -50,8 +29,52 @@ class ConnectionManager:
     ):
         conexoes = self.barbeiros.get(barber_id, [])
 
-        for websocket in conexoes:
-            await websocket.send_json(mensagem)
+        for websocket in conexoes.copy():
+            try:
+                await websocket.send_json(mensagem)
+            except Exception:
+                logger.exception(
+                    "Falha ao enviar mensagem ao barbeiro %s",
+                    barber_id
+                )
+                self.desconectar_barbeiro(
+                    barber_id,
+                    websocket
+                )
+
+    async def enviar_para_admins(
+        self,
+        mensagem: dict
+    ):
+        for websocket in self.admins.copy():
+            try:
+                await websocket.send_json(mensagem)
+            except Exception:
+                logger.exception(
+                    "Falha ao enviar mensagem ao administrador"
+                )
+                self.desconectar_admin(websocket)
+
+    async def enviar_para_cliente(
+        self,
+        cliente_id: str,
+        mensagem: dict
+    ):
+        conexoes = self.clientes.get(cliente_id, [])
+
+        for websocket in conexoes.copy():
+            try:
+                await websocket.send_json(mensagem)
+            except Exception:
+                logger.exception(
+                    "Falha ao enviar mensagem ao cliente %s",
+                    cliente_id
+                )
+                self.desconectar_cliente(
+                    cliente_id,
+                    websocket
+                )
+
 
     # =========================================================
     # ADMIN

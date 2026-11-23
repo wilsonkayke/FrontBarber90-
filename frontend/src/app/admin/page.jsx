@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatCard from "../../components/admin/StatCard";
@@ -124,65 +124,7 @@ export default function AdminDashboard() {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     };
-  };
-
-  // 🚀 Chamar próximo cliente
-  async function chamarProximo() {
-    console.log("CLIENTE CLICADO:", cliente);
-    try {
-      const response = await fetch(`${API_URL}/agendamentos/admin/chamar`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const erro = await response.json();
-        console.log("Erro:", erro.detail);
-        return;
-      }
-
-      const data = await response.json(); 
-      
-      setDashboard((prev) => ({
-        ...prev,
-        fila: prev.fila - 1,
-        agendamentos: prev.agendamentos.slice(1),
-      }));
-    } catch (error) {
-      console.error("Erro ao chamar cliente:", error);
-    }
-  }
-
-  // ✅ Finalizar atendimento
-  async function finalizarAtendimento() {
-    try {
-      const response = await fetch(`${API_URL}/agendamentos/admin/finalizar`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const erro = await response.json();
-        console.log("Erro:", erro.detail);
-        return;
-      }
-
-      const data = await response.json(); 
-
-      setDashboard((prev) => ({
-        ...prev,
-        agendamentos: prev.agendamentos.filter(
-          (ag) => ag._id !== data.agendamento_id,
-        ),
-        atendimentosHoje: prev.atendimentosHoje + 1,
-      }));
-
-      await buscarRelatorio();
-
-    } catch (error) {
-      console.error("Erro ao finalizar atendimento:", error);
-    }
-  }
+  };  
 
   // 🔐 Verifica se é admin
   useEffect(() => {
@@ -218,9 +160,49 @@ useEffect(() => {
     );
   };
 
-  socket.onmessage = (event) => {
-    console.log("Evento recebido pelo WebSocket:", event.data);
-  };
+socket.onmessage = async (event) => {
+  try {
+    const mensagem = JSON.parse(event.data);
+
+    console.log("Evento recebido pelo WebSocket:", mensagem);
+
+    switch (mensagem.tipo) {
+      case "prazo_expirado":
+        console.log(
+          "Cliente não compareceu:",
+          mensagem.agendamento_id
+        );
+
+        await carregarDashboard();
+        break;
+
+      case "cliente_chamado":
+      case "presenca_confirmada":
+        await carregarDashboard();
+        break;
+
+      case "atendimento_finalizado":
+        await carregarDashboard();
+        await buscarRelatorio();
+        break;
+
+      case "teste":
+        console.log("Teste WebSocket:", mensagem.mensagem);
+        break;
+
+      default:
+        console.log(
+          "Evento WebSocket não tratado:",
+          mensagem.tipo
+        );
+    }
+  } catch (error) {
+    console.error(
+      "Erro ao processar mensagem WebSocket:",
+      error
+    );
+  }
+};
 
   socket.onerror = (error) => {
     console.error(" Erro no WebSocket ADMIN:", error);
@@ -239,52 +221,39 @@ useEffect(() => {
   };
 }, [autorizado]);
 
-  // 📊 Carregar dashboard (auto refresh)
+  // 📊 Carregar dados atualizados do dashboard
+  const carregarDashboard = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/agendamentos/admin/dashboard`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const erro = await response.text();
+        console.error("Erro ao carregar dashboard:", erro);
+        return;
+      }
+
+      const data = await response.json();
+
+      setDashboard(data);
+
+      console.log("Dashboard atualizado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    }
+  };
+
+  // Carregamento inicial
   useEffect(() => {
     if (!autorizado) return;
 
-    let ativo = true;
-
-    async function carregarDashboard() {
-
-      try {
-        const token = localStorage.getItem("token");  
-
-        const response = await fetch(
-          `${API_URL}/agendamentos/admin/dashboard`,
-          {
-            headers: getAuthHeaders(),
-          },
-        );
-
-       // console.log("STATUS:", response.status);
-
-        if (!response.ok) {
-          const erro = await response.text();
-          console.log("ERRO BACKEND:", erro);
-          setDashboard({ erro: true });
-          return;
-        }
-
-        const data = await response.json(); 
-        if (ativo) {
-          setDashboard(data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
-        setDashboard({ erro: true });
-      }
-    }
-
-    carregarDashboard();
-
-    //const interval = setInterval(carregarDashboard, 3000);
-
-    return () => {
-      ativo = false;
-      //clearInterval(interval);
-    };
+    carregarDashboard();  
   }, [autorizado]);
+
 
   const buscarRelatorio = async () => {
   try {
@@ -358,9 +327,7 @@ useEffect(() => {
         </div>
         
           <BarberTable
-            data={dadosFiltrados}
-            onChamar={chamarProximo}
-            onFinalizar={finalizarAtendimento}
+            data={dadosFiltrados} 
             diaSelecionado={diaSelecionado}
             setDiaSelecionado={setDiaSelecionado}
             servicos={servicos}

@@ -195,36 +195,56 @@ def dashboard_admin(admin=Depends(get_admin)):
     })  
 
     pipeline = [
-        {
-            "$match": {
-                "status": {"$in": ["agendado", "em_atendimento"]}
+    {
+        "$match": {
+            "status": {
+                "$in": ["agendado", "chamado", "em_atendimento"]
             }
-        },
-        {
-            "$lookup": {
-                "from": "clientes",  # nome da collection de clientes ****
-                "localField": "cliente_id",
-                "foreignField": "_id",
-                "as": "cliente_info"
-            }
-        },
-        {
-            "$unwind": "$cliente_info"
-        },
-        {
-            "$sort": {"horario": 1}
         }
-    ]
+    },
+    {
+        "$lookup": {
+            "from": "clientes",
+            "localField": "cliente_id",
+            "foreignField": "_id",
+            "as": "cliente_info"
+        }
+    },
+    {
+        "$unwind": "$cliente_info"
+    },
+    {
+        "$lookup": {
+            "from": "barbeiros",
+            "localField": "barber_id",
+            "foreignField": "_id",
+            "as": "barbeiro_info"
+        }
+    },
+    {
+        "$unwind": {
+            "path": "$barbeiro_info",
+            "preserveNullAndEmptyArrays": True
+        }
+    },
+    {
+        "$sort": {"horario": 1}
+    }
+]
+
 
     resultados = list(agendamentos_collection.aggregate(pipeline))
 
     lista = []
 
     for ag in resultados:
+        barbeiro = ag.get("barbeiro_info") or {}
+        
         lista.append({
             "_id": str(ag["_id"]),
             "cliente_id": str(ag["cliente_id"]),
             "nome": ag["cliente_info"]["usuario"],
+            "barbeiro_nome": (ag.get("barbeiro_info") or {}).get("nome", "Não informado"),
             "horario": ag["horario"],
             "servico_id": ag["servico_id"],
             "preco": ag["preco"],

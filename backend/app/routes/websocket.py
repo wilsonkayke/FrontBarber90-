@@ -1,5 +1,4 @@
-
-import json
+import json 
 
 from bson import ObjectId
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -7,6 +6,9 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.websocket.manager import manager
 from app.dependencies.auth import verify_token
 from app.db.mongo_connection import db
+
+from fastapi import Depends
+from app.dependencies.auth import get_admin
 
 
 router = APIRouter(tags=["WebSocket"])
@@ -103,20 +105,30 @@ async def websocket_barbeiro(websocket: WebSocket):
     finally:
         if autenticado and barber_id:
             manager.desconectar_barbeiro(barber_id, websocket)
-            
-            
-            
+  
+
+# =========================================================
+# WEBSOCKET — TESTE - ADMIN
+# =========================================================           
+  
+  
 @router.post("/ws/teste-admin")
-async def testar_websocket_admin():
-    await manager.enviar_para_admins({
+async def testar_websocket_admin(
+    admin=Depends(get_admin)
+):
+    evento = {
         "tipo": "teste",
         "mensagem": "WebSocket do administrador funcionando!"
-    })
+    }
+    
+    await manager.enviar_para_admins(evento)
 
-    return {"message": "Evento de teste enviado"}           
-
-
-
+    return {
+        "message": "Evento de teste enviado",
+        "evento": evento
+    }     
+     
+ 
 # =========================================================
 # WEBSOCKET — ADMIN
 # ========================================================= 

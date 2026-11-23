@@ -520,9 +520,9 @@ export default function BarberTable({
                     text-sm
                     font-bold
                     text-slate-200">
-                    <h1 className="text-white">
-                      Felipe
-                    </h1>
+                    <span className="text-white">
+                      {cliente.barbeiro_nome || "Não informado"}
+                    </span>
                   </div>
                  
 

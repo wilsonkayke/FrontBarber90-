@@ -33,45 +33,47 @@ export default function Relatorio({
   // DADOS DOS SERVIÇOS
   // =====================================================
 
-  const dadosGraficoServicos =
-    dados?.relatorio?.reduce((acumulado, dia) => {
-      dia.servicos?.forEach((servico) => {
-        const existente = acumulado.find(
-          (item) => item.servico_id === servico.servico_id
-        );
+  const dadosGraficoServicos = dadosRelatorio.reduce(
+  (acumulado, dia) => {
+    dia.servicos?.forEach((servico) => {
+      const existente = acumulado.find(
+        (item) => item.servico_id === servico.servico_id
+      );
 
-        if (existente) {
-          existente.quantidade += servico.total;
-        } else {
-          acumulado.push({
-            servico_id: servico.servico_id,
-            quantidade: servico.total,
-            nome:
-              servicos.find(
-                (item) =>
-                  Number(item.id) === Number(servico.servico_id)
-              )?.nome || "Serviço",
-          });
-        }
-      });
+      if (existente) {
+        existente.quantidade += servico.total;
+      } else {
+        acumulado.push({
+          servico_id: servico.servico_id,
+          quantidade: servico.total,
+          nome:
+            servicos.find(
+              (item) => Number(item.id) === Number(servico.servico_id)
+            )?.nome || "Serviço desconhecido",
+        });
+      }
+    });
 
-      return acumulado;
-    }, []) || [];
+    return acumulado;
+  },
+  []
+);
 
   // =====================================================
   // DADOS PARA O GRÁFICO DE MOVIMENTO POR DIA
   // =====================================================
 
-  const dadosGraficoMovimento =
-    dados?.relatorio?.map((item) => ({
-      data: item.data
-        ? item.data.split("-").reverse().slice(0, 2).join("/")
-        : "N/A",
-      atendimentos:
-        (item.total_finalizados || 0) + (item.total_cancelados || 0),
-      finalizados: item.total_finalizados || 0,
-      cancelados: item.total_cancelados || 0,
-    })) || [];
+  const dadosGraficoMovimento = dadosRelatorio.map((item) => ({
+  data: item.data
+    ? item.data.split("-").reverse().slice(0, 2).join("/")
+    : "N/A",
+
+  atendimentos:
+    (item.total_finalizados || 0) + (item.total_cancelados || 0),
+
+  finalizados: item.total_finalizados || 0,
+  cancelados: item.total_cancelados || 0,
+}));
 
   // =====================================================
   // SERVIÇO MAIS UTILIZADO
