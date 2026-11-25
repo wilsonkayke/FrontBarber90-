@@ -226,6 +226,27 @@ export default function Barbeiro() {
             await buscarAtendimentos();
             break;
 
+          case "cliente_chamado":
+            console.log("Cliente chamado:", mensagem.agendamento_id);
+
+            await buscarAtendimentos();
+            break;
+
+          case "presenca_confirmada":
+            console.log("Presença confirmada:", mensagem.agendamento_id);
+
+            await buscarAtendimentos();
+            break;
+
+          case "atendimento_finalizado":
+            console.log("Atendimento finalizado:", mensagem.agendamento_id);
+
+            await Promise.all([
+              buscarAtendimentos(),
+              buscarRelatorio(),
+            ]);
+            break;
+
           default:
             console.log("Evento WebSocket não tratado:", mensagem.tipo);
         }
@@ -281,52 +302,45 @@ export default function Barbeiro() {
     }
   };
 
+  const handleConfirmarPresenca = async (cliente) => {
+    if (confirmandoPresenca) return;
 
-  
-const handleConfirmarPresenca = async (cliente) => {
-  if (confirmandoPresenca) return;
+    try {
+      setConfirmandoPresenca(true);
+      setErroPresenca(null);
 
-  try {
-    setConfirmandoPresenca(true);
-    setErroPresenca(null);
-
-    const response = await fetch(
-      `${API_URL}/barbeiros/barbeiro/confirmar-presenca`,
-      {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({
-          agendamento_id: cliente._id,
-        }),
-      }
-    );
-
-    const resultado = await response.json();
-
-    if (!response.ok) {
-      setErroPresenca(
-        resultado.detail || "Erro ao confirmar presença."
+      const response = await fetch(
+        `${API_URL}/barbeiros/barbeiro/confirmar-presenca`,
+        {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify({
+            agendamento_id: cliente._id,
+          }),
+        },
       );
 
-      console.warn("Erro ao confirmar presença:", resultado.detail);
+      const resultado = await response.json();
+
+      if (!response.ok) {
+        setErroPresenca(resultado.detail || "Erro ao confirmar presença.");
+
+        console.warn("Erro ao confirmar presença:", resultado.detail);
+
+        await buscarAtendimentos();
+        return;
+      }
+
+      console.log("Presença confirmada:", resultado);
 
       await buscarAtendimentos();
-      return;
+    } catch (error) {
+      setErroPresenca("Falha de comunicação com o servidor.");
+      console.error("Erro ao confirmar presença:", error);
+    } finally {
+      setConfirmandoPresenca(false);
     }
-
-    console.log("Presença confirmada:", resultado);
-
-    await buscarAtendimentos();
-
-  } catch (error) {
-    setErroPresenca("Falha de comunicação com o servidor.");
-    console.error("Erro ao confirmar presença:", error);
-
-  } finally {
-    setConfirmandoPresenca(false);
-  }
-};
-
+  };
 
   // ==============================
   // FINALIZAR ATENDIMENTO
