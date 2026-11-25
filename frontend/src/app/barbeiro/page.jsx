@@ -5,6 +5,8 @@ import { LayoutBarber } from "../../components/barbeiro/LayoutBarber";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+const WS_URL = API_URL.replace(/^http/, "ws").replace(/\/$/, "");
+
 export default function Barbeiro() {
   // ==============================
   // ESTADOS
@@ -44,21 +46,20 @@ export default function Barbeiro() {
   };
 
   const dadosGraficoAtendimentos = dadosAtendimentos.map((item) => ({
-  data: item.data
-    ? item.data.split("-").reverse().slice(0, 2).join("/")
-    : "N/A",
+    data: item.data
+      ? item.data.split("-").reverse().slice(0, 2).join("/")
+      : "N/A",
 
-  atendimentos: item.total_finalizados || 0,
-}));
+    atendimentos: item.total_finalizados || 0,
+  }));
 
-  const dadosGraficoServicos = dadosAtendimentos.reduce(
-  (acumulado, dia) => {
+  const dadosGraficoServicos = dadosAtendimentos.reduce((acumulado, dia) => {
     dia.servicos?.forEach((servico) => {
       // Consideramos somente serviços finalizados
       if (servico.status !== "finalizado") return;
 
       const existente = acumulado.find(
-        (item) => item.servico_id === servico.servico_id
+        (item) => item.servico_id === servico.servico_id,
       );
 
       if (existente) {
@@ -69,17 +70,14 @@ export default function Barbeiro() {
           quantidade: servico.total,
           nome:
             servicos.find(
-              (item) => Number(item.id) === Number(servico.servico_id)
+              (item) => Number(item.id) === Number(servico.servico_id),
             )?.nome || "Serviço desconhecido",
         });
       }
     });
 
     return acumulado;
-  },
-  []
-);
-
+  }, []);
 
   const DICIONARIO_SERVICOS = [
     { id: 1, nome: "Corte de cabelo", duracao: "15 minutos", preco: 30 },
@@ -171,56 +169,81 @@ export default function Barbeiro() {
   };
 
   // ==============================
-  // EFECT UNIFICADO PARA CARREGAMENTO E POLLING
+  // CARREGAMENTO INICIAL
   // ==============================
   useEffect(() => {
-    let ativo = true;
+    buscarAtendimentos(true);
+    buscarRelatorio();
+  }, []);
 
-    // Função interna gerenciada pelo efeito para respeitar a flag 'ativo'
-    const executarBuscaSegura = async (isFirstLoad) => {
+  // ==============================
+  // WEBSOCKET DO BARBEIRO
+  // ==============================
+  useEffect(() => {
+    const token = obterToken();
+
+    if (!token) {
+      console.error("Token do barbeiro não encontrado.");
+      return;
+    }
+
+    const socket = new WebSocket(`${WS_URL}/ws/barbeiro`);
+
+    socket.onopen = () => {
+      console.log("WebSocket do barbeiro conectado.");
+
+      socket.send(
+        JSON.stringify({
+          token: token,
+        }),
+      );
+    };
+
+    socket.onmessage = async (event) => {
       try {
-        if (isFirstLoad) setCarregando(true);
+        const mensagem = JSON.parse(event.data);
 
-        const response = await fetch(`${API_URL}/barbeiros/barbeiro/dashboard`, {
-          headers: getHeaders(),
-        });
+        console.log("Evento recebido pelo WebSocket BARBEIRO:", mensagem);
 
-        const resultado = await response.json();
+        switch (mensagem.tipo) {
+          case "novo_agendamento":
+            console.log("Novo agendamento recebido:", mensagem.agendamento_id);
 
-        if (!response.ok) {
-          throw new Error(resultado?.detail || "Erro ao buscar atendimentos.");
-        }
+            await buscarAtendimentos();
+            break;
 
-        if (ativo) {
-          const agendamentos = resultado?.agendamentos || [];
-          setData(agendamentos);
-          setDatasDisponiveis(gerarDatasDisponiveis(agendamentos));
+          case "prazo_expirado":
+            console.log("Cliente não compareceu:", mensagem.agendamento_id);
+
+            await buscarAtendimentos();
+            break;
+
+          default:
+            console.log("Evento WebSocket não tratado:", mensagem.tipo);
         }
       } catch (error) {
-        if (ativo) {
-          console.error("Erro no polling:", error);
-          setErro(error.message);
-        }
-      } finally {
-        if (ativo) setCarregando(false);
+        console.error("Erro ao processar evento WebSocket:", error);
       }
     };
 
-    // 1. Carrega os dados da tela e o relatório na primeira vez
-    executarBuscaSegura(true);
-    buscarRelatorio();
+    socket.onerror = (error) => {
+      console.warn("Erro no WebSocket BARBEIRO:", {
+        evento: error.type,
+        estado: socket.readyState,
+        url: socket.url,
+      });
+    };
 
-    // 2. Configura o cronômetro do Polling (ajustado para 3 segundos como meio-termo)
-   // const meuIntervalo = setInterval(() => {
-   //   if (ativo) {
-   //     executarBuscaSegura(false);
-   //   }
-   // }, 3000);
+    socket.onclose = (event) => {
+      console.log("WebSocket BARBEIRO fechado:", {
+        codigo: event.code,
+        motivo: event.reason,
+        encerramentoNormal: event.wasClean,
+      });
+    };
 
-    // 3. Limpeza ao desmontar
     return () => {
-      ativo = false;
-    //  clearInterval(meuIntervalo);
+      socket.close();
     };
   }, []);
 
@@ -228,36 +251,32 @@ export default function Barbeiro() {
   // CHAMAR CLIENTE
   // ==============================
   const handleChamar = async () => {
-  try {
-    const response = await fetch(
-      `${API_URL}/barbeiros/barbeiro/chamar`,
-      {
+    try {
+      const response = await fetch(`${API_URL}/barbeiros/barbeiro/chamar`, {
         method: "POST",
         headers: getHeaders(),
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok) {
+        console.error("Status HTTP:", response.status);
+        console.error("Detalhes do erro:", resultado.detail);
+        return;
       }
-    );
 
-    const resultado = await response.json();
+      console.log("Cliente chamado:", resultado);
 
-    if (!response.ok) {
-      console.error("Status HTTP:", response.status);
-      console.error("Detalhes do erro:", resultado.detail);
-      return;
+      await buscarAtendimentos();
+    } catch (error) {
+      console.error("Falha de comunicação com o backend:", error);
     }
-
-    console.log("Cliente chamado:", resultado);
-
-    await buscarAtendimentos();
-
-  } catch (error) {
-    console.error("Falha de comunicação com o backend:", error);
-  }
-};
+  };
 
   // ==============================
   // FINALIZAR ATENDIMENTO
   // ==============================
-  const handleFinalizar = async (cliente) => {  
+  const handleFinalizar = async (cliente) => {
     try {
       const response = await fetch(`${API_URL}/barbeiros/barbeiro/finalizar`, {
         method: "POST",
@@ -281,7 +300,7 @@ export default function Barbeiro() {
 
   // ==============================
   // RENDER
-  // ============================== 
+  // ==============================
   return (
     <LayoutBarber
       data={data}
@@ -301,4 +320,4 @@ export default function Barbeiro() {
       erro={erro}
     />
   );
-} 
+}

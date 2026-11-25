@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import Footer from "../Agenda/Footer";
 import DCliente from "./DCliente";
 
-export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
+export default function FilaForms({
+  fila,
+  exit,
+  sair,
+  nomeUser,
+  agendamento,
+  prazoExpirado,
+  novoAgendamento,
+}) {
   const imagens = [
     "/imagens/Reflexo.jpg",
     "/imagens/Nevou.jpg",
@@ -80,7 +88,30 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
 
           <DCliente agendamento={agendamento} />
 
-          {!fila ? (
+          {prazoExpirado && !agendamento ? (
+            <div className="bg-amber-800/90 rounded-2xl p-6 text-center space-y-4">
+              <h2 className="text-white text-2xl font-bold">
+                ⏳ Você perdeu sua vez!
+              </h2>
+
+              <p className="text-amber-100">
+                Você não confirmou sua presença dentro dos 15 minutos
+                disponíveis.
+              </p>
+
+              <p className="text-white text-sm">
+                Realize um novo agendamento para entrar novamente na fila.
+              </p>
+
+              <button
+                onClick={novoAgendamento}
+                className="bg-green-700 hover:bg-green-800 text-white
+                 font-semibold px-6 py-3 rounded-xl transition"
+              >
+                Realizar novo agendamento
+              </button>
+            </div>
+          ) : !fila ? (
             <p className="text-center text-gray-600">Carregando...</p>
           ) : foiChamado ? (
             <div className="bg-green-700/90 rounded-2xl p-6 text-center space-y-3">
@@ -106,7 +137,8 @@ export default function FilaForms({ fila, exit, sair, nomeUser, agendamento }) {
 
               {tempoRestante === 0 && (
                 <p className="text-yellow-200 text-sm">
-                  O prazo terminou. Aguardando atualização do atendimento.
+                  Você perdeu sua vez por não confirmar a presença dentro dos 15
+                  minutos.
                 </p>
               )}
             </div>

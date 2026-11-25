@@ -239,6 +239,17 @@ socket.onmessage = async (event) => {
 
       const data = await response.json();
 
+      console.log("Dados do dashboard carregados:", data);
+
+      console.log(
+        "Agendamentos recebidos:",
+        data.agendamentos?.map((ag) => ({
+          id: ag._id,
+          nome: ag.nome,
+          status: ag.status,
+        }))
+      );
+
       setDashboard(data);
 
       console.log("Dashboard atualizado com sucesso.");

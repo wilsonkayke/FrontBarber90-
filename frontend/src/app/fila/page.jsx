@@ -10,6 +10,7 @@ export default function FilaPage() {
   const [fila, setFila] = useState(null);
   const [agendamento, setAgendamento] = useState(null);
   const [nomeUser, setNomeUser] = useState("");
+  const [prazoExpirado, setPrazoExpirado] = useState(false);
 
   const router = useRouter();
 
@@ -110,6 +111,10 @@ export default function FilaPage() {
 
           setAgendamento(atual);
 
+          if (atual) {
+            setPrazoExpirado(false);
+          }
+
           agendamentoIdRef.current = atual?._id
             ? String(atual._id)
             : atual?.id
@@ -147,7 +152,7 @@ export default function FilaPage() {
       ) {
         return;
       }
-      
+
       const novaConexao = new WebSocket(`${wsUrl.replace(/\/$/, "")}/ws/fila`);
 
       socket = novaConexao;
@@ -171,7 +176,7 @@ export default function FilaPage() {
         try {
           const mensagem = JSON.parse(event.data);
 
-          //  console.log("📩 Evento WebSocket:", mensagem);
+          console.log("Evento WebSocket CLIENTE:", mensagem);
 
           const eventosAgendamento = [
             "cliente_chamado",
@@ -188,6 +193,15 @@ export default function FilaPage() {
 
           if (idAtual && String(mensagem.agendamento_id) !== idAtual) {
             return;
+          }
+
+          if (mensagem.tipo === "prazo_expirado") {
+            console.log(
+              "Prazo de comparecimento expirado:",
+              mensagem.agendamento_id,
+            );
+
+            setPrazoExpirado(true);
           }
 
           await carregarDados();
@@ -257,6 +271,8 @@ export default function FilaPage() {
       sair={() => window.location.replace("/")}
       nomeUser={nomeUser}
       agendamento={agendamento}
+      prazoExpirado={prazoExpirado}
+      novoAgendamento={() => router.push("/agenda")}
     />
   );
 }
