@@ -53,12 +53,7 @@ export function Topbarbarber() {
 
         {/* Nome do barbeiro */}
         <div className="z-10">
-            <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="left-0"
-            >
-                ☰
-            </button>
+            
         </div>
 
         {/* Lado direito */}

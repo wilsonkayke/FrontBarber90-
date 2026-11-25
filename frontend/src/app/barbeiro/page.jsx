@@ -218,6 +218,12 @@ export default function Barbeiro() {
             await buscarAtendimentos();
             break;
 
+          case "cliente_desistiu":
+            console.log("Cliente desistiu:", mensagem.agendamento_id);
+
+            await buscarAtendimentos();
+            break;
+
           default:
             console.log("Evento WebSocket não tratado:", mensagem.tipo);
         }

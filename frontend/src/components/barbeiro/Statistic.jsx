@@ -17,6 +17,9 @@ export function Statistic({
   dadosAtendimentos = [],
   dadosServicos = [],
 }) {
+
+  
+
   return (
     <section className="w-full space-y-5">
       {/* CABEÇALHO */}
