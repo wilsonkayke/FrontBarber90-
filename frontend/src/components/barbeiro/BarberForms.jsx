@@ -14,6 +14,9 @@ export function BarberForms({
   mostrarCalendario,
   setMostrarCalendario,
   onChamar,
+  onConfirmarPresenca,
+  onConfirmandoPresenca,
+  onErroPresenca,
   onFinalizar,
   carregando,
   erro,
@@ -35,8 +38,8 @@ export function BarberForms({
   };
 
   const obterServico = (servicoId) => {
-  return dicionarioServicos[servicoId] || { nome: "Serviço não encontrado" };
-};
+    return dicionarioServicos[servicoId] || { nome: "Serviço não encontrado" };
+  };
 
   const formatarHorario = (horario) => {
     if (!horario) return "--:--";
@@ -338,6 +341,16 @@ export function BarberForms({
         </div>
       </div>
 
+      {onErroPresenca && (
+        <div
+          className="mb-4 rounded-xl border border-red-500/20
+    bg-red-500/10 p-4 text-sm text-red-300"
+          role="alert"
+        >
+          {onErroPresenca}
+        </div>
+      )}
+
       {/* PRÓXIMO CLIENTE */}
       {dataFiltrada.length > 0 && (
         <div
@@ -401,42 +414,56 @@ export function BarberForms({
                     <button
                       onClick={() => onFinalizar(cliente)}
                       className="rounded-xl
-                      border
-                      border-emerald-400/20
-                      bg-emerald-500/10
-                      px-4
-                      py-2.5
-                      text-sm
-                      font-bold
-                      text-emerald-300
-                      shadow-sm
-                      transition-all
-                      hover:border-emerald-400/40
-                      hover:bg-emerald-500
-                      hover:text-white
-                      active:scale-95"
+      border border-emerald-400/20
+      bg-emerald-500/10
+      px-4 py-2.5
+      text-sm font-bold text-emerald-300
+      shadow-sm transition-all
+      hover:border-emerald-400/40
+      hover:bg-emerald-500
+      hover:text-white
+      active:scale-95"
                     >
                       Finalizar
                     </button>
-                  ) : (
-                    <button onClick={() => onChamar(cliente)} className="rounded-xl
-                      border
-                      border-sky-400/20
-                      bg-sky-500/10
-                      px-4
-                      py-2.5
-                      text-sm
-                      font-bold
-                      text-sky-300
-                      shadow-sm
-                      transition-all
-                      hover:border-sky-400/40
-                      hover:bg-sky-500
-                      hover:text-white
-                      active:scale-95">
+                  ) : cliente.status === "chamado" ? (
+                    <button
+                      onClick={() => onConfirmarPresenca(cliente)}
+                      disabled={onConfirmandoPresenca}
+                      className="rounded-xl
+      border border-amber-400/20
+      bg-amber-500/10
+      px-4 py-2.5
+      text-sm font-bold text-amber-300
+      shadow-sm transition-all
+      hover:border-amber-400/40
+      hover:bg-amber-500
+      hover:text-white
+      active:scale-95
+      disabled:opacity-50
+      disabled:cursor-not-allowed"
+                    >
+                      {onConfirmandoPresenca
+                        ? "Confirmando..."
+                        : "Confirmar presença"}
+                    </button>
+                  ) : cliente.status === "agendado" ? (
+                    <button
+                      onClick={() => onChamar(cliente)}
+                      className="rounded-xl
+      border border-sky-400/20
+      bg-sky-500/10
+      px-4 py-2.5
+      text-sm font-bold text-sky-300
+      shadow-sm transition-all
+      hover:border-sky-400/40
+      hover:bg-sky-500
+      hover:text-white
+      active:scale-95"
+                    >
                       Chamar cliente
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );
@@ -570,7 +597,7 @@ export function BarberForms({
                       "
                     >
                       ⏰ {formatarHorario(cliente.horario)}
-                    </span> 
+                    </span>
                   </div>
                 </div>
               );

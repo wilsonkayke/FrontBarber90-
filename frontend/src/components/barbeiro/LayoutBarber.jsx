@@ -20,7 +20,11 @@ export function LayoutBarber({
   setMostrarCalendario,
 
   onChamar,
+  onConfirmarPresenca,
   onFinalizar,
+
+  onConfirmandoPresenca,
+  onErroPresenca,
 
   carregando,
   erro,
@@ -69,7 +73,10 @@ export function LayoutBarber({
             mostrarCalendario={mostrarCalendario}
             setMostrarCalendario={setMostrarCalendario}
             onChamar={onChamar}
+            onConfirmarPresenca={onConfirmarPresenca}
             onFinalizar={onFinalizar}
+            confirmandoPresenca={onConfirmandoPresenca}
+            erroPresenca={onErroPresenca}
             carregando={carregando}
             erro={erro}
           />

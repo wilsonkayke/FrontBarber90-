@@ -21,6 +21,8 @@ export default function Barbeiro() {
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
+  const [confirmandoPresenca, setConfirmandoPresenca] = useState(false);
+  const [erroPresenca, setErroPresenca] = useState(null);
 
   // ==============================
   // TOKEN
@@ -279,6 +281,53 @@ export default function Barbeiro() {
     }
   };
 
+
+  
+const handleConfirmarPresenca = async (cliente) => {
+  if (confirmandoPresenca) return;
+
+  try {
+    setConfirmandoPresenca(true);
+    setErroPresenca(null);
+
+    const response = await fetch(
+      `${API_URL}/barbeiros/barbeiro/confirmar-presenca`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          agendamento_id: cliente._id,
+        }),
+      }
+    );
+
+    const resultado = await response.json();
+
+    if (!response.ok) {
+      setErroPresenca(
+        resultado.detail || "Erro ao confirmar presença."
+      );
+
+      console.warn("Erro ao confirmar presença:", resultado.detail);
+
+      await buscarAtendimentos();
+      return;
+    }
+
+    console.log("Presença confirmada:", resultado);
+
+    await buscarAtendimentos();
+
+  } catch (error) {
+    setErroPresenca("Falha de comunicação com o servidor.");
+    console.error("Erro ao confirmar presença:", error);
+
+  } finally {
+    setConfirmandoPresenca(false);
+  }
+};
+
+
   // ==============================
   // FINALIZAR ATENDIMENTO
   // ==============================
@@ -321,6 +370,9 @@ export default function Barbeiro() {
       mostrarCalendario={mostrarCalendario}
       setMostrarCalendario={setMostrarCalendario}
       onChamar={handleChamar}
+      onConfirmarPresenca={handleConfirmarPresenca}
+      confirmandoPresenca={confirmandoPresenca}
+      erroPresenca={erroPresenca}
       onFinalizar={handleFinalizar}
       carregando={carregando}
       erro={erro}
