@@ -146,6 +146,17 @@ class ConnectionManager:
                     cliente_id,
                     websocket
                 )
+    
+    async def enviar_para_clientes(
+    self,
+    clientes_ids: list[str],
+    mensagem: dict
+    ):
+        for cliente_id in set(clientes_ids):
+            await self.enviar_para_cliente(
+                cliente_id,
+                mensagem
+            )
 
 
 # Instância compartilhada

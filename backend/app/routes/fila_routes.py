@@ -3,7 +3,8 @@ from app.db.mongo_connection import db
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies.auth import get_current_user, get_admin
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 import logging
 from app.websocket.manager import manager
@@ -18,31 +19,7 @@ router = APIRouter(
 agendamentos_collection = db["agendamentos"]
 desistencias_collection = db["desistencias"]
 
-@router.get("/{cliente_id}")
-def obter_posicao_fila(cliente_id: str):
-
-    if not ObjectId.is_valid(cliente_id):
-        raise HTTPException(status_code=400, detail="ID inválido")
-
-    cliente_object_id = ObjectId(cliente_id)
-
-    fila = list(
-        agendamentos_collection
-        .find({"status": "aguardando"})
-        .sort("entrada_em", 1)
-    )
-
-    for index, item in enumerate(fila):
-        if item["cliente_id"] == cliente_object_id:
-            return {
-                "posicao": index + 1,
-                "pessoas_a_frente": index,
-                "total_na_fila": len(fila)
-            }
-
-    raise HTTPException(status_code=404, detail="Cliente não está na fila")
-
-@router.delete("/agendamentos/sair")
+@router.delete("/agendamentos/sair")    
 async def sair_fila(usuario=Depends(get_current_user)):
 
     cliente_id = ObjectId(usuario["id"])
@@ -147,36 +124,79 @@ async def sair_fila(usuario=Depends(get_current_user)):
 # 📌 Fila do usuário (posição real)
 #           Rota fila
 # =========================================================
+
 @router.get("/")
-async def minha_fila( usuario=Depends(get_current_user)):   
+async def minha_fila(usuario=Depends(get_current_user)):
 
-    agora = datetime.utcnow()
+    cliente_id = ObjectId(usuario["id"])
 
+    # Busca o agendamento do cliente autenticado
+    agendamento = agendamentos_collection.find_one({
+        "cliente_id": cliente_id,
+        "status": "agendado"
+    })
+
+    if not agendamento:
+        return {
+            "posicao": None,
+            "pessoas_a_frente": 0,
+            "total_na_fila": 0
+        }
+
+    barber_id = agendamento["barber_id"]
+
+    # Define o fuso horário da barbearia
+    fuso = ZoneInfo("America/Bahia")
+
+    horario = agendamento["horario"]
+
+    # PyMongo pode retornar datas UTC sem timezone
+    if horario.tzinfo is None:
+        horario = horario.replace(tzinfo=timezone.utc)
+
+    horario_local = horario.astimezone(fuso)
+
+    # Define o início e o fim do dia do agendamento
+    inicio_dia = horario_local.replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
+    fim_dia = inicio_dia + timedelta(days=1)
+
+    # Converte os limites para UTC
+    inicio_utc = inicio_dia.astimezone(timezone.utc)
+    fim_utc = fim_dia.astimezone(timezone.utc)
+
+    # Busca somente a fila do barbeiro e do dia
     agendamentos = list(
         agendamentos_collection.find({
+            "barber_id": barber_id,
             "status": "agendado",
-            "horario": {"$gte": agora}
-        }).sort("horario", 1)
+            "horario": {
+                "$gte": inicio_utc,
+                "$lt": fim_utc
+            }
+        }).sort([
+            ("horario", 1),
+            ("_id", 1)
+        ])
     )
 
     total = len(agendamentos)
     posicao = None
 
     for index, ag in enumerate(agendamentos):
-        if ag["cliente_id"] == ObjectId(usuario["id"]):
+        if ag["_id"] == agendamento["_id"]:
             posicao = index + 1
             break
-
-    if posicao is None:
-        return {
-            "posicao": None,
-            "pessoas_a_frente": 0,
-            "total_na_fila": total
-        }
-
+            
     return {
-    "usuario_logado": usuario["id"],
-    "posicao": posicao,
-    "pessoas_a_frente": posicao - 1 if posicao else 0,
-    "total_na_fila": total
+        "usuario_logado": usuario["id"],
+        "posicao": posicao,
+        "pessoas_a_frente": posicao - 1 if posicao else 0,
+        "total_na_fila": total
     }
+
