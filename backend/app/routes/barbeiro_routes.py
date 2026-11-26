@@ -8,6 +8,7 @@ from pymongo.errors import PyMongoError, OperationFailure
 from app.schemas.barbeiro_schema import BarbeiroCreate
 from app.utils.security import hash_password
 from bson import ObjectId
+from app.services.notificacao_fila import notificar_atualizacao_fila
 
 import logging
 from app.websocket.manager import manager
@@ -338,6 +339,13 @@ async def chamar_proximo_barbeiro(
         (
             "administradores",
             manager.enviar_para_admins(evento)
+        ),
+        (
+            "cliente na fila",
+            notificar_atualizacao_fila(
+                barber_id,
+                proximo["horario"]
+            )
         )
     ]
 
@@ -346,7 +354,7 @@ async def chamar_proximo_barbeiro(
             await notificacao
         except Exception:
             logger.exception(
-                "Falha ao notificar %s sobre cliente_chamado",
+                "Falha ao processar notificação de chamada para %s",
                 destinatario
             )
 

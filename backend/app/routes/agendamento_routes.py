@@ -10,6 +10,7 @@ from app.db.mongo_connection import db
 from app.dependencies.auth import get_current_user, get_admin, get_barbeiro
 from app.schemas.agendamento_schema import AgendamentoCreate
 from app.websocket.manager import manager
+from app.services.notificacao_fila import notificar_atualizacao_fila
 
 router = APIRouter(
     prefix="/agendamentos",
@@ -126,6 +127,11 @@ async def criar_agendamento(
             "tipo": "novo_agendamento",
             "agendamento_id": str(result.inserted_id)
         }
+    )
+    
+    await notificar_atualizacao_fila(
+        barber_oid,
+        dados.horario
     )
 
     return {

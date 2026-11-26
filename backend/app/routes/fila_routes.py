@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.dependencies.auth import get_current_user, get_admin
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
+from app.services.notificacao_fila import obter_filtro_fila, notificar_atualizacao_fila
 
 import logging
 from app.websocket.manager import manager
@@ -114,6 +115,11 @@ async def sair_fila(usuario=Depends(get_current_user)):
         logger.exception(
             "Erro ao notificar administradores sobre desistência"
         )
+        
+    await notificar_atualizacao_fila(
+        agendamento["barber_id"],
+        agendamento["horario"]
+    )
 
     return {
         "msg": "Você saiu da fila de espera com sucesso."
@@ -125,12 +131,12 @@ async def sair_fila(usuario=Depends(get_current_user)):
 #           Rota fila
 # =========================================================
 
+
 @router.get("/")
 async def minha_fila(usuario=Depends(get_current_user)):
 
     cliente_id = ObjectId(usuario["id"])
 
-    # Busca o agendamento do cliente autenticado
     agendamento = agendamentos_collection.find_one({
         "cliente_id": cliente_id,
         "status": "agendado"
@@ -143,43 +149,14 @@ async def minha_fila(usuario=Depends(get_current_user)):
             "total_na_fila": 0
         }
 
-    barber_id = agendamento["barber_id"]
-
-    # Define o fuso horário da barbearia
-    fuso = ZoneInfo("America/Bahia")
-
-    horario = agendamento["horario"]
-
-    # PyMongo pode retornar datas UTC sem timezone
-    if horario.tzinfo is None:
-        horario = horario.replace(tzinfo=timezone.utc)
-
-    horario_local = horario.astimezone(fuso)
-
-    # Define o início e o fim do dia do agendamento
-    inicio_dia = horario_local.replace(
-        hour=0,
-        minute=0,
-        second=0,
-        microsecond=0
+    # Reutiliza a regra de negócio da fila
+    filtro = obter_filtro_fila(
+        agendamento["barber_id"],
+        agendamento["horario"]
     )
 
-    fim_dia = inicio_dia + timedelta(days=1)
-
-    # Converte os limites para UTC
-    inicio_utc = inicio_dia.astimezone(timezone.utc)
-    fim_utc = fim_dia.astimezone(timezone.utc)
-
-    # Busca somente a fila do barbeiro e do dia
     agendamentos = list(
-        agendamentos_collection.find({
-            "barber_id": barber_id,
-            "status": "agendado",
-            "horario": {
-                "$gte": inicio_utc,
-                "$lt": fim_utc
-            }
-        }).sort([
+        agendamentos_collection.find(filtro).sort([
             ("horario", 1),
             ("_id", 1)
         ])
@@ -192,11 +169,10 @@ async def minha_fila(usuario=Depends(get_current_user)):
         if ag["_id"] == agendamento["_id"]:
             posicao = index + 1
             break
-            
+
     return {
         "usuario_logado": usuario["id"],
         "posicao": posicao,
         "pessoas_a_frente": posicao - 1 if posicao else 0,
         "total_na_fila": total
-    }
-
+    }   

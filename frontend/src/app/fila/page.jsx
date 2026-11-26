@@ -178,6 +178,16 @@ export default function FilaPage() {
 
           console.log("Evento WebSocket CLIENTE:", mensagem);
 
+          // Evento coletivo de atualização da fila
+          if (mensagem.tipo === "fila_atualizada") {
+            console.log("Atualizando posição na fila...");
+
+            await carregarFila();
+
+            return;
+          }
+
+          // Eventos individuais do agendamento
           const eventosAgendamento = [
             "cliente_chamado",
             "presenca_confirmada",
