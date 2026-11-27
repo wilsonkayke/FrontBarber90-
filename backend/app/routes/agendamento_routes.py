@@ -2,15 +2,17 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo import ReturnDocument
-from pymongo.errors import DuplicateKeyError 
+from pymongo.errors import DuplicateKeyError, OperationFailure, PyMongoError
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
+import logging
 
-from app.db.mongo_connection import db
+from app.db.mongo_connection import db, client
 from app.dependencies.auth import get_current_user, get_admin, get_barbeiro
 from app.schemas.agendamento_schema import AgendamentoCreate
 from app.websocket.manager import manager
 from app.services.notificacao_fila import notificar_atualizacao_fila
+
 
 router = APIRouter(
     prefix="/agendamentos",
@@ -23,6 +25,10 @@ desistencias_collection = db["desistencias"]
 servicos_collection = db["servicos"]
 clientes_collection = db["clientes"]
 barbeiros_collection = db["barbeiros"]
+nao_comparecimentos_collection = db["nao_comparecimentos"]
+
+
+logger = logging.getLogger(__name__)
 
 # =========================================================
 # 📌 Criar agendamento (cliente autenticado)
@@ -103,14 +109,71 @@ async def criar_agendamento(
 
     #Aquiiiiiiiiiiiiiii
 
+    
     try:
-        result = agendamentos_collection.insert_one(agendamento)
+        with client.start_session() as session:
+            with session.start_transaction():
+
+                # Criar o novo agendamento
+                result = agendamentos_collection.insert_one(
+                    agendamento,
+                    session=session
+                )
+
+                # Invalidar notificações anteriores
+                nao_comparecimentos_collection.update_many(
+                    {
+                        "cliente_id": cliente_oid,
+                        "status": "nao_compareceu",
+                        "notificacao_visualizada": False,
+                        "notificacao_invalidada": {"$ne": True},
+                        "expirado_em": {
+                            "$lte": agendamento["created_at"]
+                        }
+                    },
+                    {
+                        "$set": {
+                            "notificacao_invalidada": True,
+                            "notificacao_invalidada_em": datetime.now(
+                                timezone.utc
+                            )
+                        }
+                    },
+                    session=session
+                )
 
     except DuplicateKeyError:
         raise HTTPException(
             status_code=409,
             detail="Horário já reservado"
         )
+
+    except OperationFailure as error:
+        logger.exception(
+            "Erro na transação de criação do agendamento"
+        )
+
+        if error.has_error_label("TransientTransactionError"):
+            raise HTTPException(
+                status_code=409,
+                detail="Conflito ao realizar agendamento. Tente novamente."
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao realizar agendamento."
+        )
+
+    except PyMongoError:
+        logger.exception(
+            "Erro no MongoDB ao criar agendamento"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao realizar agendamento."
+        )
+
 
     # Notificar o barbeiro responsável
     await manager.enviar_para_barbeiro(
@@ -347,38 +410,97 @@ def listar_agendamentos(usuario=Depends(get_current_user)):
 
     return lista    
     
-# =========================================================
-# 📌 Aqui eu estou checamos se o usuário se atrasou ou não
-# =========================================================
-@router.get("/{agendamento_id}/status")
-def checar_status_fila(agendamento_id: str):
-    try:
-        oid = ObjectId(agendamento_id)
-    except:
-        raise HTTPException(status_code=400, detail="ID inválido")
 
-    agendamento = agendamentos_collection.find_one({"_id": oid})
-    if not agendamento:
-        raise HTTPException(status_code=404, detail="Não encontrado")
+@router.get("/notificacao-pendente")
+async def consultar_notificacao_pendente(
+    usuario=Depends(get_current_user)
+):
 
-    status_atual = agendamento.get("status")
-    minutos_passados = None
+    cliente_id = ObjectId(usuario["id"])
 
-    # Se o barbeiro já chamou, o Python calcula a diferença real usando UTC puro
-    if status_atual == "em_atendimento" and agendamento.get("atendido_em"):
-        atendido_em = agendamento["atendido_em"]
-        
-        # Garante que ambos os objetos datetime usem a mesma referência UTC para o cálculo
-        if atendido_em.tzinfo is None:
-            atendido_em = atendido_em.replace(tzinfo=timezone.utc)
-            
-        agora_utc = datetime.now(timezone.utc)
-        
-        # Calcula a diferença exata em minutos absolutos
-        diferenca = agora_utc - atendido_em
-        minutos_passados = int(diferenca.total_seconds() / 60)
+    notificacao = nao_comparecimentos_collection.find_one(
+        {
+            "cliente_id": cliente_id,
+            "status": "nao_compareceu",
+            "notificacao_visualizada": False,
+            "notificacao_invalidada": {"$ne": True}
+        },
+        sort=[
+            ("expirado_em", -1),
+            ("_id", -1)
+        ]
+    )
+
+    if not notificacao:
+        return {
+            "notificacao": None
+        }
 
     return {
-        "status": status_atual,
-        "minutos_passados": minutos_passados
+        "notificacao": {
+            "id": str(notificacao["_id"]),
+            "agendamento_id": str(
+                notificacao["agendamento_id"]
+            ),
+            "tipo": "prazo_expirado",
+            "mensagem": (
+                "Você perdeu sua vez! "
+                "O prazo de comparecimento expirou."
+            ),
+            "expirado_em": notificacao["expirado_em"]
+        }
     }
+
+
+@router.patch("/notificacoes/{notificacao_id}/visualizar")
+async def visualizar_notificacao(
+    notificacao_id: str,
+    usuario=Depends(get_current_user)
+):
+
+    if not ObjectId.is_valid(notificacao_id):
+        raise HTTPException(
+            status_code=400,
+            detail="ID da notificação inválido."
+        )
+
+    cliente_id = ObjectId(usuario["id"])
+
+    resultado = nao_comparecimentos_collection.update_one(
+        {
+            "_id": ObjectId(notificacao_id),
+            "cliente_id": cliente_id,
+            "status": "nao_compareceu",
+            "notificacao_visualizada": False,
+            "notificacao_invalidada": {"$ne": True}
+        },
+        {
+            "$set": {
+                "notificacao_visualizada": True,
+                "notificacao_visualizada_em": datetime.now(
+                    timezone.utc
+                )
+            }
+        }
+    )
+
+    if resultado.matched_count == 0:
+
+        notificacao = nao_comparecimentos_collection.find_one({
+            "_id": ObjectId(notificacao_id),
+            "cliente_id": cliente_id,
+            "status": "nao_compareceu",
+            "notificacao_visualizada": True,
+            "notificacao_invalidada": {"$ne": True}
+        })
+
+        if not notificacao:
+            raise HTTPException(
+                status_code=404,
+                detail="Notificação não encontrada."
+            )
+
+    return {
+        "message": "Notificação visualizada com sucesso."
+    }
+

@@ -69,7 +69,11 @@ def expirar_agendamento(agendamento_id: ObjectId):
                     **agendamento,
                     "agendamento_id": agendamento_id,
                     "status": "nao_compareceu",
-                    "expirado_em": agora
+                    "expirado_em": agora,
+                    "notificacao_visualizada": False,
+                    "notificacao_visualizada_em": None,
+                    "notificacao_invalidada": False,
+                    "notificacao_invalidada_em": None
                 }
 
                 historico.pop("_id", None)
